@@ -19,7 +19,7 @@ locale                   : "ko-KR"
 title                    : "wbpark Web Log"
 title_separator          : "-"
 subtitle                 : # site tagline that appears below site title in masthead
-name                     : "WonBin Park"
+name                     : &name "WonBin Park"
 description              : "An amazing website."
 url                      : "https://parkwonbin.github.io"
 baseurl                  : # the subpath of your site, e.g. "/blog"
@@ -102,12 +102,15 @@ analytics:
 
 # Site Author
 author:
-  name             : "WonBin Park"
-  avatar           : # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
+  name             : *name
+  avatar           : "/assets/images/profile_test.jpg" # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
   bio              : "I am an **amazing** person."
   location         : "Korea Republic of"
   email            : "an3449@naver.com"
   links:
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/ParkWonBin"
     - label: "Email"
       icon: "fas fa-fw fa-envelope-square"
       url: "mailto:an3449@naver.com"
@@ -120,9 +123,6 @@ author:
     - label: "Facebook"
       icon: "fab fa-fw fa-facebook-square"
       url: "https://facebook.com/wonbin.park.902"
-    - label: "GitHub"
-      icon: "fab fa-fw fa-github"
-      url: "https://github.com/ParkWonBin"
     - label: "Instagram"
       icon: "fab fa-fw fa-instagram"
       # url: "https://instagram.com/"
@@ -207,6 +207,22 @@ kramdown:
   smart_quotes: lsquo,rsquo,ldquo,rdquo
   enable_coderay: false
 
+# Collections
+collections:
+  docs:
+    output: true
+    permalink: /:collection/:path/
+  recipes:
+    output: true
+    permalink: /:collection/:path/
+  pets:
+    output: true
+    permalink: /:collection/:path/
+  portfolio:
+    output: true
+    permalink: /:collection/:path/
+
+
 
 # Sass/SCSS
 sass:
@@ -279,12 +295,13 @@ compress_html:
 defaults:
   # _posts
   - scope:
-      path: ""
+      path: "_posts"
       type: posts
     values:
       layout: single
+      nav: "docs"
       author_profile: true
       read_time: true
-      comments: # true
+      comments: true
       share: true
       related: true

@@ -158,6 +158,7 @@ exclude:
   - Rakefile
   - README
   - tmp
+  - \[HowTo\]_RunLocalHost.md
 keep_files:
   - .git
   - .svn
