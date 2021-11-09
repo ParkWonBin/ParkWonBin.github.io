@@ -9,6 +9,8 @@ tags:
 
 ```yaml
 title : "게시글 제목을 설정합니다."
+excerpt: "GitHub github.io "
+  # 게시글 목록에서 요약글 형태로 보입니다. 
 categories:
   - 카테고리 여러개 선택 가능
   - 카테고리1
@@ -28,8 +30,6 @@ toc: true
   # 오르쪽 사이즈 바에 표시해주는 기능
 toc_sticky: true
   # skicy 설정
-excerpt: "GitHub github.io "
-  # 발췌 : 
 layout: post
   # 레이아웃
 author_profile: False

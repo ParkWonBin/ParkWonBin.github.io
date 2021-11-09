@@ -19,8 +19,8 @@ locale                   : "ko-KR"
 title                    : "wbpark Web Log"
 title_separator          : "-"
 subtitle                 : # site tagline that appears below site title in masthead
-name                     : &name "WonBin Park"
-description              : "An amazing website."
+name                     : &name "WonBin Park" # name = "WonBin Park" 적용 됨
+description              : "RPA Developer."
 url                      : "https://parkwonbin.github.io"
 baseurl                  : # the subpath of your site, e.g. "/blog"
 repository               : parkwonbin/parkwonbin.github.io
@@ -295,7 +295,7 @@ compress_html:
 defaults:
   # _posts
   - scope:
-      path: "_posts"
+      path: "_"
       type: posts
     values:
       layout: single
@@ -305,3 +305,6 @@ defaults:
       comments: true
       share: true
       related: true
+      mathjax: true
+      sidebar_main: true
+      # https://ansohxxn.github.io/blog/category/
