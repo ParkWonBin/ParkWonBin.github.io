@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!--  공통경로의 JS CSS 불러오기  -->
+    <script src="common/js/jquery.js"></script>
+    <script src="common/js/chart.js"></script>
+    <script src="common/js/jquery.min.js"></script>
+    <script src="common/js/common.js"></script>
+    <link rel="stylesheet" type="text/css" href="common/css/common.css"/>
+
+    <!--  trafficMetroline JS CSS 불러오기  -->
+    <script src="section_trafficMetroline/js/trafficMetroline.js"></script>
+    <link rel="stylesheet" type="text/css" href="section_trafficMetroline/css/trafficMetroline.css"/>
+
+    <!--  trafficNaverSearch JS CSS 불러오기  -->
+    <script src="section_trafficNaverSearch/js/trafficNaverSearch.js"></script>
+    <link rel="stylesheet" type="text/css" href="section_trafficNaverSearch/css/trafficNaverSearch.css"/>
+
+    <!--  trafficChart JS CSS 불러오기  -->
+    <script src="section_trafficChart/js/trafficChart.js"></script>
+    <link rel="stylesheet" type="text/css" href="section_trafficChart/css/trafficChart.css"/>
+
+    <!--  weatherKorea JS CSS 불러오기  -->
+    <script src="section_weatherKorea/js/weatherKorea.js"></script>
+    <link rel="stylesheet" type="text/css" href="section_weatherKorea/css/weatherKorea.css"/>
+
+    <!--  weatherChart JS CSS 불러오기  -->
+    <script src="section_weatherChart2/js/weatherChart2.js"></script>
+    <link rel="stylesheet" type="text/css" href="section_weatherChart2/css/weatherChart2.css"/>
+
+    <!--  chatbot JS CSS 불러오기  -->
+    <script src="section_chatbot/js/chatbot.js"></script>
+    <link rel="stylesheet" type="text/css" href="section_chatbot/css/chatbot.css"/>
+
+    <!--  chatbotGPT JS CSS 불러오기  -->
+    <script src="section_chatbot_GPT/js/chatbot_GPT.js"></script>
+    <link rel="stylesheet" type="text/css" href="section_chatbot_GPT/css/chatbot_GPT.css"/>
+
+
+</head>
+<body>
+<!-- header start -->
+<header>
+    <div id="top-menu">
+        <div id="top-title">
+            <img src="src/summer.png" alt="title-icon">
+            <h1 id="header-title">Weather Navigation</h1>
+        </div>
+        <nav id="top_nav">
+            <a href="#">박원빈</a>
+            <a href="#">김인수</a>
+            <a href="#">이지우</a>
+            <a href="#">김은지</a>
+        </nav>
+    </div>
+</header>
+<!-------------------------------------->
+<section id="traffic">
+    <article id="traffic_L">
+        <img id="trafficVideo" src="src/train_AI_Drawing_picsart.gif" ></img>
+    </article>
+    <article id="traffic_M">
+        <div id="trafficMetroline"></div>
+        <div id="trafficNaverSearch"></div>
+    </article>
+    <article id="traffic_R">
+        <div id="trafficChart"></div>
+    </article>
+</section>
+<!-------------------------------------->
+<section id="weather">
+    <article id="weather_L">
+        <div id="weatherKorea"></div>
+    </article>
+    <article id="weather_R">
+        <img id="weatherVideo" src="src/weather_AI_Drawing_picsart.gif" ></img>
+    </article>
+    <article id="weather_M">
+        <div id="weatherChart"></div>
+    </article>
+</section>
+<!-------------------------------------->
+<div id="chatbotIconContainer"></div>
+<div id="chatbot"></div>
+<!-------------------------------------->
+<div id="chatbotGPT_IconContainer"></div>
+<div id="chatbotGPT"></div>
+<!-------------------------------------->
+
+<!-- 교통정보 BGM -->
+<audio id="BGM" src="src/Rain Heavy Loud.mp3" autoplay loop controls></audio>
+
+<footer>
+    <div class="foot_container">
+        <div class="site_helper">
+            <ul class="f-cont">
+                <li><a href="#">개인정보 처리방침</a></li>
+                <li><a href="#">이용안내</a></li>
+                <li><a href="#">저작권보호 및 정책</a></li>
+                <li><a href="#">웹접근성 정책</a></li>
+                <li><a href="#">누리집오류 / 건의</a></li>
+                <li><a href="#">전화번호 안내</a></li>
+            </ul>
+            <div class="f_info">
+                <ul>
+                    <li>Copyright@2024 WIJE. All Rights RESERVED.</li>
+                    <li>(주)코드랩 학생</li>
+                    <li>조원 : 박원빈, 김인수, 이지우, 김은지</li>
+                    <li>전화번호 : 000-0000-0000</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+</body>
+</html>

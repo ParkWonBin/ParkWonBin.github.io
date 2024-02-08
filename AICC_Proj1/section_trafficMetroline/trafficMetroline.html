@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+
+
+    <title>weather</title>
+    <!--  공통경로의 JS CSS 불러오기  -->
+    <script src="../common/js/common.js"></script>
+    <script src="../common/js/jquery.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="../common/css/common.css"/>
+    <!--  상대경로로 JS CSS 불러오기  -->
+    <script src="js/trafficMetroline.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/trafficMetroline.css"/>
+
+    <style>
+        #Metrovideo {
+            position:relative;
+            text-align:right;
+        }
+
+        h1{
+            font-size:3.5em;
+
+
+        }
+        a:link, a:visited {
+            text-decoration:none;
+            color:#222;
+        }
+        a:hover {
+            cursor:pointer;
+        }
+    </style>
+
+    <script>
+        function directyoutube() {
+            var youtubelink = document.getElementById('youtubelink')
+            var youtubeURL = youtubelink.querySelector('a').getAttribute('href');
+            window.location.href = youtubeURL;
+        }
+    </script>
+</head>
+
+<div id="trafficMetroline">
+</div>
+<div id="Metrovideo">
+    <video width="600" height="300" src="src/traffic_video.mp4" autoplay muted onclick="directyoutube()"></video>
+    <p id="youtubelink"><a href="https://youtu.be/n1xVGQowSow"></a></p>
+</div>
+<script>
+
+</script>
+</html>

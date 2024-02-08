@@ -1,0 +1,107 @@
+/*#chat-container {*/
+/*    display: flex;*/
+/*    flex-direction: column;*/
+/*    height: 100vh;*/
+/*    margin: 0;*/
+/*    font-family: Arial, sans-serif;*/
+/*}*/
+#chatbot {
+    width: 500px;
+    position: fixed;
+    right: 20px;
+    bottom : 20px;
+    display: flex;
+    flex-direction: column; /* 요소들을 세로 방향으로 쌓음 */
+    padding: 5px;
+    background-color: #ffff00;
+    z-index: 3;
+}
+
+#chatbot #chatMessageContainer{
+    background-color: #b5cad7;
+    display: flex;
+    flex-direction: column;
+    height: 500px;
+    overflow-y: auto
+}
+#chatbot #chatTitle {
+    display: flex;
+    flex-direction: row;
+    background-color: #715253;
+    color: white;
+    font-weight: bold;
+    padding: 10px 15px;
+}
+#chatbotClose{
+    max-width: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background:rgb(0,0,0,0);
+    padding: 0 10px;
+    border: none;
+    font-size: 30px;
+    font-weight: bold;
+    position: absolute;
+    right: 10px;
+    color: white;
+}
+#chatbot #chatTitle>*{
+    flex: 1;
+    margin: 5px 0px;
+}
+#chatbot #chatInputContainer {
+    display: flex;
+}
+#chatbot #chatInput {
+    flex: 1;
+    padding: 10px;
+    resize: none;
+}
+#chatbot #chatSendBtn {
+    padding: 10px 20px;
+}
+#chatbot .message{
+    align-items: flex-start; /* 기본적으로 왼쪽 정렬 */
+    width: fit-content;
+    max-width: 80%;
+    font-weight: bold;
+    border-radius: 8px; /* 테두리 둥글게 */
+    padding: 15px;
+    margin: 5px;
+}
+#chatbot .user{
+    background-color: #ffff00;
+    align-self: flex-end; /* 오른쪽 정렬 */
+    text-align: right; /* 텍스트 오른쪽 */
+}
+#chatbot .assistant{
+    background-color: white;
+
+}
+
+#chatbotIconContainer {
+    /*display: none;*/
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    z-index: 3;
+    background-color: #ffff00;
+    padding: 15px;
+    border-radius: 50px;
+    border: 5px solid #715253;
+}
+
+#chatbotIcon {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+
+#chatbotIconContainer:hover {
+    background-color: #00ffe7;
+}

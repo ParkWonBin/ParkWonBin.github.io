@@ -1,0 +1,48 @@
+#weatherChart{
+    display: flex;
+    width: 100%;
+    height: 100%;
+
+}
+
+#wcTitle{
+    background-color: #ededee;
+    display: flex;
+    flex-direction: column;
+    width: 240px;
+}
+
+.wcDate{
+    height: 100%;
+    /*border: 2px solid white;*/
+    display: flex;
+}
+.wcDate *{
+    width: 100%;
+    border-bottom: 1px solid white;
+}
+.wcWIcon{
+    width: 3em;
+    padding: 5px;
+}
+
+#wcChart{
+    background-color: #ffffff;
+    width: 100%;
+}
+
+.wcDDD{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.wcTemp{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    font-weight: bold;
+}
