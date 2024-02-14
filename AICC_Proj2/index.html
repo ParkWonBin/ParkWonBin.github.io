@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GPS Location Tracker with State Display</title>
+</head>
+<body>
+    <h2>현재 당신의 위치 정보</h2>
+    <div>위도: <span id="latitude"></span></div>
+    <div>경도: <span id="longitude"></span></div>
+    <div>정확도: <span id="accuracy"></span></div>
+    <div>현재 상태: <span id="trackingState">추적 멈춤</span></div>
+    <button id="toggleUpdate">위치 정보 업데이트 토글</button>
+
+    <script>
+        let isUpdating = false;
+        let updateInterval;
+
+        function updateLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    document.getElementById('latitude').textContent = position.coords.latitude;
+                    document.getElementById('longitude').textContent = position.coords.longitude;
+                    document.getElementById('accuracy').textContent = position.coords.accuracy + 'm';
+                }, function(error) {
+                    console.error("Error Code = " + error.code + " - " + error.message);
+                });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        document.getElementById('toggleUpdate').addEventListener('click', function() {
+            if (isUpdating) {
+                clearInterval(updateInterval);
+                document.getElementById('trackingState').textContent = '추적 멈춤';
+            } else {
+                updateInterval = setInterval(updateLocation, 500);
+                document.getElementById('trackingState').textContent = '추적중';
+            }
+            isUpdating = !isUpdating;
+        });
+    </script>
+</body>
+</html>
