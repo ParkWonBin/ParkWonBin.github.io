@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko-KR">
+<head>
+    <meta charset="UTF-8">
+    <title>AICC Project2</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/login.css">
+
+    <script src="js/template.js"></script>
+</head>
+<body>
+<div id="mainPage">
+    <img src="images/map_001.png"/>
+    <div id="mainBox">
+        <h1>로그인 페이지 입니다.</h1>
+        <form id="form_Login" action="/login" method="post"> 
+            <div>
+                <label for="userId">아이디</label>
+                <input type="text" id="userId" name="userId" required>
+            </div>
+            <div>
+                <label for="userPw">비밀번호</label>
+                <input type="password" id="userPw" name="userPw" required>
+            </div>
+            <div>
+                <a href="/createUser" class="mainButton">회원가입</a>
+                <button type="submit" class="mainButton">로그인</button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

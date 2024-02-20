@@ -1,0 +1,122 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+
+#mainPage {
+    position: relative;
+    width: 100%;
+    height: 100vh; /* 뷰포트의 높이를 100%로 설정 */
+}
+
+#mainPage > img {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+
+    /* 이미지 비율을 유지하면서 영역을 채움 */
+    object-fit: cover; 
+}
+
+#mainPage #mainBox {
+    position: absolute;
+    width: 60vw; /* 박스의 너비를 조정 */
+    height: 50vh; /* 박스의 높이를 조정 */
+    
+    /* 핸드폰 세로모드일 때 종횡비 유지를 위함 */
+    max-height: 45vw;
+
+    /* 반투명한 yellowgreen 색상 */
+    background-color: rgba(0, 0, 0, 0.5); 
+
+    /* 요소를 정확히 중앙에 배치 */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); 
+
+    /* flex 적용 후 내용물 가운데 정렬 */
+    display: flex;
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center; 
+    
+    /* 내부 여백 및 모서리 둥글게 */
+    padding: 1vh 1vw; 
+    border-radius: 2vw; 
+}
+
+#mainBox h1 {
+    margin: 0 0 4vh 0;
+    /* 폰트 크기, 색갈, 정렬 설정 */
+    font-size: 4vw; 
+    color: #fff; 
+    text-align: center; 
+}
+
+#mainPage #mainMenu {
+    height: 50%;
+    /* 버튼을 수평 중앙 정렬 */
+    display: flex;
+    justify-content: center; 
+}
+
+#mainPage .mainButton {
+    /* 버튼 배경색 설정 */
+    background-color: #0000ff; 
+    border-radius: 2vw; 
+    color: #fff; 
+
+    /* 버튼 너비, 여백, 간격 */
+    width: 13vw;
+    height: 70%;
+    padding: 1vw 2vw; 
+    margin: 0 1vw;
+
+    /* 폰트 크기, 굵기, 옵션 설정 */
+    font-size: 3vw;  
+    font-weight: bold;
+    text-decoration: none;
+
+    /* 텍스트 가운데 정렬 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    /* 마우스 커서를 손가락 모양으로 설정 */
+    cursor: pointer; 
+    
+    /* 배경색 변경시 부드럽게 전환 */
+    transition: background-color 0.3s ease; 
+}
+
+/* 버튼을 호버할 때 배경색 변경 */
+#mainPage .mainButton:hover {
+    background-color: #00007b; 
+}
+
+/* 세로 높이가 800px 이하일 때 적용 */
+@media (max-height: 800px){
+    #mainPage #mainBox {
+        height: 70%;
+    }
+}
+
+/* 가로 너비가 1000px 이하일 때 적용 */
+@media (max-width: 1000px)  {
+    #mainPage #mainBox {
+        width: 90%;
+    }
+
+    #mainBox h1 {
+        font-size: 7vw; 
+    }
+
+    #mainPage .mainButton {
+        width: 20vw;
+        font-size: 4vw;
+        padding: 1vh 1vw; 
+        margin: 0 2vw;
+    }
+    
+}
