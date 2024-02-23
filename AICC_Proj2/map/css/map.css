@@ -1,0 +1,20 @@
+body{
+    margin:0;
+    padding:0;
+}
+
+#backgroudimg {
+    position: absolute;
+    width: 100%;
+    height: 100vh;
+    /* 이미지 비율을 유지하면서 영역을 채움 */
+    /*object-fit: cover;*/
+}
+
+#MapContainer{
+    width: 100%;
+    height: 100vh;
+    position: relative;
+    background-image: url("../images/map_001.png");
+    background-size: 100% 100vh; /* 백그라운드 이미지가 컨테이너의 100% 너비와 높이를 꽉 채우도록 설정 */
+}

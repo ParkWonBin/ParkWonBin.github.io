@@ -1,0 +1,85 @@
+
+#form_Login {
+    display: flex;
+    flex-direction: column;
+    width: 70%;   
+  }
+  
+  #form_Login > div {
+    display: flex;
+    margin-bottom: 1vw;
+    height: 10vh;
+    max-height: 6vw;
+  }
+
+  #form_Login label {
+    color: #fff; /* 흰색 텍스트 */
+
+    margin-right: 1vw; 
+    font-size: 3vw;
+    font-weight: bold;
+    min-width: 13vw;
+
+    /* 텍스트 가운데 정렬 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+  }
+  
+  #form_Login input {
+    flex-grow: 1; /* 입력란이 남은 공간을 모두 채우도록 설정 */
+    font-size: 2.2vw;
+
+    box-sizing: border-box;
+    padding: 0.5vw;
+    border: none;
+    border-radius: 1vw;
+  }
+
+  
+#form_Login > div:last-child {
+    margin-top: 2vh;
+
+    /* 텍스트 가운데 정렬 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+button.mainButton, a.mainButton {
+    border:none;
+    flex-basis: 50%; /* 버튼의 비율 */
+    padding: 0;
+    margin: 0;
+    
+    box-sizing: border-box;
+    min-width: 18vw;
+    min-height: 10vh;
+}
+
+#mainPage #mainBox {
+    height: 70%;
+}
+
+#mainPage .small{
+    font-size: 2.5vw ;
+}
+
+@media (max-width: 1000px)  {
+
+    #form_Login label {
+        font-size: 4vw;
+        font-weight: bold;
+        min-width: 17vw;
+    }
+
+    button.mainButton, a.mainButton {
+        flex-basis: 50%; /* 버튼의 비율 */
+        padding: 0;
+        
+        box-sizing: border-box;
+        min-width: 18vw;
+        min-height: 6vh;
+    }
+}
