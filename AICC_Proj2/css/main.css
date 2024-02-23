@@ -63,9 +63,10 @@ body {
 
 #mainPage .mainButton {
     /* 버튼 배경색 설정 */
-    background-color: #0000ff; 
-    border-radius: 2vw; 
-    color: #fff; 
+    border: none;
+    background-color: #0000ff;
+    border-radius: 2vw;
+    color: #fff;
 
     /* 버튼 너비, 여백, 간격 */
     width: 13vw;

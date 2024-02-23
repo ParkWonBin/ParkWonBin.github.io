@@ -1,0 +1,25 @@
+.drop-area {
+    /*border: 2px dashed #ccc;*/
+    /*padding: 20px;*/
+    /*width: 50vw;*/
+    /*height: 50vh;*/
+    /*text-align: center;*/
+    position: relative;
+}
+.drop-area .dragable {
+    position: absolute; /* 초기에 absolute로 설정하여 드랍 영역 외부에서도 드래그 가능하게 함 */
+}
+
+.drop-area .dragable img{
+    /* 이미지의 초기 너비를 % 대신 px 단위로 설정해야 드래그 시 위치가 더 정확해집니다. */
+    width: 12vw; /* 예시 너비, 적절히 조정해주세요. */
+    height: 15vh;
+    min-height: 15vw;
+    position: absolute; /* 초기에 absolute로 설정하여 드랍 영역 외부에서도 드래그 가능하게 함 */
+    border: 0.2vw solid black;
+}
+
+.drop-area .selectedImg {
+    border: 0.3vw solid yellowgreen; /* 테두리 안쪽은 뚜렷한 초록색으로 */
+    box-shadow: 0 0 3vw green; /* 테두리 바깥쪽은 흐린 초록색으로 */
+}

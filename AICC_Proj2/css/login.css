@@ -1,5 +1,4 @@
 
-
 #form_Login {
     display: flex;
     flex-direction: column;
@@ -41,7 +40,6 @@
   
 #form_Login > div:last-child {
     margin-top: 2vh;
-    justify-content: space-between; /* 버튼들 사이에 공간을 동일하게 배분 */
 
     /* 텍스트 가운데 정렬 */
     display: flex;
@@ -50,6 +48,7 @@
   }
   
 button.mainButton, a.mainButton {
+    border:none;
     flex-basis: 50%; /* 버튼의 비율 */
     padding: 0;
     margin: 0;
@@ -63,6 +62,9 @@ button.mainButton, a.mainButton {
     height: 70%;
 }
 
+#mainPage .small{
+    font-size: 2.5vw ;
+}
 
 @media (max-width: 1000px)  {
 
