@@ -34,12 +34,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // 기본적으로 로드된 이미지에 대해서는 dragstart 이벤트를 제거함
     var ElementImages = document.querySelectorAll('img');
     // 각 이미지에 대해 이벤트 리스너 추가
-    ElementImages.forEach(function(img) {
-        img.addEventListener('dragstart', function(e) {
+    ElementImages.forEach(function (img) {
+        img.addEventListener('dragstart', function (e) {
             e.preventDefault(); // 드래그 시작 이벤트의 기본 동작을 방지
         });
     });
-
 
     const dropEvents = ['dragenter', 'dragover', 'dragleave', 'drop'];
     const dropAreas = document.getElementsByClassName('drop-area');
@@ -49,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
             dropArea.addEventListener(eventName, preventDefaults, false);
         });
 
-        dropArea.addEventListener('drop', function(e) {
+        dropArea.addEventListener('drop', function (e) {
             handleDrop(e, dropArea); // 이벤트와 함께 dropArea도 전달
         }, false);
     });
@@ -60,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function handleDrop(e, dropArea) { // dropArea 인자 추가
-        var files =  e.dataTransfer.files;
+        var files = e.dataTransfer.files;
 
         // 드롭 위치를 얻습니다.
         const dropX = e.clientX;
@@ -77,13 +76,13 @@ document.addEventListener('DOMContentLoaded', function() {
     function previewFile(file, dropArea, dropX, dropY) {
         let reader = new FileReader();
         reader.readAsDataURL(file);
-        reader.onloadend = function() {
+        reader.onloadend = function () {
             let container = document.createElement('div');
             container.className = 'dragable';
 
             let img = document.createElement('img');
             img.src = reader.result;
-            img.onload = function() {
+            img.onload = function () {
                 // 이미지의 크기를 기준으로 드롭된 위치에서 이미지를 중앙에 배치합니다.
                 const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0) / 100;
                 const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0) / 100;
@@ -110,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 btn.style.position = 'absolute';
 
                 // 버튼 클릭 이벤트 핸들러 추가 (예시)
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function () {
                     console.log('이미지 등록 처리');
                     // 이미지 컨테이너 div를 참조
                     const imgContainer = this.parentNode;
@@ -133,6 +132,44 @@ document.addEventListener('DOMContentLoaded', function() {
             // 드래그 시작 시 기본 동작을 방지합니다.
             img.addEventListener('dragstart', e => e.preventDefault());
         }
+
+
+        // 핸드폰용 함수 추가
+        var timer;
+        var longPressThreshold = 1000; // 1초
+
+        // 롱 프레스를 감지할 요소에 이벤트 리스너 추가
+        document.body.addEventListener('touchstart', function (e) {
+            // 타이머 시작
+            timer = setTimeout(function () {
+                openFileInput()
+            }, longPressThreshold);
+        }, false);
+
+        // 사용자가 손을 떼거나 움직이면 타이머 초기화
+        document.body.addEventListener('touchend', function (e) {
+            clearTimeout(timer);
+        }, false);
+
+        document.body.addEventListener('touchmove', function (e) {
+            clearTimeout(timer);
+        }, false);
+
+        function openFileInput() {
+            var fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*'; // 이미지 파일만 선택 가능
+            fileInput.style.display = 'none'; // 파일 입력 요소 숨기기
+
+            fileInput.addEventListener('change', function (e) {
+                var file1 = e.target.files[0];
+                if (file1) {
+                    // 파일 선택 후 처리 로직
+                    // 예: drop 이벤트 핸들러에 파일 객체 전달
+                    handleFiles(file1, dropArea, 0, 0);
+                }
+            });
+        }
     }
 });
 
@@ -145,7 +182,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     let offsetX = 0; // 마우스 클릭 위치와 이미지의 x 위치 차이
     let offsetY = 0; // 마우스 클릭 위치와 이미지의 y 위치 차이
 
-    document.addEventListener('mousedown', function(e) {
+    function act_start(e) {
         let dragableElement = e.target.closest('.dragable'); // 클릭된 요소에서 가장 가까운 .dragable 요소를 찾습니다.
         if (dragableElement) {
             selectedImg = dragableElement; // dragable 클래스를 가진 div를 선택합니다.
@@ -157,9 +194,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
             offsetX = e.clientX - imgRect.left;
             offsetY = e.clientY - imgRect.top;
         }
-    });
+    }
 
-    document.addEventListener('mousemove', function(e) {
+    function act_move(e) {
         if (selectedImg) {
             let vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0) / 100;
             let vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0) / 100;
@@ -171,13 +208,22 @@ document.addEventListener('DOMContentLoaded', (event) => {
             selectedImg.style.left = newLeft + 'vw';
             selectedImg.style.top = newTop + 'vh';
         }
-    });
+    }
 
-    document.addEventListener('mouseup', function() {
+    function act_end() {
         if (selectedImg) {
             selectedImg.style.zIndex = ''; // 드래그 종료 시 zIndex 초기화
             selectedImg.getElementsByTagName('img')[0].classList.remove('selectedImg');
             selectedImg = null;
         }
-    });
+    }
+
+    document.addEventListener('mousedown', act_start);
+    document.addEventListener('touchstart', act_start);
+
+    document.addEventListener('mousemove', act_move);
+    document.addEventListener('touchmove', act_move);
+
+    document.addEventListener('mouseup', act_end);
+    document.addEventListener('touchend', act_end);
 });
