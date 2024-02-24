@@ -225,10 +225,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
     document.addEventListener('mousedown', act_start);
-    document.addEventListener('touchstart', act_start);
+    // document.addEventListener('touchstart', act_start); // pc 크롬, 모바일 safari 잘 작동, 모바일 크롬은 설정 추가 필요.
+    document.addEventListener('touchstart', act_start, { passive: false });
 
     document.addEventListener('mousemove', act_move);
-    document.addEventListener('touchmove', act_move);
+    // document.addEventListener('touchmove', act_move); // pc 크롬, 모바일 safari 잘 작동, 모바일 크롬은 설정 추가 필요
+    document.addEventListener('touchmove', act_move, { passive: false });
 
     document.addEventListener('mouseup', act_end);
     document.addEventListener('touchend', act_end);
