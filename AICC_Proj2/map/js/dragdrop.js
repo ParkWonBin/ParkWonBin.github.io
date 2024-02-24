@@ -183,16 +183,19 @@ document.addEventListener('DOMContentLoaded', (event) => {
     let offsetY = 0; // 마우스 클릭 위치와 이미지의 y 위치 차이
 
     function act_start(e) {
-        let dragableElement = e.target.closest('.dragable'); // 클릭된 요소에서 가장 가까운 .dragable 요소를 찾습니다.
+        const dragableElement = e.target.closest('.dragable'); // 클릭된 요소에서 가장 가까운 .dragable 요소를 찾습니다.
         if (dragableElement) {
             selectedImg = dragableElement; // dragable 클래스를 가진 div를 선택합니다.
             selectedImg.style.zIndex = 1000; // 선택된 요소를 최상위로
             // 하이라이트 이미지
             dragableElement.getElementsByTagName('img')[0].classList.add('selectedImg');
 
-            let imgRect = selectedImg.getBoundingClientRect();
-            offsetX = e.clientX - imgRect.left;
-            offsetY = e.clientY - imgRect.top;
+            const imgRect = selectedImg.getBoundingClientRect();
+            
+            // 이벤트 종류에 따른 처리
+            const e_target = e.touches ? e.touches[0] : e
+            offsetX = e_target.clientX - imgRect.left;
+            offsetY = e_target.clientY - imgRect.top;
         }
     }
 
@@ -202,8 +205,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
             let vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0) / 100;
 
             // 클릭한 지점에 상대적으로 이미지 이동 (오프셋 고려)
-            let newLeft = (e.clientX - offsetX) / vw;
-            let newTop = (e.clientY - offsetY) / vh;
+            const e_target = e.touches ? e.touches[0] : e
+            let newLeft = (e_target.clientX - offsetX) / vw;
+            let newTop = (e_target.clientY - offsetY) / vh;
 
             selectedImg.style.left = newLeft + 'vw';
             selectedImg.style.top = newTop + 'vh';
