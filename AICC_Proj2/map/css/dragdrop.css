@@ -7,6 +7,7 @@
     position: relative;
 }
 .drop-area .dragable {
+    touch-action: none;  /* 모바일 환경에서 터치후 이동시 스크롤/새로고침 방지 */
     position: absolute; /* 초기에 absolute로 설정하여 드랍 영역 외부에서도 드래그 가능하게 함 */
 }
 
