@@ -18,3 +18,27 @@ body{
     background-image: url("../images/map_001.png");
     background-size: 100% 100vh; /* 백그라운드 이미지가 컨테이너의 100% 너비와 높이를 꽉 채우도록 설정 */
 }
+
+#btn_addHotSpot{
+    position: absolute;
+    top : 1vh;
+    left :1vw;
+    z-index: 1;
+    font-size: 3rem;
+
+    /* 버튼 배경색 설정 */
+    border: 0.2rem solid white;
+    padding: 1px;
+    background-color: #00aa00;
+    border-radius: 2vw;
+    color: #fff;
+}
+#btn_addHotSpot:hover{
+    background-color: #00dd00;
+}
+
+.register-button{
+    background-color: blue;
+    color:white;
+    font-size: 1rem;
+}
