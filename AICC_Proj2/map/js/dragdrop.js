@@ -193,6 +193,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             const imgRect = selectedImg.getBoundingClientRect();
             
             // 이벤트 종류에 따른 처리
+            e.preventDefault(); // 모바일에서 터치이동시 스크롤 및 새로고침 방지
             const e_target = e.touches ? e.touches[0] : e
             offsetX = e_target.clientX - imgRect.left;
             offsetY = e_target.clientY - imgRect.top;
@@ -205,6 +206,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             let vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0) / 100;
 
             // 클릭한 지점에 상대적으로 이미지 이동 (오프셋 고려)
+            e.preventDefault(); // 모바일에서 터치이동시 스크롤 및 새로고침 방지
             const e_target = e.touches ? e.touches[0] : e
             let newLeft = (e_target.clientX - offsetX) / vw;
             let newTop = (e_target.clientY - offsetY) / vh;
