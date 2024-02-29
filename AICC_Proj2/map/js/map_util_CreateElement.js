@@ -1,11 +1,12 @@
 const createElement = (data) => {
-    const {tagName, id, className, textContent, onclick, change} = data
+    const {tagName, id, className, textContent, onclick,touchend, change} = data
     const tag = document.createElement(tagName ? tagName : 'div');
 
     if(id){tag.id = id}
     if(className){tag.className = className}
     if(textContent){tag.textContent = textContent}
     if(onclick){tag.addEventListener('click',onclick)}
+    if(touchend){tag.addEventListener('touchend',touchend)}
     if(change){tag.addEventListener('change', change)}
 
     return tag
@@ -68,20 +69,24 @@ function createImageConainer(data) {
         })
         container.appendChild(btnCntainder)
 
+        // 등록버튼 클릭/터치 시 기능
+        const createbtnClick = ()=>{
+            const imgContainer = container;
+            // sendImageDataToServer 함수를 호출하여 이미지 데이터와 위치 정보를 전송합니다.
+            request_CreateHotSpot({
+                left : imgContainer.style.left,
+                top : imgContainer.style.top,
+                file : reader.result
+            });
+        }
+
         // 등록 버튼 만들기
         const btn = createElement({
             tagName: 'button',
             textContent : '등록',
             className : 'register-button',
-            onclick : ()=>{
-                const imgContainer = container;
-                // sendImageDataToServer 함수를 호출하여 이미지 데이터와 위치 정보를 전송합니다.
-                request_CreateHotSpot({
-                    left : imgContainer.style.left,
-                    top : imgContainer.style.top,
-                    file : reader.result
-                });
-            }
+            onclick :createbtnClick,
+            touchend:createbtnClick
         })
         btnCntainder.appendChild(btn);
 
@@ -98,38 +103,42 @@ const createBtnContainer = (imgContainder)=>{
 
     // 등록 버튼이 존재한다면,이동 버튼을 만들지 않음.
     if (btnContainder.getElementsByClassName('register-button').length === 0) {
+        const updateBtnClick = ()=> {
+            const imgContainer = imgContainder;
+            // sendImageDataToServer 함수를 호출하여 이미지 데이터와 위치 정보를 전송합니다.
+            request_UpdateHotSpot({
+                spot_id: imgContainer.getElementsByTagName('img')[0].getAttribute('data-id'),
+                top: imgContainer.style.top,
+                left: imgContainer.style.left,
+                src: imgContainer.getElementsByTagName('img')[0].src
+            })
+        }
         // 등록버튼 없으면 이동버튼 만들기
         const btnUpdate = createElement({
             tagName: 'button',
             textContent: '이동',
             className: 'update-button',
-            onclick: () => {
-                const imgContainer = imgContainder;
-                // sendImageDataToServer 함수를 호출하여 이미지 데이터와 위치 정보를 전송합니다.
-                request_UpdateHotSpot({
-                    spot_id: imgContainer.getElementsByTagName('img')[0].getAttribute('data-id'),
-                    top: imgContainer.style.top,
-                    left: imgContainer.style.left,
-                    src: imgContainer.getElementsByTagName('img')[0].src
-                });
-            }
+            onclick: updateBtnClick,
+            touchend:updateBtnClick
         })
         btnContainder.appendChild(btnUpdate);
     }
 
+    const deleteBtnCLick = ()=>{
+        const imgContainer = imgContainder;
+        // sendImageDataToServer 함수를 호출하여 이미지 데이터와 위치 정보를 전송합니다.
+        request_DeleteHotSpot({
+            spot_id: imgContainer.getElementsByTagName('img')[0].getAttribute('data-id'),
+            src: imgContainer.getElementsByTagName('img')[0].src
+        });
+    }
     // 삭제 버튼 만들기
     const btndelete = createElement({
         tagName: 'button',
         textContent : '삭제',
         className : 'delete-button',
-        onclick : ()=>{
-            const imgContainer = imgContainder;
-            // sendImageDataToServer 함수를 호출하여 이미지 데이터와 위치 정보를 전송합니다.
-            request_DeleteHotSpot({
-                spot_id: imgContainer.getElementsByTagName('img')[0].getAttribute('data-id'),
-                src: imgContainer.getElementsByTagName('img')[0].src
-            });
-        }
+        onclick : deleteBtnCLick,
+        touchend : deleteBtnCLick
     })
     btnContainder.appendChild(btndelete);
 
