@@ -4,7 +4,9 @@ const request_UpdateHotSpot = (data) => {
     // src : 해당 이미지의 경로
     // left: vw 단위의 숫자,
     // top: vh 단위의 숫자,
-    alert('request_UpdateHotSpot : '+JSON.stringify(data,null,2))
+    alert('request_UpdateHotSpot : '+JSON.stringify(data,(key, value)=>{
+        return (typeof value === "string" && value.length > 30) ? value.substring(0, 30) + "..." :value;
+    },2))
 
     // payload 만들기
     const formData = new FormData();
