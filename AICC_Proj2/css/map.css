@@ -1,3 +1,4 @@
+/* 배경관련 ********************************************/
 body{
     margin:0;
     padding:0;
@@ -15,6 +16,84 @@ body{
     width: 100%;
     height: 100vh;
     position: relative;
-    background-image: url("../images/map_001.png");
-    background-size: 100% 100vh; /* 백그라운드 이미지가 컨테이너의 100% 너비와 높이를 꽉 채우도록 설정 */
+    /* 백그라운드 이미지가 컨테이너의 100% 너비와 높이를 꽉 채우도록 설정 */
+    background-image: url("../images/bak.png");
+    background-size: 100% 100vh;
+}
+/* 장소등록 ********************************************/
+#btn_addHotSpot{
+    position: absolute;
+    top : 1vh;
+    left :1vw;
+    z-index: 1;
+    font-size: 2rem;
+
+    /* 버튼 배경색 설정 */
+    border: 0.2rem solid white;
+    padding: 0.5vw;
+    background-color: yellowgreen;
+    color: black;
+}
+#btn_addHotSpot:hover{
+    background-color: greenyellow;
+}
+/* 이미지 내 버튼 ********************************************/
+.imageHotSpot{
+    display: flex;
+    flex-direction: column;
+    border: 2px solid black;
+}
+.imageHotSpot:has(.selectedImg) {
+    border: 0.3vw solid black;
+    box-shadow: 0 0 2vw white;
+}
+.imageHotSpot .btnContainer{
+    display: flex;
+    flex-direction: row;
+    border-top: 2px solid black;
+}
+.imageHotSpot .btnContainer button{
+    width: 100%;
+    padding: 0.5vw;
+    color: black;
+    font-weight: bolder;
+    font-size: 1.4vw;
+    border: none;
+}
+.imageHotSpot .register-button{
+    background-color: greenyellow;
+}
+.imageHotSpot .update-button{
+    background-color: deepskyblue;
+}
+.imageHotSpot .delete-button{
+    background-color: coral;
+}
+.imageHotSpot img{
+    width: 12vw;
+    height: 15vh;
+    /*기본적으로 종횡비 맞추되, 상자 너무 찌그러지면 보정*/
+    min-width: 12vh;
+    min-height: 15vw;
+}
+@media (max-aspect-ratio: 1/1) {
+    /* 가로보다 세로가 긴 경우에 적용할 스타일 */
+    .imageHotSpot{
+        display: flex;
+        flex-direction: row;
+        border: 0.5vw solid black;
+    }
+    .imageHotSpot .btnContainer{
+        display: flex;
+        flex-direction: column;
+        border: none;
+        min-height: 15vw;
+    }
+    .imageHotSpot .btnContainer button{
+        flex-grow: 1;
+        font-size: 2vh;
+        padding: 1vw;
+        text-orientation: upright;
+        writing-mode: vertical-rl;
+    }
 }
