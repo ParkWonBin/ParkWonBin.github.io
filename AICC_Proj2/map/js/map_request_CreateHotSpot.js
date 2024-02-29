@@ -3,7 +3,12 @@ const request_CreateHotSpot = (data) => {
     // file: file객체,
     // left: vw 단위의 숫자,
     // top: vh 단위의 숫자,
-    alert('request_CreateHotSpot : '+JSON.stringify(data,null,2))
+    alert('request_CreateHotSpot : '+JSON.stringify(data,(key, value)=>{
+        if (typeof value === "string" && value.length > 40) {
+            return value.substring(0, 40) + "..."; // 문자열이 30자를 초과하는 경우, 30자까지만 표시하고 "..." 추가
+        }
+        return value
+    },2))
 
     // payload 만들기
     const formData = new FormData();
