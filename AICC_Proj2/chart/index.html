@@ -63,27 +63,10 @@
 
 <!-- 게시판 머리말 영역 -->
 <div class="head">
-    <h2>게시판</h2>
-    <span>
-    <a href="/bulletin/write" class="button">✎ 글쓰기</a>
-    <a href="/" class="button" style="background-color:blue"> 처음으로 </a>
-    </span>
 </div>
 
 <!-- 게시글 표시 영역 -->
-<table>
-    <thead><tr><th>제목</th><th>글쓴이</th><th>등록일</th><th>조회수</th></tr></thead>
-<tbody>
-    <% for (let k=0; k<postId.length;k++){ %>
-        <tr>
-            <td><a href="/bulletin/Detail/<%= postId[k] %>" class="post-link"><%= title[k] %>[<%= comments_count[k] %>]</a></td>
-            <td><%= writerName[k] %>(<%= writerId[k] %>)</td>
-            <td><%= created_at[k] %></td>
-            <td><%= views[k] %></td>
-        </tr>
-    <% } %>
-</tbody>
-</table>
+
 
 </body>
 </html>
