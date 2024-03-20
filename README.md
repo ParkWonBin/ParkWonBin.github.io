@@ -11,6 +11,7 @@
 - 데모 기능
   - [▶ map](https://parkwonbin.github.io/AICC_Proj2/map/)
   - [▶ chart](https://parkwonbin.github.io/AICC_Proj2/chart/)
+  - [▶ chatbot](https://parkwonbin.github.io/AICC_Proj2/chatbot/)
   - [▶ demo](https://parkwonbin.github.io/AICC_Proj2/demo/)
   - [▶ gps](https://parkwonbin.github.io/AICC_Proj2/gps/)
   - [▶ speach2text](https://parkwonbin.github.io/AICC_Proj2/speach2text/)
