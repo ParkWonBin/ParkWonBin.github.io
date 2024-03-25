@@ -79,7 +79,14 @@ function App() {
   }
 
   const btnShareURL = () => {
-    const baseURL = window.location.origin;
+    const getBaseURL = () => {
+      const url = window.location.href; // 현재 페이지의 전체 URL
+      const pathnameIndex = url.indexOf(window.location.pathname); // 패스네임 시작 인덱스
+      const endpoint = url.indexOf('?', pathnameIndex); // '?' 쿼리 스트링 시작 인덱스
+      return endpoint > -1 ? url.substring(0, endpoint) : url; // '?'가 있으면 쿼리 스트링 이전까지, 없으면 전체 URL
+    };
+    
+    const baseURL = getBaseURL();
     // https://parkwonbin.github.io/React_Test01/
     // 'http://localhost:3000/'
 
