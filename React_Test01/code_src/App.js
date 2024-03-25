@@ -79,7 +79,9 @@ function App() {
   }
 
   const btnShareURL = () => {
-    const baseURL = 'http://localhost:3000/'
+    const baseURL = window.location.origin;
+    // https://parkwonbin.github.io/React_Test01/
+    // 'http://localhost:3000/'
 
     // state를 url 인코딩 후 base64로 인코딩한다. (ascii -> base64)
     // 바로 bota 실행 시 문자열 범위를 벗어나는 오류가 생기기 때문에
@@ -213,7 +215,7 @@ function App() {
     <div className="App">
       <div className="black-nav">
         {/* style 속성은 객체 형식으로 입력한다. public 경로는 '/'로 시작한다. */}
-        <img src="/favicon.ico" style={{
+        <img src="./favicon.ico" style={{
           width: '40px', 
           height: '40px', 
           borderRadius: '30%', 
