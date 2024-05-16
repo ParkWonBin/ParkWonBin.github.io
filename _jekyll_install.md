@@ -1,7 +1,8 @@
 # 윈도우에서 jekyll 설치하는법 
 
 ## 주의사항
-[공식 문서 참고](https://jekyllrb-ko.github.io/docs/installation/windows/)
+- [공식 문서 참고](https://jekyllrb-ko.github.io/docs/installation/windows/)
+- [좋은 설명 참고](https://blog.hyeyoonjung.com/2017/05/04/how-to-start-jekyll/)
 
 1. ruby 버전 : 2.7 버전 (2.4 이상)
 - 버전오류 : 3.0 이상에서는 종속성 오류 있음.
