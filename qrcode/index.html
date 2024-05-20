@@ -97,12 +97,14 @@
                 downloadPngButton.style.display = "inline";
                 downloadSvgButton.style.display = "inline";
 
-                // PNG 다운로드
-                downloadPngButton.onclick = function() {
+     // PNG 다운로드
+     downloadPngButton.onclick = function() {
                     const link = document.createElement('a');
                     link.href = dataUrl;
                     link.download = 'qr_code.png';
+                    document.body.appendChild(link);
                     link.click();
+                    document.body.removeChild(link);
                 };
 
                 // SVG 다운로드
@@ -120,11 +122,13 @@
                         return;
                     }
                     downloadSvgButton.onclick = function() {
-                        const link = document.createElement('a');
                         const blob = new Blob([svgString], { type: 'image/svg+xml' });
+                        const link = document.createElement('a');
                         link.href = URL.createObjectURL(blob);
                         link.download = 'qr_code.svg';
+                        document.body.appendChild(link);
                         link.click();
+                        document.body.removeChild(link);
                     };
                 });
             });
