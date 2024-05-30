@@ -20,9 +20,9 @@
 
 title: wbpark Dev Blog
 email: pwb1128@gmail.com
-description: >- # this means to ignore newlines until "baseurl:"
-  Hey, I'm the penguin
-baseurl: "" # the subpath of your site, e.g. /blog
+description: the penguin
+
+baseurl: "htpps://wbpark.app" 
 url: "https://github.com/ParkWonBin" 
 twitter_username: 
 github_username:  ParkWonBin
@@ -31,6 +31,9 @@ github_username:  ParkWonBin
 theme: minima
 plugins:
   - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
 
 # Exclude from processing.
 # The following items will not be processed, by default.
