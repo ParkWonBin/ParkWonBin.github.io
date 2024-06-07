@@ -55,3 +55,21 @@ bundle exec jekyll serve
 # 4000번 포트 들어가보면 돌고있음.
 # http://localhost:4000
 ```
+
+----
+plugin 관리
+
+_config.yml
+```yml
+plugins:
+  - jekyll-sitemap
+  - jekyll-paginate
+
+```
+Gemfile
+```gemfile
+gem "jekyll", "~> 4.3.3"
+gem "minima", "~> 2.5"
+gem 'jekyll-sitemap'
+gem 'jekyll-paginate'
+```
