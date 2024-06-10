@@ -1,6 +1,8 @@
 title: wbpark Dev Blog
-email: pwb1128@gmail.com
-author: 'wbpark'
+author: 
+  name: wbpark
+  email: pwb1128@gmail.com
+
 description: >- # this means to ignore newlines until "baseurl:"
   test123213
 
@@ -21,8 +23,8 @@ plugins:
   - jekyll-seo-tag
 
 # Pagination
-paginate:            5
-paginate_path:       '/page-:num/'
+paginate: 5
+paginate_path: "/page:num/"
 
 markdown: kramdown
 kramdown:
