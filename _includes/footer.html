@@ -1,5 +1,5 @@
 <footer class="site-footer h-card">
-  <data class="u-url" href="{{ "/" | relative_url }}"></data>
+  <data class="u-url" href="{{ '/' | relative_url }}"></data>
 
   <div class="wrapper">
 
@@ -7,6 +7,11 @@
 
     <div class="footer-col-wrapper">
       <div class="footer-col footer-col-1">
+
+        <div class="footer-profile">
+          <img src="{{ '/assets/images/profile.jpg' | relative_url }}" alt="Profile Picture" style="width: 100px; height: 100px; border-radius: 25%;border: solid 2px black;padding: 2px;">
+        </div>
+
         <ul class="contact-list">
           <li class="p-name">
             {%- if site.author -%}
@@ -30,6 +35,7 @@
       </div>
     </div>
 
+    <p class="rss-subscribe">subscribe <a href="{{ '/feed.xml' | relative_url }}">via RSS</a></p>
   </div>
 
 </footer>

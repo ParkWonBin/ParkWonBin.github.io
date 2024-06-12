@@ -11,7 +11,13 @@ url: "https://github.com/ParkWonBin"
 # baseurl 입력하면 src의 시작 주소가 바뀐다.
 
 github_username: ParkWonBin
-twitter_username: 
+tistory_username: phy64ev1
+linkedin_username: wbpark14
+instagram_username: wbpark14
+facebook_username: wbpark14
+pinterest_username: wbpark14
+naverblog_username: wbpark14
+youtube_username: AIPenguinStudio
 
 # Build settings
 theme: minima
