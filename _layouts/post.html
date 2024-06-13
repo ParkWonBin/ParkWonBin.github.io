@@ -18,6 +18,10 @@ layout: default
   <div class="post-content e-content" itemprop="articleBody">
     {{ content }}
   </div>
+  
+  <!-- 커스텀 기능 추가 -->
+  {%- include util/urlMenuBtn.html -%}
+
 
   {%- if site.disqus.shortname -%}
     {%- include disqus_comments.html -%}
