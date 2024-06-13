@@ -1,0 +1,18 @@
+- title : qrcode
+  url : /dev_apps/qrcode
+  desc : QR코드 생성기입니다.
+  url_repo : ""
+  thumbnail : 
+
+- title : react001
+  url : /dev_apps/react001
+  desc : 리엑트 공부용, CRUD, URL로 data 내보내기
+  url_repo : ""
+  thumbnail : 
+
+- title : browserTest
+  url : /dev_apps/test001
+  desc : 브라우저 음성인식, 소리재생 테스트
+  url_repo : ""
+  thumbnail : 
+

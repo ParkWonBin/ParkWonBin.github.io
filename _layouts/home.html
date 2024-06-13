@@ -6,8 +6,13 @@ layout: default
   {%- if page.title -%}
     <h1 class="page-heading">{{ page.title }}</h1>
   {%- endif -%}
-
+  
   {{ content }}
+
+  <!-- 앱리스트 -->
+  {% include dataPage/nav_apps.html %}
+  {% include dataPage/nav_projs.html %}
+  
 
   {%- if site.posts.size > 0 -%}
     <h2 class="post-list-heading">{{ page.list_title | default: "Posts" }}</h2>

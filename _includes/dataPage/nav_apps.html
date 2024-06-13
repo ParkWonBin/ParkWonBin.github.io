@@ -1,0 +1,100 @@
+<h2> App 목록 </h2>
+{% assign navList = site.data.nav_apps %}
+
+<div class="card-container">
+  {% for item in navList %}
+  <div class="card">
+    {% if item.thumbnail %}
+    <div class="card-thumbnail">
+      <img src="{{ item.thumbnail }}" alt="{{ item.title }} thumbnail">
+    </div>
+    {% endif %}
+    <div class="card-content">
+      <h2 class="card-title">{{ item.title }}</h2>
+      <p class="card-desc">{{ item.desc }}</p>
+      <div class="card-links">
+        <a href="{{ item.url }}" class="card-link">Link</a>
+        {% if item.url_repo %}
+        | <a href="{{ item.url_repo }}" class="card-repo">Repository</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <p>No apps found.</p>
+  {% endfor %}
+
+</div>
+
+<style>
+  .card-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 10px;
+  }
+
+  .card {
+    display: flex;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    width: 100%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  @media (min-width: 600px) {
+    /* .card-container {
+      justify-content: center;
+    } */
+
+    .card {
+      width: 45%;
+
+    }
+  }
+
+  .card-thumbnail {
+    flex: 0 0 100px;
+    overflow: hidden;
+  }
+
+  .card-thumbnail img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+  }
+
+  .card-content {
+    padding: 16px;
+    flex: 1;
+  }
+
+  .card-title {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .card-desc {
+    margin: 0 0 16px;
+    font-size: 14px;
+    color: #555;
+  }
+
+  .card-links {
+    display: flex;
+    gap: 8px;
+  }
+
+  .card-link,
+  .card-repo {
+    text-decoration: none;
+    color: #007BFF;
+  }
+
+  .card-link:hover,
+  .card-repo:hover {
+    text-decoration: underline;
+  }
+</style>

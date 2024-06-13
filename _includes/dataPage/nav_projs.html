@@ -1,0 +1,26 @@
+<h2> Project 목록 </h2>
+{% assign navList = site.data.nav_projs %}
+
+<div class="card-container">
+  {% for item in navList %}
+  <div class="card">
+    {% if item.thumbnail %}
+    <div class="card-thumbnail">
+      <img src="{{ item.thumbnail }}" alt="{{ item.title }} thumbnail">
+    </div>
+    {% endif %}
+    <div class="card-content">
+      <h2 class="card-title">{{ item.title }}</h2>
+      <p class="card-desc">{{ item.desc }}</p>
+      <div class="card-links">
+        <a href="{{ item.url }}" class="card-link">Link</a>
+        {% if item.url_repo %}
+        | <a href="{{ item.url_repo }}" class="card-repo">Repository</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <p>No apps found.</p>
+  {% endfor %}
+</div>
