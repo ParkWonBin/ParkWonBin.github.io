@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenAI API Example</title>
+</head>
+<body>
+    <h1>OpenAI API Example</h1>
+    <pre>
+OpenAI의 Assistant API 기능을 테스트 해보기 위해 만든 페이지입니다.
+입력란에 값을 입력하고 버튼을 누르면 페이지 최하단에 응답결과가 표시됩니다.
+    </pre>
+    
+    <!-- API Key 입력 -->
+    <h2> 1.계정(API KEY) 연동</h2>
+    <label for="api-key">API Key:</label>
+    <input type="text" id="api-key" name="api-key">
+    <button id="set-api-key-button">(유사 로그인) KEY 설정</button>
+    <pre>
+OpenAI-API KEY를 입력하고 버튼을 누르면 해당 KEY로 요청 해더가 설정됩니다.
+API KEY를 입력한다는 건 해당 ID로 로그인 하는 것이라고 생각해도 무방하겠습니다.
+
+(1) 설정 : 
+    - openAI 계정에 결제 카드가 연결되어 있지 않으면 메시지가 생성 불가.
+    </pre>
+    <hr>
+    
+    <!-- Thread 등록 -->
+    <h2> 2.채팅방(Thread) 설정/생성</h2>
+    <label for="thread-id">Thread ID:</label>
+    <input type="text" id="thread-id" name="thread-id">
+    <button id="set-thread-button">(유사 체팅방) 생성/설정</button>
+    <pre>
+OpenAI의 Assistant API 에서 Thread는 대화방이라고 생각하시면 됩니다. 
+
+(1) 생성 : 
+    - 입력란을 비워두고 [생성/설정]을 클릭하면 대화방(Thread)이 생성됩니다.
+    - 생성된 대화방의 ID는 위의 ID 입력란에 표시됩니다.
+(2) 설정 : 
+    - 채팅방(Thread)의 id를 입력하고 [생성/설정]버튼을 클릭합니다.
+    </pre>
+    <hr>
+    
+    <!-- Assistant 등록 -->
+    <h2> 3. 챗봇(Assistant) 설정</h2>
+    <label for="assistant-id">Assistant ID:</label>
+    <input type="text" id="assistant-id" name="assistant-id">
+    <button id="set-assistant-button">(유사 챗봇) 설정</button>
+    <pre>
+위에서 적용한 채팅방에서 대화할 챗봇(Assistant)를 설정합니다. 
+챗봇(Assistant)는 계정(API-KEY에 연결된 OpenAI 계정)마다 따로 관리됩니다.
+따라서 다른 계정으로 Assistant를 선택할 수 없습니다. 
+    </pre>    
+    <button id="show-assistant-list">계정에 연결된 챗봇(Assistant) 모두 보기</button>
+    <hr>
+
+    <!-- Assistant 생성 혹은 수정 -->
+    <h2> 3. 챗봇(Assistant) 생성/수정</h2>
+    <label for="assistant-id2">Assistant ID:</label>
+    <input type="text" id="assistant-id2" name="assistant-id2"><br>
+    <pre>
+(1) 생성 : 
+    - ID 입력란은 비워두고, 아래 GPT 모델과 '지시사항'을 입력합니다.
+    - [저장] 버튼을 누르면 챗봇이 생성되고, 생성된 ID는 ID 입력란에 표시됩니다.
+(2) 수정 : 
+    - ID 입력란에 챗봇의 ID를 입력하고, 아래 GPT 모델과 '지시사항'을 수정합니다.
+    - [저장] 버튼을 누르면 챗봇의 설정값이 수정됩니다.
+    </pre>    
+
+    <label for="model">Model 선택:</label>
+    <select id="model" name="model">
+        <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+        <option value="gpt-4">gpt-4</option>
+        <option value="gpt-4-1106-preview">gpt-4-1106-preview</option>
+        <!-- 추가 모델 옵션들을 여기에 추가할 수 있습니다 -->
+    </select><br><br>
+    <label for="instructions">챗봇 지시사항 :</label><br>
+    <textarea id="instructions" name="instructions" rows="4" cols="50"></textarea><br>
+    <button id="update-assistant-button">챗봇(Assistant) 설정값 저장</button>
+    <hr>
+    
+    <!-- 메시지 전송 -->
+    <h2> 4. 채팅 주고 받기</h2>
+    <pre>
+위에서 설정한 채팅방(Thread)에서 설정된 챗봇(Assistant)와 대화를 합니다. 
+물어보고 싶은 내용을 아래의 입력창에 입력하고 [메시지 전송] 버튼을 클릭합니다.
+* 챗봇은 바로 응답하는 않고 [챗봇 응답 생성]버튼을 눌러야 응답이 생성됩니다. 
+* 주고받은 메시지를 확인하고 싶은 경우 [채팅내역 확인]버튼을 누릅니다.
+    </pre>
+    <label for="user-message">Ask to GPT:</label><br>
+    <textarea id="user-message" name="user-message" rows="4" cols="50"></textarea><br>
+    <button id="send-message-button">메시지 전송</button>
+    <button id="run-assistant-button">챗봇 응답 생성</button>
+    <button id="show-message-list-button">채팅내역 확인</button>
+    <hr>
+
+    <!-- 메시지 표시 -->
+    <pre id="response"></pre>
+
+    <script>
+        let apiKey = '';
+
+        document.getElementById('set-api-key-button').addEventListener('click', () => {
+            apiKey = document.getElementById('api-key').value.trim();
+            alert('API Key set!');
+        });
+
+        
+        document.getElementById('set-thread-button').addEventListener('click', async () => {
+            const threadId = document.getElementById('thread-id').value.trim();
+            const responseElement = document.getElementById('response');
+            
+            try {
+                let response = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json',
+                        'OpenAI-Beta': 'assistants=v2'
+                    }
+                });
+
+                if (response.status === 404) {
+                    response = await fetch('https://api.openai.com/v1/threads', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${apiKey}`,
+                            'Content-Type': 'application/json',
+                            'OpenAI-Beta': 'assistants=v2'
+                        }
+                    });
+
+                    const data = await response.json();
+                    document.getElementById('thread-id').value = data.id;
+                    responseElement.textContent = 'New thread created. ID: ' + data.id;
+                } else {
+                    const data = await response.json();
+                    responseElement.textContent = JSON.stringify(data, null, 4);
+                }
+            } catch (error) {
+                responseElement.textContent = `Error: ${error.message}`;
+            }
+        });
+
+        document.getElementById('show-assistant-list').addEventListener('click', async () => {
+            const responseElement = document.getElementById('response');
+
+            try {
+                const response = await fetch(`https://api.openai.com/v1/assistants`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json',
+                        'OpenAI-Beta': 'assistants=v2'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorDetails = await response.json();
+                    throw new Error(`Error fetching assistants! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
+                }
+
+                const data = await response.json();
+                responseElement.textContent = JSON.stringify(data, null, 4);
+            } catch (error) {
+                responseElement.textContent = `Error: ${error.message}`;
+            }
+        });
+
+        document.getElementById('set-assistant-button').addEventListener('click', async () => {
+            const assistantId = document.getElementById('assistant-id').value.trim();
+            const responseElement = document.getElementById('response');
+
+            try {
+                const response = await fetch(`https://api.openai.com/v1/assistants/${assistantId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json',
+                        'OpenAI-Beta': 'assistants=v2'
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        responseElement.textContent = 'Assistant does not exist.';
+                    } else {
+                        const errorDetails = await response.json();
+                        throw new Error(`Error checking assistant! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
+                    }
+                } else {
+                    const data = await response.json();
+                    responseElement.textContent = JSON.stringify(data, null, 4);
+                }
+            } catch (error) {
+                responseElement.textContent = `Error: ${error.message}`;
+            }
+        });
+
+        document.getElementById('update-assistant-button').addEventListener('click', async () => {
+            const assistantId = document.getElementById('assistant-id2').value.trim();
+            const instructions = document.getElementById('instructions').value.trim();
+            const model = document.getElementById('model').value.trim();
+            const responseElement = document.getElementById('response');
+
+            try {
+                let response = await fetch(`https://api.openai.com/v1/assistants`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json',
+                        'OpenAI-Beta': 'assistants=v2'
+                    },
+                    body: JSON.stringify({
+                        name: assistantId,
+                        instructions: instructions,
+                        model: model
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorDetails = await response.json();
+                    throw new Error(`Error updating assistant! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
+                }
+
+                const data = await response.json();
+                document.getElementById('assistant-id2').value = data.id;
+                responseElement.textContent = JSON.stringify(data, null, 4);
+            } catch (error) {
+                responseElement.textContent = `Error: ${error.message}`;
+            }
+        });
+
+        document.getElementById('run-assistant-button').addEventListener('click', async () => {
+            const threadId = document.getElementById('thread-id').value.trim();
+            const assistantId = document.getElementById('assistant-id').value.trim();
+            const instructions = document.getElementById('instructions').value.trim();
+            const responseElement = document.getElementById('response');
+
+            try {
+                // 어시스턴트를 실행하는 fetch 요청
+                const response = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json',
+                        'OpenAI-Beta': 'assistants=v2'
+                    },
+                    body: JSON.stringify({
+                        assistant_id: assistantId,
+                        instructions: instructions
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorDetails = await response.json();
+                    throw new Error(`Error running assistant! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
+                }
+              
+
+                const data = await response.json();
+                responseElement.textContent = JSON.stringify(data, null, 4);
+
+                const runId = data.id;
+
+                // 주기적으로 상태를 확인하는 함수
+                const checkRunStatus = async () => {
+                    try {
+                        const statusResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs/${runId}`, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${apiKey}`,
+                                'Content-Type': 'application/json',
+                                'OpenAI-Beta': 'assistants=v2'
+                            }
+                        });
+
+                        if (!statusResponse.ok) {
+                            const errorDetails = await statusResponse.json();
+                            throw new Error(`Error checking run status! status: ${statusResponse.status}, details: ${JSON.stringify(errorDetails)}`);
+                        }
+
+                        const statusData = await statusResponse.json();
+
+                        if (statusData.status === 'completed') {
+                            clearInterval(intervalId); // 상태 체크 중지
+
+                            // 메시지 목록 갱신을 위한 fetch 요청
+                            const messageResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': `Bearer ${apiKey}`,
+                                    'Content-Type': 'application/json',
+                                    'OpenAI-Beta': 'assistants=v2'
+                                }
+                            });
+
+                            if (!messageResponse.ok) {
+                                const errorDetails = await messageResponse.json();
+                                throw new Error(`Error fetching messages! status: ${messageResponse.status}, details: ${JSON.stringify(errorDetails)}`);
+                            }
+
+                            const messageData = await messageResponse.json();
+                            responseElement.textContent = JSON.stringify(messageData, null, 4);
+                        }
+                    } catch (error) {
+                        clearInterval(intervalId); // 상태 체크 중지
+                        responseElement.textContent = `Error: ${error.message}`;
+                    }
+                };
+
+                // 0.5초마다 상태를 확인
+                const intervalId = setInterval(checkRunStatus, 1000);
+            } catch (error) {
+                responseElement.textContent = `Error: ${error.message}`;
+            }
+        });
+
+
+
+        
+        document.getElementById('show-message-list-button').addEventListener('click', async () => {
+            const threadId = document.getElementById('thread-id').value.trim();
+            const responseElement = document.getElementById('response');
+
+            try {
+                const response = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json',
+                        'OpenAI-Beta': 'assistants=v2'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorDetails = await response.json();
+                    throw new Error(`Error fetching messages! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
+                }
+
+                const data = await response.json();
+                responseElement.textContent = JSON.stringify(data, null, 4);
+            } catch (error) {
+                responseElement.textContent = `Error: ${error.message}`;
+            }
+        });
+
+        document.getElementById('send-message-button').addEventListener('click', async () => {
+            const threadId = document.getElementById('thread-id').value.trim();
+            const userMessage = document.getElementById('user-message').value.trim();
+            const responseElement = document.getElementById('response');
+
+            try {
+                const response = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json',
+                        'OpenAI-Beta': 'assistants=v2'
+                    },
+                    body: JSON.stringify({
+                        role: "user",
+                        content: userMessage
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorDetails = await response.json();
+                    throw new Error(`Error sending message! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
+                }
+
+                const data = await response.json();
+                responseElement.textContent = JSON.stringify(data, null, 4);
+            } catch (error) {
+                responseElement.textContent = `Error: ${error.message}`;
+            }
+        });
+
+    </script>
+</body>
+</html>
