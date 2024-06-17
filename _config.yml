@@ -2,7 +2,7 @@ title: wbpark Dev Blog
 author: wbpark
 email: pwb1128@gmail.com
 
-description: >- # this means to ignore newlines until "baseurl:"
+description: >- 
   기술블로그 제작중..
 
 permalink: pretty
@@ -20,7 +20,9 @@ naverblog_username: wbpark14
 youtube_username: AIPenguinStudio
 
 # Build settings
-theme: minima
+# theme: minima
+# minima 2.5.1 그대로 복사해서 필요 없음.
+
 plugins:
   - jekyll-feed
   - jekyll-paginate
