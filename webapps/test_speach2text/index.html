@@ -1,0 +1,65 @@
+---
+layout: dev_apps
+---
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>음성 인식 테스트</title>
+</head>
+<body>
+<button id="start-btn">녹음 시작</button>
+<button id="stop-btn" disabled>녹음 중지</button>
+<p id="text"></p>
+
+<script>
+// SpeechRecognition 객체 생성
+var recognition = new window.webkitSpeechRecognition || window.SpeechRecognition();
+
+// 연속적인 결과를 반환하도록 설정
+recognition.continuous = true;
+
+// 사용자의 언어 설정
+recognition.lang = 'ko-KR';
+
+// 음성 인식 시작 버튼 이벤트
+document.getElementById('start-btn').onclick = function() {
+    recognition.start();
+};
+
+// 음성 인식 중지 버튼 이벤트
+document.getElementById('stop-btn').onclick = function() {
+    recognition.stop();
+};
+
+// 음성 인식 시작 이벤트 핸들러
+recognition.onstart = function() {
+    document.getElementById('start-btn').disabled = true;
+    document.getElementById('stop-btn').disabled = false;
+    console.log("음성 인식이 시작되었습니다.");
+};
+
+// 음성 인식 결과 이벤트 핸들러
+recognition.onresult = function(event) {
+    var transcript = '';
+    for (var i = event.resultIndex; i < event.results.length; ++i) {
+        transcript += event.results[i][0].transcript;
+    }
+    document.getElementById('text').textContent = transcript;
+};
+
+// 음성 인식 에러 이벤트 핸들러
+recognition.onerror = function(event) {
+    console.error("음성 인식 에러 발생:", event.error);
+};
+
+// 음성 인식 서비스 종료 이벤트 핸들러
+recognition.onend = function() {
+    document.getElementById('start-btn').disabled = false;
+    document.getElementById('stop-btn').disabled = true;
+    console.log("음성 인식 서비스가 종료되었습니다.");
+};
+</script>
+</body>
+</html>

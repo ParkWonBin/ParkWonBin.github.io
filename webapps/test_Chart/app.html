@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko-kr">
+<head>
+    <title>상위 5위 공지사항 조회수</title>
+    <meta charset="UTF-8">
+       </head>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div style="width:40%; margin:auto;">
+    <canvas id="salesChart"></canvas>
+</div>
+
+<script>
+    // 5개의 인기상품 정의
+    let bulletinNum= ['게시글15','게시글32','게시글34','게시글14','게시글37'];
+    // 각 상품에 대한 색상 정의
+    const colors = ['rgba(168,180,255,0.73)', 'rgba(246,89,125,0.48)', 'rgba(255,206,93,0.6)', 'rgba(109,199,255,0.47)', 'rgba(153, 102, 255, 0.2)'];
+
+    // 초기 판매량 데이터 생성
+    const initialData = bulletinNum.map(() => Math.floor(Math.random() * 10));
+
+    // Chart.js를 사용하여 차트 생성
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    const salesChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: bulletinNum,
+            datasets: [{
+                label: '누적 조회수',
+                data:  initialData,
+                backgroundColor: colors,
+                borderColor: 'gray',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+
+    function updateData() {
+        // 이전 데이터 가져오기
+        const previousData = salesChart.data.datasets[0].data;
+
+        // 새로운 데이터 생성 및 누적
+        const newData = previousData.map(value => value + Math.floor(Math.random() * 3));
+
+        // 차트에 새로운 데이터 설정
+        salesChart.data.datasets[0].data = newData;
+
+        // 차트 업데이트
+        salesChart.update();}
+
+    // 2초마다 데이터 업데이트
+    setInterval(updateData, 3000);
+</script>
+
+<!-- 게시판 머리말 영역 -->
+<div class="head">
+</div>
+
+<!-- 게시글 표시 영역 -->
+
+
+</body>
+</html>

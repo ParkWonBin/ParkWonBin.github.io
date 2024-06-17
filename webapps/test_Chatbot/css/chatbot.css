@@ -1,0 +1,17 @@
+#chat-container {
+    width: 300px;
+    margin: 20px auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+    height: 300px;
+    overflow-y: scroll;
+}
+#input-container {
+    width: 300px;
+    margin: 10px auto;
+    display: flex;
+    flex-direction: column;
+}
+#user-input {
+    margin-bottom: 5px;
+}

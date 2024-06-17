@@ -1,33 +1,4 @@
-<h2> App 목록 </h2>
-{% assign navList = site.data.nav_apps %}
-
-<div class="card-container">
-  {% for item in navList %}
-  <div class="card">
-    {% if item.thumbnail %}
-    <div class="card-thumbnail">
-      <img src="{{ item.thumbnail }}" alt="{{ item.title }} thumbnail">
-    </div>
-    {% endif %}
-    <div class="card-content">
-      <h3 class="card-title">{{ item.title }}</h3>
-      <p class="card-desc">{{ item.desc }}</p>
-      <div class="card-links">
-        <a href="{{ item.url }}" class="card-link">Link</a>
-        {% if item.repo %}
-        | <a href="{{ item.repo }}" class="card-repo">code</a>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-  {% else %}
-  <p>No apps found.</p>
-  {% endfor %}
-
-</div>
-
-<style>
-  .card-container {
+.card-container {
     display: flex;
     flex-wrap: wrap;
     gap: 16px;
@@ -70,7 +41,7 @@
     flex: 1;
   }
 
-  .card-title {
+  h3.card-title {
     margin: 0 0 8px;
     font-size: 18px;
     font-weight: bold;
@@ -97,4 +68,3 @@
   .card-repo:hover {
     text-decoration: underline;
   }
-</style>

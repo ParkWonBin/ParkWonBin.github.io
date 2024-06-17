@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko-kr">
+<head>
+    <meta charset="UTF-8">
+    <title>AICC2 MAP</title>
+    <link rel="stylesheet" href="./css/map.css">
+    <link rel="stylesheet" href="./css/dragdrop.css">
+    <script src="./js/map_request_CreateHotSpot.js"></script>
+    <script src="./js/map_request_DeleteHotSpot.js"></script>
+    <script src="./js/map_request_UpdateHotSpot.js"></script>
+    <script src="./js/map_ui_initSetting.js"></script>
+    <script src="./js/map_util_CreateElement.js"></script>
+    <script src="./js/map_util_ClickTopElement.js"></script>
+    <script src="./js/map_util_drag.js"></script>
+    <script src="./js/map_util_drop.js"></script>
+</head>
+<body>
+<!--<button id="btn_addHotSpot">장소추가</button>-->
+<!--지역에 따른-->
+<div id="MapContainer" class="drop-area">
+    <div class="draggable" style="top:10vh;left:10vw">
+        <img src="./images/upload/image1.jpg" data-id="1">
+    </div>
+    <div class="draggable" style="top:30vh;left:30vw">
+        <img src="./images/upload/image2.jpg" data-id="2">
+    </div>
+    <div class="draggable" style="top:50vh;left:50vw">
+        <img src="./images/upload/image3.jpg" data-id="3">
+    </div>
+</div>
+
+</body>
+</html>

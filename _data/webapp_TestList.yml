@@ -1,0 +1,34 @@
+- title : 브라우저 API - STT
+  url : /webapps/test_speach2text
+  repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/test_speach2text/index.html
+  thumbnail : 
+  type : test
+  desc : 음성인식 브라우저 API 사용 연습
+
+- title : 쳇봇 대본 연습
+  url : /webapps/test_Chatbot
+  repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/test_Chatbot/index.html
+  thumbnail : 
+  type : test
+  desc : 대본 넣어서 만드는 쳇봇, 대본관리 연습
+
+- title : 모바일 모션 데이터 받아오기 연습
+  url : /webapps/test_getData_Motion
+  repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/test_getData_Motion/index.html
+  thumbnail : 
+  type : test
+  desc : 모바일에서 받아올 수 있는 데이터 확인
+
+- title : 모바일 GPS 정보 받아오기
+  url : /webapps/test_getData_GPS
+  repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/test_getData_GPS/index.html
+  thumbnail : 
+  type : test
+  desc : 모바일 GPS 정보 받아오기 예시
+
+- title : 차트 그려서 업데이트 해보기
+  url : /webapps/test_Chart
+  repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/test_Chart/index.html
+  thumbnail : 
+  type : test
+  desc : 차트 그리고 움직여보기 예시

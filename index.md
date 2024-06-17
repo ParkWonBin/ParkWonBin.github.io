@@ -6,10 +6,13 @@
 # See: https://jekyllrb.com/docs/themes/#overriding-theme-defaults
 #
 layout: home
+custom_css: /assets/webapp_card.css
 ---
 
-{% include dataPage/nav_apps.html %}
-{% include dataPage/nav_projs.html %}
+<!-- {% include dataPage/webapp_App.html %} -->
+{% include dataPage/webapp_Demo.html %}
+{% include dataPage/webapp_Proj.html %}
+{% include dataPage/webapp_Test.html %}
 
 
 {%- if site.posts.size > 0 -%}

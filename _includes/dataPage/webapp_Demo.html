@@ -1,0 +1,28 @@
+<h2> Demo Pages </h2>
+{% assign cardList = site.data.webapp_DemoList %}
+
+<div class="card-container">
+  {% for item in cardList %}
+  <div class="card">
+    {% if item.thumbnail %}
+    <div class="card-thumbnail">
+      <img src="{{ item.thumbnail }}" alt="{{ item.title }} thumbnail">
+    </div>
+    {% endif %}
+    <div class="card-content">
+      <h3 class="card-title">{{ item.title }}</h3>
+      <p class="card-desc">{{ item.desc }}</p>
+      <div class="card-links">
+        <a href="{{ item.url }}" class="card-link">링크</a>
+        | <a href="{{ item.url }}/app.html" class="card-link">이동</a>
+        {% if item.repo %}
+        | <a href="{{ item.repo }}" class="card-repo">소스코드</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <p>No apps found.</p>
+  {% endfor %}
+
+</div>

@@ -1,0 +1,28 @@
+# Demo
+- title : OpenAI API - Assistant
+  url : /webapps/demo_GPT001
+  repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/demo_GPT001/index.html
+  thumbnail : 
+  type : demo
+  desc : GPT Assistant API 테스트용 페이지입니다.
+
+- title : qrcode
+  url : /webapps/demo_qrcode
+  repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/demo_qrcode/index.html
+  thumbnail :
+  type : demo 
+  desc : QR코드 생성기입니다.
+
+- title : react blog 테스트 (목록 CRUD)
+  url : /webapps/demo_react001
+  repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/demo_react001/index.html
+  thumbnail :
+  type : demo 
+  desc : 목록 CRUD, URL에 data 넣어 내보내기
+
+- title : image map (이미지 CURD)
+  url : /webapps/demo_Image_CURD
+  repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/demo_Image_CURD/index.html
+  thumbnail :
+  type : demo 
+  desc : 이미지 이동(드래그, 터치) 및 업로드(파일, 드롭다운) 이미지 CURD

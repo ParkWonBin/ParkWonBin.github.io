@@ -1,0 +1,86 @@
+---
+layout: dev_apps
+---
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Adjustable GPS Location Tracker with Speed in m/s</title>
+</head>
+<body>
+    <h2>현재 당신의 위치 정보</h2>
+    <div>위도: <span id="latitude"></span></div>
+    <div>경도: <span id="longitude"></span></div>
+    <div>정확도: <span id="accuracy"></span></div>
+    <div>현재 상태: <span id="trackingState">추적 멈춤</span></div>
+    <div>초당 이동 속도: <span id="speed">0</span> m/s</div>
+    <div>
+        추적 간격(밀리초): <input type="number" id="updateInterval" value="500" min="100" step="100">
+        <button id="toggleUpdate">위치 정보 업데이트 토글</button>
+    </div>
+
+    <script>
+        let isUpdating = false;
+        let updateInterval;
+        let lastPosition = null;
+        let lastUpdateTime = Date.now();
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            function toRad(x) {
+                return x * Math.PI / 180;
+            }
+
+            var R = 6371e3; // 지구의 반지름(m)
+            var dLat = toRad(lat2-lat1);
+            var dLon = toRad(lon2-lon1);
+            if (dLat === 0 && dLon ===0 ){return 0}
+
+
+            var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            var d = R * c;
+            return d; // meters
+        }
+
+        function updateLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const now = Date.now();
+                    const currentLatitude = position.coords.latitude;
+                    const currentLongitude = position.coords.longitude;
+                    document.getElementById('latitude').textContent = currentLatitude;
+                    document.getElementById('longitude').textContent = currentLongitude;
+                    document.getElementById('accuracy').textContent = position.coords.accuracy + 'm';
+
+                    if (lastPosition) {
+                        const distance = calculateDistance(lastPosition.latitude, lastPosition.longitude, currentLatitude, currentLongitude);
+                        const timeElapsed = (now - lastUpdateTime) / 1000; // 초 단위로 변환
+                        const speed = distance / timeElapsed; // m/s
+                        document.getElementById('speed').textContent = speed.toFixed(2);
+                    }
+
+                    lastPosition = {latitude: currentLatitude, longitude: currentLongitude};
+                    lastUpdateTime = now;
+                }, function(error) {
+                    console.error("Error Code = " + error.code + " - " + error.message);
+                });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        document.getElementById('toggleUpdate').addEventListener('click', function() {
+            const intervalSeconds = parseInt(document.getElementById('updateInterval').value, 10) ;
+            if (isUpdating) {
+                clearInterval(updateInterval);
+                document.getElementById('trackingState').textContent = '추적 멈춤';
+            } else {
+                updateInterval = setInterval(updateLocation, intervalSeconds);
+                document.getElementById('trackingState').textContent = '추적중';
+            }
+            isUpdating = !isUpdating;
+        });
+    </script>
+</body>
+</html>
