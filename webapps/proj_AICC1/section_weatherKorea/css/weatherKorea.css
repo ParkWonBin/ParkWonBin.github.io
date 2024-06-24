@@ -1,0 +1,45 @@
+#weatherKorea{
+    width: 365px;
+    height: 510px;
+    overflow: hidden;
+}
+#weatherKorea img{
+    width: 100%;
+}
+
+#weatherKorea #weatherTitle{
+    display: flex;
+    height: 75px;
+}
+#weatherKorea #weatherTitle > button {
+    width: 100%;
+    background-color: #fdfdfd;
+    border: none;
+    font-weight: bold;
+    font-size: 24px;
+}
+
+#weatherKorea #weatherTitle > button.active {
+    background-color: #54aff7;
+    color: white;
+}
+
+#weatherKorea #weather_ImgContainer{
+    position: relative;
+    display: flex;
+}
+#weatherKorea #weather_ImgContainer > button{
+    position: absolute;
+    top:2%;
+    padding: 25px 30px;
+    z-index: 2;
+    opacity: 0.01;
+}
+
+#weatherKorea #weather_AM {
+    left: 0.5%;
+}
+
+#weatherKorea #weather_PM{
+    left : 15%
+}

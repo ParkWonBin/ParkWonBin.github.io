@@ -1,0 +1,112 @@
+#chatbotGPT {
+    width: 500px;
+    position: fixed;
+    bottom:20px;
+    right: 20px;
+    z-index: 4;
+    border: 5px solid yellow;
+
+    display: flex;
+    flex-direction: column;
+    height: 600px;
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+#chatbotGPT #chatGPTClose{
+    width: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background:rgb(0,0,0,0);
+    padding: 0 30px;
+    border: none;
+    font-size: 30px;
+    font-weight: bold;
+    position: absolute;
+    top:10px;
+    right: 0px;
+    color: white;
+}
+
+#chatbotGPT #chatGPT-title {
+    display: flex;
+    flex-direction: column;
+    background-color: #715253;
+    color: white;
+    font-weight: bold;
+    padding: 10px 15px;
+}
+#chatbotGPT #chatGPT-title>*{
+    flex: 1;
+    margin: 5px 0px;
+}
+#chatbotGPT #chatGPT-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column; /* 요소들을 세로 방향으로 쌓음 */
+    padding: 10px;
+    overflow-y: auto;
+    background-color: #b5cad7;
+}
+#chatbotGPT #chatGPT_NewMessageContainer {
+    display: flex;
+}
+#chatbotGPT  #API_KEY {
+    display: flex;
+    padding: 5px 10px;
+    /*width: fit-content;*/
+}
+#chatbotGPT #chatGPT_NewMessage {
+    flex: 1;
+    padding: 10px;
+    resize: none;
+}
+#chatbotGPT button {
+    padding: 10px 20px;
+}
+#chatbotGPT .message{
+    align-items: flex-start; /* 기본적으로 왼쪽 정렬 */
+    width: fit-content;
+    max-width: 80%;
+    font-weight: bold;
+    border-radius: 8px; /* 테두리 둥글게 */
+    padding: 15px;
+    margin: 5px;
+}
+#chatbotGPT .user{
+    background-color: #ffff00;
+    align-self: flex-end; /* 오른쪽 정렬 */
+    text-align: right; /* 텍스트 오른쪽 */
+}
+#chatbotGPT .assistant{
+    background-color: white;
+}
+/*****************/
+#chatbotGPT_IconContainer {
+    z-index: 1;
+    position: fixed;
+    bottom:100px;
+    right: 100px;
+
+    width: 10px;
+    height: 10px;
+    cursor: pointer;
+    background-color: #ffff00;
+    padding: 15px;
+    border: 3px solid #715253;
+    border-radius: 50%;
+    color: #715253;
+
+    font-size: 13px;
+    font-weight: bolder;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+#chatbotGPT_IconContainer:hover {
+    background-color: #00ffe7;
+}

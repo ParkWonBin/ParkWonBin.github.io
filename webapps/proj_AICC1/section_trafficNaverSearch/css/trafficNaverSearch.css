@@ -1,0 +1,39 @@
+#traffic_pathFinder{
+    width: 580px;
+    display: flex;
+    padding: 10px;
+    flex-direction: column;
+    background-color: #ededee;
+    /*border-radius: 15px;*/
+
+}
+#traffic_inputContainer{
+    display: flex;
+    flex-direction: row;
+}
+#traffic_inputContainer > * {
+    flex-grow: 1;
+    padding: 5px;
+}
+#traffic_start{
+    height: 50px;
+    font-weight: bold;
+    font-size: 23px;
+}
+
+#traffic_end{
+    height: 50px;
+    font-weight: bold;
+    font-size: 23px;
+}
+#traffic_pathFinder_result{
+    border: 1px solid #757575;
+    height: 50px;
+    background-color: white;
+    text-align: center;
+    margin-top: 5px;
+    padding: 5px 5px 10px 5px;
+    font-weight: bold;
+    font-size: 23px;
+    line-height: 52px;
+}
