@@ -1,0 +1,43 @@
+---
+layout: dev_apps
+---
+<!DOCTYPE html>
+<html lang="ko-kr">
+<head>
+    <meta charset="UTF-8">
+    <title>AICC2 MAP</title>
+    <link rel="stylesheet" href="./css/map.css">
+    <link rel="stylesheet" href="./css/dragdrop.css">
+    <script src="./js/map_request_CreateHotSpot.js"></script>
+    <script src="./js/map_request_DeleteHotSpot.js"></script>
+    <script src="./js/map_request_UpdateHotSpot.js"></script>
+    <script src="./js/map_ui_initSetting.js"></script>
+    <script src="./js/map_util_CreateElement.js"></script>
+    <script src="./js/map_util_ClickTopElement.js"></script>
+    <script src="./js/map_util_drag.js"></script>
+    <script src="./js/map_util_drop.js"></script>
+</head>
+<body>
+<!--  챗봇 표시 -->
+<a id="form_chatbot" href="../chatbot" target="_blank" style="position:absolute;right:3vw;bottom:3vh;z-index:3;text-decoration:none;color:#715253;background-color:#ffff00;padding:7px;border:3px solid #715253;border-radius:25%;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="currentColor" class="bi bi-chat-text-fill"
+         id=chat-bot viewBox="0 0 16 16">
+        <path d="M16 8c0 3.866-3.582 7-8 7a9 9 0 0 1-2.347-.306c-.584.296-1.925.864-4.181 1.234-.2.032-.352-.176-.273-.362.354-.836.674-1.95.77-2.966C.744 11.37 0 9.76 0 8c0-3.866 3.582-7 8-7s8 3.134 8 7M4.5 5a.5.5 0 0 0 0 1h7a.5.5 0 0 0 0-1zm0 2.5a.5.5 0 0 0 0 1h7a.5.5 0 0 0 0-1zm0 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1z"/>
+    </svg>
+</a>
+
+<!--이미지 표시 예시 -->
+<div id="MapContainer" class="drop-area">
+    <div class="draggable" style="top:10vh;left:10vw">
+        <img src="./images/upload/image1.jpg" data-id="1">
+    </div>
+    <div class="draggable" style="top:30vh;left:30vw">
+        <img src="./images/upload/image2.jpg" data-id="2">
+    </div>
+    <div class="draggable" style="top:50vh;left:50vw">
+        <img src="./images/upload/image3.jpg" data-id="3">
+    </div>
+</div>
+
+</body>
+</html>
