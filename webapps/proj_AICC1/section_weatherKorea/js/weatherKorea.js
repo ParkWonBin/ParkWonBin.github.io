@@ -12,9 +12,14 @@ function weather_DaySelected(selectedDay,dateName){
     weather_setImageSrc(weather_DAY,weather_time)
 }
 
-function weather_TimeSelected(timeName){
-    weather_time = timeName
-    weather_setImageSrc(weather_DAY,weather_time)
+function weather_TimeToggle(){
+    // 이미지 클릭 토글로 바꿈.
+    if (weather_time === '오전') {
+        weather_time = '오후';
+    } else {
+        weather_time = '오전';
+    }
+    weather_setImageSrc(weather_DAY, weather_time);
 }
 function weather_setImageSrc(day,time){
     // day : 월화수목금토일
@@ -43,10 +48,7 @@ function CreateweatherKorea(){
     weatherTitle.append($(`<button id="weather_Fri" onclick="weather_DaySelected('weather_Fri','금')"> 금 </button>`))
     weatherTitle.append($(`<button id="weather_Sat" onclick="weather_DaySelected('weather_Sat','토')"> 토 </button>`))
     weatherTitle.append($(`<button id="weather_Sun" onclick="weather_DaySelected('weather_Sun','일')"> 일 </button>`))
-
-    weatherImgContainer.append($(`<button id="weather_AM" onclick="weather_TimeSelected('오전')">오전</button>`))
-    weatherImgContainer.append($(`<button id="weather_PM" onclick="weather_TimeSelected('오후')">오후</button><br>`))
-    weatherImgContainer.append($(`<img id="weather_koreaImg" src="src/전국날씨_월_오전.jpg" >`))
+    weatherImgContainer.append($(`<img id="weather_koreaImg" onclick="weather_TimeToggle()" src="src/전국날씨_월_오전.jpg" >`))
 
 }
 

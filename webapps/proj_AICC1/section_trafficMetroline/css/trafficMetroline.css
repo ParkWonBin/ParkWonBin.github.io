@@ -1,47 +1,50 @@
-#trafficMetroline{
-    width: 600px;
-    height: 370px;
+#trafficMetroline {
     display: flex;
     flex-direction: column;
-    /*border: 2px solid green;*/
+    width: calc(max(100%,33vw)); /* 기본 너비 설정 */
+    height: 360px; /* 기본 높이 설정 */
+    max-width: 100%;
+    position: relative;
 }
-#trafficMetroline #trafficMatroline_BtnContainer{
+
+#trafficMetroline #trafficMatroline_BtnContainer {
     display: flex;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
 }
-#trafficMetroline #trafficMatroline_BtnContainer button{
+
+#trafficMetroline #trafficMatroline_BtnContainer button {
     flex-grow: 1;
     padding: 10px;
-
 }
-#trafficMetroline #traffic_gallery_wrap{
+
+#trafficMetroline #traffic_gallery_wrap {
+    position: absolute;
     overflow: hidden;
+    width: 100%;
 }
 
-#trafficMetroline #traffic_slide_gallery{
+#trafficMetroline #traffic_slide_gallery {
     display: flex;
-    width: 5400px;
-}
-#trafficMetroline .traffic_slide_gallery_Image{
-    display: inline-block;
-    width: 600px;
-    height: 325px;
+    transition: margin-left 0.3s;
 }
 
-#trafficMetroline  #backbtn {
-        background-size: contain;
-}
-#trafficMetroline  #nextbtn {
-    background-size: contain;
+#trafficMetroline .traffic_slide_gallery_Image {
+    
+    /* display: inline-block; */
+    width: 600px; /* 이미지 너비 고정 */
+    height: 350px; /* 이미지 높이 고정 */
 }
 
-#trafficMetroline #trafficMatroline_BtnContainer *{
+#trafficMetroline #trafficMatroline_BtnContainer * {
     font-weight: bold;
     font-size: 25px;
 }
-#trafficMetroline #traffic_playToggle.BigChar{
-    font-size: 35px;
-    overflow: hidden;  /* 내용이 버튼 크기를 초과할 경우 숨김 처리 */
-    text-align: center; /* 글자를 버튼 중앙에 위치 */
-    line-height: 0; /* 글자를 버튼 중앙에 정렬 (세로) */
 
+#trafficMetroline #traffic_playToggle.BigChar {
+    font-size: 35px;
+    overflow: hidden;
+    text-align: center;
+    line-height: 0;
 }

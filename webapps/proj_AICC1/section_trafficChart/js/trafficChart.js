@@ -1,79 +1,36 @@
 const chart_percentageChanges = [[], [], [], [], [], [], [], [], [], []];
 let percentageChart;
 
+const labels = [
+    '1호선 혼잡율', '2호선 혼잡율', '3호선 혼잡율', '4호선 혼잡율',
+    '5호선 혼잡율', '6호선 혼잡율', '7호선 혼잡율', '8호선 혼잡율', '9호선 혼잡율'
+];
+
+const colors = [
+    'rgb(0,82,164)', 'rgb(0,168,77)', 'rgb(239,124,28)', 'rgb(0,164,227)',
+    'rgb(153,108,172)', 'rgb(205,124,239)', 'rgb(116,127,0)', 'rgb(230,24,108)', 'rgb(189,176,146)'
+];
+
 
 function InitTrafficChart() {
     const ctx = document.getElementById('percentageChart').getContext('2d');
+    const datasets = labels.map((label, index) => ({
+        label: label,
+        borderColor: colors[index],
+        borderWidth: 4,
+        fill: false,
+        data: chart_percentageChanges[index]
+    }));
+
     percentageChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: Array.from({length: 10}, (_, i) => ''),
-            datasets: [
-                {
-                    label: '1호선 혼잡율',
-                    borderColor: 'rgb(0,82,164)',
-                    borderWidth: 4,
-                    fill: false,
-                    data: chart_percentageChanges[0]
-                },
-                {
-                    label: '2호선 혼잡율',
-                    borderColor: 'rgb(0,168,77)',
-                    borderWidth: 4,
-                    fill: false,
-                    data: chart_percentageChanges[1]
-                },
-                {
-                    label: '3호선 혼잡율',
-                    borderColor: 'rgb(239,124,28)',
-                    borderWidth: 4,
-                    fill: false,
-                    data: chart_percentageChanges[2]
-                },
-                {
-                    label: '4호선 혼잡율',
-                    borderColor: 'rgb(0,164,227)',
-                    borderWidth: 4,
-                    fill: false,
-                    data: chart_percentageChanges[3]
-                },
-                {
-                    label: '5호선 혼잡율',
-                    borderColor: 'rgb(153,108,172)',
-                    borderWidth: 4,
-                    fill: false,
-                    data: chart_percentageChanges[4]
-                },
-                {
-                    label: '6호선 혼잡율',
-                    borderColor: 'rgb(205,124,239)',
-                    borderWidth: 4,
-                    fill: false,
-                    data: chart_percentageChanges[5]
-                },
-                {
-                    label: '7호선 혼잡율',
-                    borderColor: 'rgb(116,127,0)',
-                    borderWidth: 4,
-                    fill: false,
-                    data: chart_percentageChanges[6]
-                },
-                {
-                    label: '8호선 혼잡율',
-                    borderColor: 'rgb(230,24,108)',
-                    borderWidth: 4,
-                    fill: false,
-                    data: chart_percentageChanges[7]
-                },
-                {
-                    label: '9호선 혼잡율',
-                    borderColor: 'rgb(189,176,146)',
-                    borderWidth: 4,
-                    fill: false,
-                    data: chart_percentageChanges[8]
-                },
-            ],
+            datasets: datasets
         },
+        responsive: true,
+        maintainAspectRatio: false,
+
         options: {
             scales: {
                 y: {
@@ -101,7 +58,7 @@ function flow_rate() {
             newPercentage = newPercentage + 5
         }
 
-        td.textContent = newPercentage.toFixed(2) + '%';
+        td.textContent = newPercentage.toFixed(0) + '%';
 
         chart_percentageChanges[index].push(newPercentage);
 
@@ -141,7 +98,7 @@ function CreateTrafficChart() {
     table.append(tableSecondRow)
 
     trafficContainer.append(table);
-    trafficContainer.append($(`<canvas height="140" id="percentageChart"></canvas>`));
+    trafficContainer.append($(`<canvas id="percentageChart"></canvas>`));
 }
 
 // HTML 로그완료될 떄 돌릴 함수

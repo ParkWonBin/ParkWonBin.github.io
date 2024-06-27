@@ -1,6 +1,11 @@
+#trafficChart canvas {
+    width: 100%;
+    height: 250px;
+}
+
 #trafficChart table {
     border-collapse: collapse;
-    /*width: 100%;*/
+    width: 100%;
     height: 95px;
     table-layout: fixed;
 }
@@ -17,10 +22,7 @@
     width: 10%;
     background-color: white;
     text-align: center;
+    font-size: 1em;
     border: 1px solid #dddddd;
 }
 
-#trafficChart #percentageChart{
-    background-color: white;
-    border: 7px solid #e9ecef;
-}

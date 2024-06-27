@@ -1,0 +1,76 @@
+#AICC1 header {
+    margin-bottom: 5px;
+    width: 100%;
+    background: white;
+    box-shadow: 0 7px 7px -7px #818181;
+    overflow: hidden;
+}
+
+#AICC1 header h1 {
+    /* 기본 설정 제거 */
+    margin: 0;
+    padding: 0;
+    font-size: inherit;
+    font-weight: normal;
+    line-height: normal;
+    color: inherit;
+    font-family: inherit;
+    /* 스타일 추가 */
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+
+#top-menu {
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px; 
+}
+
+#top-title {
+    display: flex;
+    align-items: center;
+}
+
+#top-title img {
+    width: 2em;
+    margin-right: 10px; 
+}
+
+#top_nav {
+    display: flex;
+    gap: 10px; 
+}
+
+#top_nav a {
+    text-decoration: none;
+    color: #2b2b2b;
+    padding: 5px 10px;
+}
+
+/* 미디어 쿼리 추가 */
+@media (max-width: 840px) {
+    #AICC1 header {
+        display: block;
+    }
+
+    #top-menu {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    #top-title {
+        margin-bottom: 10px;
+    }
+
+    #top_nav {
+        width: 100%;
+    }
+
+    #top_nav a {
+        width: 100%;
+        text-align: center;
+    }
+}

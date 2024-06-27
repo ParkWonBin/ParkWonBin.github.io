@@ -15,6 +15,7 @@
 .wcDate{
     height: 100%;
     /*border: 2px solid white;*/
+    padding-left: 5px;
     display: flex;
 }
 .wcDate *{

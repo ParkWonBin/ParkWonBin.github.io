@@ -1,0 +1,38 @@
+#AICC1 section {
+    margin: 0 auto;
+    background: white;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+}
+
+#AICC1 section > article {
+    flex-grow: 1;
+    border: 1px solid black;
+    min-height: 400px;
+    position: relative; /* 자식 요소의 절대 위치를 설정하기 위해 */
+    margin: 10px;
+    margin-bottom: 0;
+}
+
+#AICC1 section > article>img {
+    display: block;
+    margin: 0 auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+    overflow: hidden;
+}
+
+/* 미디어 쿼리 추가 */
+@media (max-width: 840px) {
+    #AICC1 section {
+        margin: 0 auto;
+        background: white;
+        display: flex;    
+        flex-direction: column;
+    }
+}

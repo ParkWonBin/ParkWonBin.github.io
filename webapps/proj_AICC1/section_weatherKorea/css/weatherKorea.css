@@ -1,17 +1,28 @@
-#weatherKorea{
+#weatherKorea {
+    width: 100%;
+    display: flex;
+    justify-content: center; /* 수평 중앙 정렬 */
+    align-items: center; /* 수직 중앙 정렬 */
+    height: 100%; /* 부모 요소의 높이 설정 */
+    overflow: hidden;
+}
+
+#weather_wrap {
     width: 365px;
     height: 510px;
     overflow: hidden;
 }
-#weatherKorea img{
+
+#weather_wrap img {
     width: 100%;
 }
 
-#weatherKorea #weatherTitle{
+#weather_wrap #weatherTitle {
     display: flex;
     height: 75px;
 }
-#weatherKorea #weatherTitle > button {
+
+#weather_wrap #weatherTitle > button {
     width: 100%;
     background-color: #fdfdfd;
     border: none;
@@ -19,27 +30,36 @@
     font-size: 24px;
 }
 
-#weatherKorea #weatherTitle > button.active {
+#weather_wrap #weatherTitle > button.active {
     background-color: #54aff7;
     color: white;
 }
+/* 버튼 호버시 색갈 표시 */
+#weather_wrap #weatherTitle > button:hover{
+    background-color: #7bc3fd;
+}
 
-#weatherKorea #weather_ImgContainer{
+#weather_wrap #weather_ImgContainer {
     position: relative;
     display: flex;
 }
-#weatherKorea #weather_ImgContainer > button{
+
+#weather_wrap #weather_ImgContainer > button {
     position: absolute;
-    top:2%;
+    top: 2%;
     padding: 25px 30px;
     z-index: 2;
     opacity: 0.01;
 }
 
-#weatherKorea #weather_AM {
+#weather_wrap #weather_AM {
     left: 0.5%;
 }
 
-#weatherKorea #weather_PM{
-    left : 15%
+#weather_wrap #weather_PM {
+    left: 15%;
+}
+
+#weather_ImgContainer > button:hover{
+    background-color: red;
 }

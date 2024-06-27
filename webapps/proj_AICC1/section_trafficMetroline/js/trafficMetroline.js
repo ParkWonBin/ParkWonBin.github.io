@@ -1,91 +1,93 @@
-// $(String_Selector)  : 요소 찾아서 돌려줌
-// $(String_HTML)  : 입력받은 HTML 코드를 지가 새롭게 생성해서 돌려줌.
-// $(function) : 페이지 로드 완료됐을 떄 해당 함수 돌리라고 등록해줌
-// $(element) : 해당 요소를 jquery 객체로 만들어줌
+$(document).ready(function() {
+    var currentImageIndex = 0;
+    var intervalId = null;
+    const totalImages = 9; // 총 이미지 수
 
-var traffic_slide_gallery_Xoffset = 0;
-var intervalId = null;
-const TRAFFIC_IMAGE_WIDTH= 600
+    function updateImageSizes() {
+        const TRAFFIC_IMAGE_Container = $('#trafficMetroline');
+        const TRAFFIC_IMAGE_WIDTH = TRAFFIC_IMAGE_Container.width();
+        const TRAFFIC_IMAGE_HEIGHT = TRAFFIC_IMAGE_Container.height() - 70;
 
-function traffic_Move() {
-    traffic_slide_gallery_Xoffset -= TRAFFIC_IMAGE_WIDTH
-    if (traffic_slide_gallery_Xoffset < -8*TRAFFIC_IMAGE_WIDTH) {
-        traffic_slide_gallery_Xoffset = 0
-    }
-    $('#traffic_slide_gallery').animate({'marginLeft': `${traffic_slide_gallery_Xoffset}px`}, 300)
-}
+        $('.traffic_slide_gallery_Image').each(function() {
+            $(this).css({
+                'width': TRAFFIC_IMAGE_WIDTH + 'px',
+                'height': TRAFFIC_IMAGE_HEIGHT + 'px'
+            });
+        });
 
-function traffic_back() {
-    traffic_slide_gallery_Xoffset += TRAFFIC_IMAGE_WIDTH
-    if (traffic_slide_gallery_Xoffset > 0) {
-        traffic_slide_gallery_Xoffset = -8*TRAFFIC_IMAGE_WIDTH
-    }
-    $(`#traffic_slide_gallery`).animate({'marginLeft': `${traffic_slide_gallery_Xoffset}px`}, 300)
-}
+        $('#traffic_slide_gallery').css('width', TRAFFIC_IMAGE_WIDTH * totalImages + 'px');
 
-function traffic_play() {
-    // setInterval의 ID를 저장하고 반환
-    if (intervalId === null) {
-        intervalId = setInterval(traffic_Move, 1000);
-        $('#traffic_playToggle').text('■')
-        $('#traffic_playToggle').addClass('BigChar')
-    } else {
-        clearInterval(intervalId);
-        intervalId = null
-        $('#traffic_playToggle').removeClass('BigChar')
-        $('#traffic_playToggle').text('▶')
+        // 현재 인덱스의 이미지 위치로 이동
+        $('#traffic_slide_gallery').css('marginLeft', -currentImageIndex * TRAFFIC_IMAGE_WIDTH + 'px');
     }
 
-
-    // $('#trafic_playTogle').text('stop!!!!!!!!!!!!!!!')
-    // $('#trafic_playTogle').attr('onclick','trafic_back()')
-}
-
-// 생성후 바로 추가 예시
-// $('body').append($('<div>test</div>'));
-
-// function CreateTrafficSlider(){
-//     let trafficContainder = $('#traffic')
-//     let trafficBackBtn = $('<button onclick="traffic_back()">back</button>')
-//     trafficContainder.append(trafficBackBtn)
-//
-//     let traffic_gallery_wrap = $('<div id="traffic_gallery_wrap"></div>')
-//     let traffic_slide_gallery = $('<div id="traffic_slide_gallery"></div>')
-//     let img1 = $('<img src="src/1호선.jpg" alt="사진1">')
-//
-//     trafficContainder.append(traffic_gallery_wrap)
-//     traffic_gallery_wrap.append(traffic_slide_gallery)
-//     traffic_slide_gallery.append(img1)
-//     traffic_slide_gallery.append($('<img src="src/2호선." alt="사진2">'))
-// }
-
-function CreateTrafficSlider(){
-    let trafficContainder = $('#trafficMetroline')
-    // 슬라이더 추가
-    let traffic_gallery_wrap = $('<div id="traffic_gallery_wrap"></div>')
-    let traffic_slide_gallery = $('<div id="traffic_slide_gallery"></div>')
-
-    trafficContainder.append(traffic_gallery_wrap)
-    traffic_gallery_wrap.append(traffic_slide_gallery)
-
-    for(let i = 1; i<=9; i++){
-        traffic_slide_gallery.append($(`<img class="traffic_slide_gallery_Image" src="src/${i}호선.jpg" alt="사진${i}">`))
+    function showImageAtIndex(index) {
+        const TRAFFIC_IMAGE_WIDTH = $('#trafficMetroline').width();
+        currentImageIndex = index;
+        $('#traffic_slide_gallery').animate({'marginLeft': -currentImageIndex * TRAFFIC_IMAGE_WIDTH + 'px'}, 300);
     }
 
-    // 버튼 추가
-    let buttonContainer = $(`<div id='trafficMatroline_BtnContainer'></div>`)
-    trafficContainder.append(buttonContainer)
-    buttonContainer.append( $('<button onclick="traffic_back()">◀◀</button>'))
-    buttonContainer.append( $('<button id="traffic_playToggle" onclick="traffic_play()">▶</button>'))
-    buttonContainer.append( $('<button onclick="traffic_Move()">▶▶</button>'))
-}
+    function traffic_Move() {
+        if (currentImageIndex < totalImages - 1) {
+            showImageAtIndex(currentImageIndex + 1);
+        } else {
+            showImageAtIndex(0);
+        }
+    }
 
-//DOM 완료되면 테그 생성해주기
-$(CreateTrafficSlider)
+    function traffic_back() {
+        if (currentImageIndex > 0) {
+            showImageAtIndex(currentImageIndex - 1);
+        } else {
+            showImageAtIndex(totalImages - 1);
+        }
+    }
 
+    function traffic_play() {
+        if (intervalId === null) {
+            intervalId = setInterval(traffic_Move, 1000);
+            $('#traffic_playToggle').text('■');
+            $('#traffic_playToggle').addClass('BigChar');
+        } else {
+            clearInterval(intervalId);
+            intervalId = null;
+            $('#traffic_playToggle').removeClass('BigChar');
+            $('#traffic_playToggle').text('▶');
+        }
+    }
 
-    // function traffic_stop() {
-//     // 저장한 setInterval의 ID를 활용하여 clearInterval 호출
-//     clearInterval(intervalId);
-//     intervalId = null
-// }
+    function CreateTrafficSlider() {
+        let trafficContainder = $('#trafficMetroline');
+
+        // 버튼 추가
+        let buttonContainer = $(`<div id='trafficMatroline_BtnContainer'></div>`);
+        trafficContainder.append(buttonContainer);
+        buttonContainer.append($('<button class="traffic_back">◀◀</button>'));
+        buttonContainer.append($('<button id="traffic_playToggle" class="traffic_play">▶</button>'));
+        buttonContainer.append($('<button class="traffic_move">▶▶</button>'));
+
+        // 슬라이더 추가
+        let traffic_gallery_wrap = $('<div id="traffic_gallery_wrap"></div>');
+        let traffic_slide_gallery = $('<div id="traffic_slide_gallery"></div>');
+
+        trafficContainder.append(traffic_gallery_wrap);
+        traffic_gallery_wrap.append(traffic_slide_gallery);
+
+        for (let i = 1; i <= totalImages; i++) {
+            let img = $(`<img class="traffic_slide_gallery_Image" src="src/${i}호선.jpg" alt="사진${i}">`);
+            traffic_slide_gallery.append(img);
+        }
+
+        updateImageSizes();
+    }
+
+    CreateTrafficSlider();
+
+    // 이벤트 핸들러 등록
+    $(document).on('click', '.traffic_back', traffic_back);
+    $(document).on('click', '.traffic_play', traffic_play);
+    $(document).on('click', '.traffic_move', traffic_Move);
+
+    // 윈도우 리사이즈 이벤트 핸들러 등록
+    $(window).resize(updateImageSizes);
+});
