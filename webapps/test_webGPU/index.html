@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGPU Example</title>
+</head>
+<body>
+    <h1>WebGPU Activation Guide</h1>
+    <h2>WebGPU 활성화</h2>
+    <p>일부 브라우저에서는 WebGPU를 실험적 기능으로 제공하므로, 활성화가 필요할 수 있습니다. 
+    </p><p>예를 들어, Chrome에서는 다음과 같이 설정할 수 있습니다:</p>
+    <ul>
+        <li>주소창에 <code>chrome://flags</code> 입력 후 이동.</li>
+        <li><code>WebGPU</code> 검색.</li>
+        <li><code>Enabled</code>로 설정 후 브라우저 재시작.</li>
+    </ul>
+    <canvas id="canvas" width="640" height="480"></canvas>
+    <script>
+        async function initWebGPU() {
+            if (!navigator.gpu) {
+                console.log("WebGPU not supported.");
+                return;
+            }
+
+            const canvas = document.getElementById("canvas");
+            const adapter = await navigator.gpu.requestAdapter();
+            const device = await adapter.requestDevice();
+
+            const context = canvas.getContext("webgpu");
+
+            const swapChainFormat = "bgra8unorm";
+            context.configure({
+                device: device,
+                format: swapChainFormat,
+                usage: GPUTextureUsage.RENDER_ATTACHMENT,
+            });
+
+            const pipelineLayout = device.createPipelineLayout({
+                bindGroupLayouts: [],
+            });
+
+            const pipeline = device.createRenderPipeline({
+                layout: pipelineLayout,
+                vertex: {
+                    module: device.createShaderModule({
+                        code: `
+                        @vertex
+                        fn main(@builtin(vertex_index) VertexIndex : u32) -> @builtin(position) vec4<f32> {
+                            var pos = array<vec2<f32>, 3>(
+                                vec2<f32>(0.0,  0.5),
+                                vec2<f32>(-0.5, -0.5),
+                                vec2<f32>(0.5, -0.5)
+                            );
+                            return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
+                        }
+                        `,
+                    }),
+                    entryPoint: "main",
+                },
+                fragment: {
+                    module: device.createShaderModule({
+                        code: `
+                        @fragment
+                        fn main() -> @location(0) vec4<f32> {
+                            return vec4<f32>(1.0, 0.0, 0.0, 1.0);
+                        }
+                        `,
+                    }),
+                    entryPoint: "main",
+                    targets: [
+                        {
+                            format: swapChainFormat,
+                        },
+                    ],
+                },
+                primitive: {
+                    topology: "triangle-list",
+                },
+            });
+
+            function frame() {
+                const commandEncoder = device.createCommandEncoder();
+                const textureView = context.getCurrentTexture().createView();
+                const renderPassDescriptor = {
+                    colorAttachments: [
+                        {
+                            view: textureView,
+                            clearValue: [0.0, 0.0, 0.0, 1.0],
+                            loadOp: "clear",
+                            storeOp: "store",
+                        },
+                    ],
+                };
+
+                const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+                passEncoder.setPipeline(pipeline);
+                passEncoder.draw(3, 1, 0, 0);
+                passEncoder.end();
+
+                device.queue.submit([commandEncoder.finish()]);
+                requestAnimationFrame(frame);
+            }
+
+            requestAnimationFrame(frame);
+        }
+
+        initWebGPU();
+    </script>
+</body>
+</html>
