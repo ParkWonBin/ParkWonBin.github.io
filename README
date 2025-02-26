@@ -1,0 +1,16 @@
+### 로컬 실행
+serve.bat 파일 실행하거나
+
+```sh
+# 서버 실행
+bundle exec jekyll clean
+bundle exec jekyll serve --livereload
+# LiveReload address: http://127.0.0.1:35729
+#     Server address: http://127.0.0.1:4000
+
+# bundle 없으면
+gem install bundler
+
+# gem 없으면 ruby 다운로드 
+# https://rubyinstaller.org/downloads/
+```
