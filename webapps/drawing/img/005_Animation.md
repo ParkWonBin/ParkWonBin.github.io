@@ -3,7 +3,6 @@ layout: dev_apps
 custom_css: /assets/webapp_card.css
 ---
 
-
 <style>
   #center {
     display: flex;
@@ -21,5 +20,12 @@ custom_css: /assets/webapp_card.css
   <img src="../005_Animation03.gif">
 </div>
 
+### 움직임
+> 단어에 담기지 않는 언어
+
+
+<br>
+
+---
 
 {% include dataPage/webapp_drawing.html %}
