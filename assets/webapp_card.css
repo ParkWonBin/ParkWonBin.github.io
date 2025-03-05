@@ -68,3 +68,8 @@
   .card-repo:hover {
     text-decoration: underline;
   }
+
+  .card-content a.style_unset {
+    all: unset;
+    cursor: pointer;
+  }

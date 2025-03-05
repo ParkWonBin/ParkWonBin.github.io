@@ -5,19 +5,27 @@
   <div class="card">
     {% if item.thumbnail %}
     <div class="card-thumbnail">
+      {% if item.url %}<a class = "style_unset" href="{{ item.url }}">{% endif %}
       <img src="{{ item.thumbnail }}" alt="{{ item.title }} thumbnail">
+      {% if item.url %}</a>{% endif %}
     </div>
     {% endif %}
     <div class="card-content">
-      <h3 class="card-title">{{ item.title }}</h3>
-      <p class="card-desc">{{ item.desc }}</p>
-      <div class="card-links">
-        <a href="{{ item.url }}" class="card-link">바로가기</a>
+      
+      {% if item.url %}<a class = "style_unset" href="{{ item.url }}">{% endif %}
+        <h3 class="card-title">{{ item.title }}</h3>
+        <p class="card-desc">{{ item.desc }}</p>
+      {% if item.url %}</a>{% endif %}
+
+      <div class="card-links">        
+        {% if item.url %}
+            <a href="{{ item.url }}" class="card-link">바로가기</a>
+        {% endif %}
         {% if item.url_app %}
-        | <a href="{{ item.url_app }}" class="card-link">APP</a>
+            | <a href="{{ item.url_app }}" class="card-link">APP</a>
         {% endif %}
         {% if item.repo %}
-        | <a href="{{ item.repo }}" class="card-repo">소스코드</a>
+            | <a href="{{ item.repo }}" class="card-repo">소스코드</a>
         {% endif %}
       </div>
     </div>
