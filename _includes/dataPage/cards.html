@@ -12,8 +12,10 @@
       <h3 class="card-title">{{ item.title }}</h3>
       <p class="card-desc">{{ item.desc }}</p>
       <div class="card-links">
-        <a href="{{ item.url }}" class="card-link">링크</a>
-        | <a href="{{ item.url }}/app.html" class="card-link">전체화면</a>
+        <a href="{{ item.url }}" class="card-link">바로가기</a>
+        {% if item.url_app %}
+        | <a href="{{ item.url_app }}" class="card-link">APP</a>
+        {% endif %}
         {% if item.repo %}
         | <a href="{{ item.repo }}" class="card-repo">소스코드</a>
         {% endif %}

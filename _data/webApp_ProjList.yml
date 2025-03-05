@@ -1,5 +1,6 @@
 - title : AICC4
   url : /webapps/proj_AICC4
+  url_app : /webapps/proj_AICC4/app.html
   repo : https://github.com/ParkWonBin/Codelabit_AICC_Project_04
   thumbnail : 
   type : proj
@@ -8,6 +9,7 @@
 
 - title : AICC3
   url : https://aicc3.wbpark.app/react
+  url_app : https://aicc3.wbpark.app/react/app.html
   repo : https://github.com/ParkWonBin/Codelabit_AICC_Project_03
   thumbnail : 
   type : proj
@@ -16,6 +18,7 @@
 
 - title : AICC2
   url : /webapps/proj_AICC2
+  url_app : /webapps/proj_AICC2/app.html
   repo : https://github.com/ParkWonBin/Codelabit_AICC_Project_02
   thumbnail : 
   type : proj
@@ -24,6 +27,7 @@
 
 - title : AICC1
   url : /webapps/proj_AICC1
+  url_app : /webapps/proj_AICC1/app.html
   repo : https://github.com/ParkWonBin/Codelabit_AICC_Project_01
   thumbnail :
   type : proj 

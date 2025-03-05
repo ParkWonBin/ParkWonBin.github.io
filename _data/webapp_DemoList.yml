@@ -1,6 +1,7 @@
 # Demo
 - title : OpenAI API - Assistant
   url : /webapps/demo_GPT001
+  url_app : /webapps/demo_GPT001/app.html
   repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/demo_GPT001/index.html
   thumbnail : 
   type : demo
@@ -12,6 +13,7 @@
 
 - title : qrcode
   url : /webapps/demo_qrcode
+  url_app : /webapps/demo_qrcode/app.html
   repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/demo_qrcode/index.html
   thumbnail :
   type : demo 
@@ -23,6 +25,7 @@
 
 - title : react blog 테스트 (목록 CRUD)
   url : /webapps/demo_react001
+  url_app : /webapps/demo_react001/app.html
   repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/demo_react001/index.html
   thumbnail :
   type : demo 
@@ -32,6 +35,7 @@
 
 - title : image map (이미지 CURD)
   url : /webapps/demo_Image_CURD
+  url_app : /webapps/demo_Image_CURD/app.html
   repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/demo_Image_CURD/index.html
   thumbnail :
   type : demo 

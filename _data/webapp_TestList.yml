@@ -1,5 +1,6 @@
 - title : Browser API - STT
   url : /webapps/test_speach2text
+  url_app : /webapps/test_speach2text/app.html
   repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/test_speach2text/index.html
   thumbnail : 
   type : test
@@ -7,6 +8,7 @@
 
 - title : Snake Game
   url : /webapps/game_snake
+  url_app : /webapps/game_snake/app.html
   repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/game_snake/index.html
   thumbnail : 
   type : game
@@ -14,6 +16,7 @@
 
 - title : 쳇봇 대본 연습
   url : /webapps/test_Chatbot
+  url_app : /webapps/test_Chatbot/app.html
   repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/test_Chatbot/index.html
   thumbnail : 
   type : test
@@ -21,6 +24,7 @@
 
 - title : 모바일 움직임 테스트
   url : /webapps/test_getData_Motion
+  url_app : /webapps/test_getData_Motion/app.html
   repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/test_getData_Motion/index.html
   thumbnail : 
   type : test
@@ -28,6 +32,7 @@
 
 - title : 모바일 GPS 
   url : /webapps/test_getData_GPS
+  url_app : /webapps/test_getData_GPS/app.html
   repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/test_getData_GPS/index.html
   thumbnail : 
   type : test
@@ -35,6 +40,7 @@
 
 - title : 차트 그려보기
   url : /webapps/test_Chart
+  url_app : /webapps/test_Chart/app.html
   repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/test_Chart/index.html
   thumbnail : 
   type : test
