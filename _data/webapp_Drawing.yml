@@ -29,5 +29,11 @@
   type : test
   desc : <strong> 기억하고 재현하는 과정 </strong> 
 
+- title : exhibition
+  url : /webapps/ex
+  url_app : /webapps/ex/app.html
+  type : test
+  desc : <strong> 전시관 3D </strong>
+    <br> 전시관 3D 웹뷰어입니다.
 
 
