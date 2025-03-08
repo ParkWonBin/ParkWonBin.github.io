@@ -3,6 +3,26 @@ permalink: /404.html
 layout: default
 ---
 
+<script>
+  // 현재 경로 확인
+  const currentPath = window.location.pathname;
+
+  // 기본 이동할 URL
+  const redirectUrl = "https://wbpark.app/";
+
+  // GitHub Pages에서 SPA 라우팅 문제 해결 (history 모드 대응)
+  if (currentPath.startsWith("/webapps/drawing/")) {
+      // 현재 URL에서 최상위 경로 추출 후 리디렉트
+      let newUrl
+      if(currentPath.startsWith("/webapps/drawing/img")){
+        newUrl = "https://wbpark.app/webapps/drawing/img/005_Animation/"
+      }else{
+        newUrl = "https://wbpark.app/webapps/drawing"
+      }
+      window.location.replace(newUrl);
+  } 
+</script>
+
 <style type="text/css" media="screen">
   .container {
     margin: 10px auto;
