@@ -7,20 +7,14 @@ layout: default
   // 현재 경로 확인
   const currentPath = window.location.pathname;
 
-  // 기본 이동할 URL
-  const redirectUrl = "https://wbpark.app/";
-
   // GitHub Pages에서 SPA 라우팅 문제 해결 (history 모드 대응)
-  if (currentPath.startsWith("/webapps/drawing/")) {
-      // 현재 URL에서 최상위 경로 추출 후 리디렉트
-      let newUrl
-      if(currentPath.startsWith("/webapps/drawing/img")){
-        newUrl = "https://wbpark.app/webapps/drawing/img/005_Animation/"
-      }else{
-        newUrl = "https://wbpark.app/webapps/drawing"
-      }
-      window.location.replace(newUrl);
-  } 
+  if(currentPath.startsWith("/webapps/drawing/img")){
+    // 전시회 펭귄 gif 로 들어온 사람은 펭귄 그림 페이지로 이동
+    window.location.replace("https://wbpark.app/webapps/drawing/img/005_Animation/");
+  }else if(currentPath.startsWith("/webapps/drawing")){
+    // 그냥 전시회 관련 URL 로 들어왔다가 깨지면 메인으로
+    window.location.replace("https://wbpark.app/webapps/drawing/");
+  }
 </script>
 
 <style type="text/css" media="screen">
