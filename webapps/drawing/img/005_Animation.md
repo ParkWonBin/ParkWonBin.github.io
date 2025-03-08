@@ -15,9 +15,9 @@ custom_css: /assets/webapp_card.css
 
 <div id='center'>
   <img src="../005_Animation.png">
-  <img src="../005_Animation01.gif">
-  <img src="../005_Animation02.gif">
-  <img src="../005_Animation03.gif">
+  <img src="../005_Animation1.gif">
+  <img src="../005_Animation2.gif">
+  <img src="../005_Animation3.gif">
 </div>
 
 ### 움직임
