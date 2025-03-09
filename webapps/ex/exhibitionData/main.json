@@ -5,6 +5,6 @@
     },
     {
         "name": "개발",
-        "filename": "_dev.json"
+        "filename": "dev.json"
     }
 ]
