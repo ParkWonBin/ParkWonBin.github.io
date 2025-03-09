@@ -1,0 +1,20 @@
+{
+    "name": "개발",
+    "date_bgn": "2025.3.4",
+    "date_end": "2025.3.9",
+    "camera_position": [0, 15, 0],
+    "pictures": [{
+        "position": [0.05, -0.1, -0.1],
+        "rotation": [270, 0, 0],
+        "boxGeometry": [12.136, 14.381, 0.01],
+        "color": [0, 0, 0],
+        "emissive":3,
+        "imageUrl": "/img/miru.jpg"
+    }, {
+        "position": [-0.12,2.02,1.07],
+        "rotation": [0, 90, 0],
+        "boxGeometry": [2.14, 0.01, 0.01],
+        "color": [255,0,0],
+        "desc":"1 = 1m"
+    }]
+}
