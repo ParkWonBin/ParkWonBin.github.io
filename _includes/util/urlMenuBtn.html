@@ -27,9 +27,9 @@
   </style>
 
   {% assign url_parts = page.url | relative_url | split: '/' %}
-  {% assign url_count = url_parts.size | minus: 5 %}
+  {% assign url_count = url_parts.size | minus: 2 %}
   <!-- minus 5 하는 이유는, 글제목이랑 날짜 관리가 까다로워서. -->
-  
+  <!-- <div>"{{ page.url }}"</div> -->
   <div>
     <a class="urlMenuBtn" href="/">{{site.url}}</a></span> 
     {% for i in (1..url_count) %}

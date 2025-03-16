@@ -1,0 +1,57 @@
+{%- assign subpage_list = "" | split: "," -%}
+
+{%- if page.layout == "post" -%}
+  {%- assign parent_permalink_parts = page.permalink | split: "/" -%}
+  {%- assign parent_permalink_size = parent_permalink_parts.size | minus: 2 -%}
+  {%- assign parent_permalink = "/" -%}
+
+  {%- for i in (1..parent_permalink_size) -%}
+    {%- assign parent_permalink = parent_permalink | append: parent_permalink_parts[i] | append: "/" -%}
+  {%- endfor -%}
+
+  {%- assign parent_page = site.pages | where: "permalink", parent_permalink | first -%}
+  {%- assign header_title = parent_page.title -%}
+{%- else -%}
+  {%- assign parent_permalink = page.permalink -%}
+  {%- assign header_title = page.title -%}
+{%- endif -%}
+
+{%- assign all_pages = site.pages | concat: site.posts -%}
+
+{%- for subpage in all_pages %}
+    {%- unless subpage.permalink and subpage.permalink != "" -%} 
+      {%- continue -%} 
+    {%- endunless %}
+
+    {%- unless subpage.permalink contains parent_permalink -%} 
+      {%- continue -%} 
+    {%- endunless %}
+
+    {%- if subpage.permalink == parent_permalink -%} 
+      {%- continue -%} 
+    {%- endif %}
+
+    {%- unless subpage.title and subpage.title != "" -%} 
+      {%- continue -%} 
+    {%- endunless %}
+
+    {%- assign remaining_path = subpage.permalink | remove_first: parent_permalink | split: "/" -%}
+    {%- unless remaining_path.size == 1 and remaining_path[0] != "" -%}
+      {%- continue -%} 
+    {%- endunless -%}
+
+    {%- assign subpage_list = subpage_list | push: subpage -%}
+{%- endfor %}
+
+{%- assign sorted_subpage_list = subpage_list | sort: "title" -%}
+
+{%- if sorted_subpage_list.size > 0 -%}
+<h2>📂 {{ header_title }}</h2>
+<ul>
+  {%- for subpage in sorted_subpage_list %}
+    <li>
+      <a href="{{ subpage.permalink | relative_url }}">{{ subpage.title }}</a> - {{ subpage.permalink }}
+    </li>
+  {%- endfor %}
+</ul>
+{%- endif -%}

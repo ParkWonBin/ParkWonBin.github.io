@@ -18,14 +18,9 @@ layout: default
   <div class="post-content e-content" itemprop="articleBody">
     {{ content }}
   </div>
+
+  <!-- 포스트 카테고리 목록 -->
+  {% include category-list.html %}
   
-  <!-- 커스텀 기능 추가 -->
-  {%- include util/urlMenuBtn.html -%}
-
-
-  {%- if site.disqus.shortname -%}
-    {%- include disqus_comments.html -%}
-  {%- endif -%}
-
   <a class="u-url" href="{{ page.url | relative_url }}" hidden></a>
 </article>

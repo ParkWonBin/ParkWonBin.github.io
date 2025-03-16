@@ -2,13 +2,15 @@
 layout: default
 ---
 <article class="post">
-
   <header class="post-header">
-    <h1 class="post-title">{{ page.title | escape }}</h1>
+    <!-- <h1 class="post-title">{{ page.title | escape }}</h1> -->
   </header>
 
   <div class="post-content">
     {{ content }}
   </div>
+
+  <!-- 포스트 카테고리 목록 -->
+  {% include category-list.html %}
 
 </article>
