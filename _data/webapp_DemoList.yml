@@ -1,4 +1,18 @@
 # Demo
+- title : exhibition
+  url : /webapps/ex
+  url_app : /webapps/ex/app.html
+  type : demo 
+  desc : <strong> 전시관 3D </strong>
+    <br> 전시관 3D 웹뷰어입니다.
+
+- title : Earth 시뮬레이터
+  url : /earth
+  url_app : /webapps/Demo_Earth/app.html
+  type : demo 
+  desc : <strong> 남극의 백야, 극야 현상 보기 </strong>
+    <br> 시뮬레이터 시간 n 배속해서 보세요.
+
 - title : qrcode
   url : /webapps/demo_qrcode
   url_app : /webapps/demo_qrcode/app.html
@@ -11,12 +25,6 @@
     <br> - QR 색상 설정
     <br> - 오류율 조정  
 
-- title : exhibition
-  url : /webapps/ex
-  url_app : /webapps/ex/app.html
-  type : demo 
-  desc : <strong> 전시관 3D </strong>
-    <br> 전시관 3D 웹뷰어입니다.
 
 - title : OpenAI API - Assistant
   url : /webapps/demo_GPT001
