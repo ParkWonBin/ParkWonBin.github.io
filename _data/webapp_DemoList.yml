@@ -13,6 +13,13 @@
   desc : <strong> 남극의 백야, 극야 현상 보기 </strong>
     <br> 시뮬레이터 시간 n 배속해서 보세요.
 
+- title : 물리 시뮬레이터
+  url : /physics
+  url_app : /webapps/demo_physicsSImulation/app.html
+  type : demo 
+  desc : <strong> 단진동, 진자, 이중진자 </strong>
+    <br>  물리학 실험 및 설명 페이지입니다.
+
 - title : qrcode
   url : /webapps/demo_qrcode
   url_app : /webapps/demo_qrcode/app.html
