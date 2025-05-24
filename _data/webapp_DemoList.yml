@@ -1,4 +1,13 @@
 # Demo
+- title : 물리 시뮬레이터
+  url : /physics
+  url_app : /webapps/demo_physicsSimulation/app.html
+  type : demo 
+  desc : <strong> 단진동, 진자, 이중진자 </strong>
+    <br>  물리학 실험 및 설명 페이지입니다.
+    <br>  실시간으로 phase diagram을 확인하고
+    <br>  csv 파일로 데이터를 받을 수 있습니다.
+
 - title : exhibition
   url : /webapps/ex
   url_app : /webapps/ex/app.html
@@ -12,13 +21,6 @@
   type : demo 
   desc : <strong> 남극의 백야, 극야 현상 보기 </strong>
     <br> 시뮬레이터 시간 n 배속해서 보세요.
-
-- title : 물리 시뮬레이터
-  url : /physics
-  url_app : /webapps/demo_physicsSimulation/app.html
-  type : demo 
-  desc : <strong> 단진동, 진자, 이중진자 </strong>
-    <br>  물리학 실험 및 설명 페이지입니다.
 
 - title : qrcode
   url : /webapps/demo_qrcode
