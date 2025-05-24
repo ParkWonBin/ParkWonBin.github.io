@@ -15,7 +15,7 @@
 
 - title : 물리 시뮬레이터
   url : /physics
-  url_app : /webapps/demo_physicsSImulation/app.html
+  url_app : /webapps/demo_physicsSimulation/app.html
   type : demo 
   desc : <strong> 단진동, 진자, 이중진자 </strong>
     <br>  물리학 실험 및 설명 페이지입니다.
