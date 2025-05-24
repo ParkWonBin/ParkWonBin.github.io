@@ -1,9 +1,9 @@
-<header class="site-header" role="banner">
+<header class="site-header" style="width: 100%"  role="banner">
 
-  <div class="wrapper">
+  <div class="wrapper" style="width: 100%">
     {%- assign default_paths = site.pages | map: "path" -%}
     {%- assign page_paths = site.header_pages | default: default_paths -%}
-    <a class="site-title" rel="author" href="{{ "/" | relative_url }}">
+    <a class="site-title" style="width: 100%" rel="author" href="{{ "/" | relative_url }}">
       <img src="{{ '/assets/images/logo.svg' | relative_url }}" alt="logo" style="width: 40px;height: 40px;">
       {{ site.title | escape }}
     </a>
