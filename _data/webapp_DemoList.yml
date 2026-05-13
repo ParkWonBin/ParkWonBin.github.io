@@ -1,4 +1,16 @@
 # Demo
+- title : 서울시 침수흔적도 뷰어
+  url : /flood_map
+  url_app : /webapps/flood_map/app.html
+  repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/flood_map/index.html
+  thumbnail :
+  type : demo
+  desc : <strong> Leaflet, GeoJSON, Canvas </strong>
+    <br> 서울시 침수흔적 데이터(2013~2025) 시각화
+    <br> - 연도별 레이어 토글
+    <br> - 침수심 필터 및 주소 검색
+
+
 - title : 물리 시뮬레이터
   url : /physics
   url_app : /webapps/demo_physicsSimulation/app.html

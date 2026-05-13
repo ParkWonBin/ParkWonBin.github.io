@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>서울시 침수흔적도 뷰어</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#0f1117;color:#e1e4ea;overflow:hidden}
+#map{position:absolute;top:0;left:0;right:0;bottom:0;z-index:1}
+
+/* Side Panel */
+#panel{position:absolute;top:0;left:0;bottom:0;width:340px;z-index:1000;
+  background:linear-gradient(180deg,rgba(15,17,23,0.97),rgba(20,22,30,0.95));
+  backdrop-filter:blur(20px);border-right:1px solid rgba(255,255,255,0.06);
+  display:flex;flex-direction:column;transition:transform .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:4px 0 30px rgba(0,0,0,0.4)}
+#panel.collapsed{transform:translateX(-340px)}
+
+.panel-header{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.panel-header h1{font-size:16px;font-weight:700;
+  background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;margin-bottom:4px}
+.panel-header p{font-size:11px;color:#6b7280}
+
+.controls-bar{display:flex;gap:6px;padding:12px 20px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.ctrl-btn{flex:1;padding:6px 8px;border:1px solid rgba(255,255,255,0.1);border-radius:8px;
+  background:rgba(255,255,255,0.03);color:#9ca3af;font-size:11px;cursor:pointer;
+  font-family:inherit;transition:all .2s}
+.ctrl-btn:hover{background:rgba(96,165,250,0.1);color:#60a5fa;border-color:rgba(96,165,250,0.3)}
+
+.layer-list{flex:1;overflow-y:auto;padding:8px 12px;scrollbar-width:thin;
+  scrollbar-color:rgba(255,255,255,0.1) transparent}
+
+.layer-item{display:flex;align-items:center;gap:10px;padding:10px 12px;margin:4px 0;
+  border-radius:10px;cursor:pointer;transition:all .2s;border:1px solid transparent;
+  position:relative}
+.layer-item:hover{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.06)}
+.layer-item.active{background:rgba(96,165,250,0.08);border-color:rgba(96,165,250,0.15)}
+
+.layer-toggle{width:36px;height:20px;border-radius:12px;background:rgba(255,255,255,0.1);
+  position:relative;transition:all .3s;flex-shrink:0}
+.layer-toggle.on{background:linear-gradient(135deg,#3b82f6,#8b5cf6)}
+.layer-toggle::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;
+  background:#fff;top:2px;left:2px;transition:transform .3s;box-shadow:0 1px 3px rgba(0,0,0,0.3)}
+.layer-toggle.on::after{transform:translateX(16px)}
+
+.layer-color{width:14px;height:14px;border-radius:4px;flex-shrink:0;
+  box-shadow:0 0 8px rgba(0,0,0,0.3)}
+.layer-info{flex:1;min-width:0}
+.layer-name{font-size:13px;font-weight:600;color:#e5e7eb}
+.layer-meta{font-size:10px;color:#6b7280;margin-top:2px}
+.layer-badge{font-size:9px;padding:2px 6px;border-radius:6px;
+  background:rgba(255,255,255,0.06);color:#9ca3af;flex-shrink:0}
+
+/* Legend */
+.legend-section{padding:12px 20px;border-top:1px solid rgba(255,255,255,0.06)}
+.legend-title{font-size:11px;font-weight:600;color:#9ca3af;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px}
+.legend-items{display:flex;flex-wrap:wrap;gap:6px}
+.legend-chip{display:flex;align-items:center;gap:4px;font-size:10px;color:#9ca3af;
+  background:rgba(255,255,255,0.04);padding:3px 8px;border-radius:6px}
+.legend-dot{width:8px;height:8px;border-radius:2px}
+
+/* Toggle Button */
+#toggle-panel{position:absolute;top:12px;z-index:1001;width:36px;height:36px;
+  border-radius:10px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;
+  background:rgba(15,17,23,0.9);backdrop-filter:blur(10px);color:#9ca3af;
+  font-size:16px;display:flex;align-items:center;justify-content:center;
+  transition:all .3s;left:352px}
+#toggle-panel:hover{background:rgba(96,165,250,0.15);color:#60a5fa}
+#panel.collapsed~#toggle-panel{left:12px}
+
+/* Info Popup */
+.leaflet-popup-content-wrapper{background:rgba(15,17,23,0.95)!important;
+  backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1)!important;
+  border-radius:12px!important;color:#e1e4ea!important;box-shadow:0 8px 32px rgba(0,0,0,0.4)!important}
+.leaflet-popup-tip{background:rgba(15,17,23,0.95)!important;
+  border:1px solid rgba(255,255,255,0.1)!important}
+.popup-title{font-size:13px;font-weight:700;margin-bottom:8px;
+  background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.popup-row{display:flex;justify-content:space-between;padding:3px 0;font-size:11px;
+  border-bottom:1px solid rgba(255,255,255,0.04)}
+.popup-row:last-child{border:none}
+.popup-label{color:#6b7280}
+.popup-value{color:#e5e7eb;font-weight:500;text-align:right;max-width:180px}
+
+/* Stats Bar */
+#stats{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:1000;
+  display:flex;gap:8px;padding:8px 16px;background:rgba(15,17,23,0.9);
+  backdrop-filter:blur(20px);border-radius:12px;border:1px solid rgba(255,255,255,0.06)}
+.stat{text-align:center;padding:0 10px}
+.stat-val{font-size:16px;font-weight:700;
+  background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-label{font-size:9px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px}
+
+/* Loading */
+#loading{position:absolute;top:0;left:0;right:0;bottom:0;z-index:2000;
+  background:rgba(15,17,23,0.95);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;transition:opacity .5s}
+#loading.hidden{opacity:0;pointer-events:none}
+.spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,0.1);
+  border-top-color:#60a5fa;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading p{margin-top:16px;font-size:13px;color:#6b7280}
+#load-progress{margin-top:8px;font-size:11px;color:#60a5fa}
+
+/* Depth filter */
+.depth-filter{padding:12px 20px;border-top:1px solid rgba(255,255,255,0.06)}
+.depth-filter label{font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+.depth-slider{width:100%;margin-top:8px;accent-color:#60a5fa}
+.depth-val{font-size:12px;color:#60a5fa;font-weight:600;text-align:right}
+
+/* Leaflet base layer control */
+.leaflet-control-layers{background:rgba(15,17,23,0.92)!important;backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,0.08)!important;border-radius:10px!important;
+  color:#e1e4ea!important;padding:10px 14px!important;box-shadow:0 4px 20px rgba(0,0,0,0.3)!important}
+.leaflet-control-layers-separator{border-top-color:rgba(255,255,255,0.08)!important}
+.leaflet-control-layers label{color:#d1d5db!important;font-size:12px;font-family:'Inter',sans-serif}
+
+/* Search bar */
+.search-box{padding:12px 20px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.search-wrap{display:flex;gap:6px}
+.search-wrap input{flex:1;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.05);color:#e5e7eb;font-size:12px;font-family:inherit;outline:none}
+.search-wrap input:focus{border-color:rgba(96,165,250,0.4);background:rgba(255,255,255,0.08)}
+.search-wrap input::placeholder{color:#6b7280}
+.search-wrap button{padding:8px 12px;border-radius:8px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;font-size:12px;font-family:inherit;
+  white-space:nowrap;transition:opacity .2s}
+.search-wrap button:hover{opacity:0.85}
+.search-msg{font-size:10px;margin-top:6px;color:#6b7280;min-height:14px}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <p>침수흔적도 데이터 로딩 중...</p>
+  <div id="load-progress"></div>
+</div>
+
+<div id="map"></div>
+
+<div id="panel">
+  <div class="panel-header">
+    <h1><a href="https://data.seoul.go.kr/dataList/OA-15636/F/1/datasetView.do#" target="_blank" style="color:inherit;-webkit-text-fill-color:inherit;text-decoration:none">🌊 서울시 침수흔적도</a></h1>
+    <p>2013~2025년 침수흔적 데이터 시각화</p>
+  </div>
+  <div class="search-box">
+    <div class="search-wrap">
+      <input type="text" id="search-input" value="남부순환로234길 33-8" placeholder="주소 검색 (예: 강남구 역삼동)" onkeydown="if(event.key==='Enter')searchAddress()">
+      <button onclick="searchAddress()">검색</button>
+    </div>
+    <div class="search-msg" id="search-msg"></div>
+  </div>
+  <div class="controls-bar">
+    <button class="ctrl-btn" onclick="toggleAll(true)">전체 켜기</button>
+    <button class="ctrl-btn" onclick="toggleAll(false)">전체 끄기</button>
+    <button class="ctrl-btn" onclick="fitAll()">전체 영역</button>
+  </div>
+  <div class="layer-list" id="layer-list"></div>
+  <div class="depth-filter">
+    <label>최소 침수심 필터</label>
+    <div class="depth-val" id="depth-val">0.0m 이상</div>
+    <input type="range" class="depth-slider" id="depth-slider" min="0" max="200" value="0" step="1">
+  </div>
+  <div class="depth-filter">
+    <label>폴리곤 투명도</label>
+    <div class="depth-val" id="opacity-val">35%</div>
+    <input type="range" class="depth-slider" id="opacity-slider" min="5" max="90" value="35" step="5">
+  </div>
+  <div class="legend-section">
+    <div class="legend-title">침수심 범례</div>
+    <div class="legend-items">
+      <div class="legend-chip"><div class="legend-dot" style="background:#fef08a"></div>0~0.2m</div>
+      <div class="legend-chip"><div class="legend-dot" style="background:#fbbf24"></div>0.2~0.5m</div>
+      <div class="legend-chip"><div class="legend-dot" style="background:#f97316"></div>0.5~1.0m</div>
+      <div class="legend-chip"><div class="legend-dot" style="background:#ef4444"></div>1.0~2.0m</div>
+      <div class="legend-chip"><div class="legend-dot" style="background:#991b1b"></div>2.0m+</div>
+    </div>
+  </div>
+</div>
+
+<button id="toggle-panel" onclick="togglePanel()">☰</button>
+
+<div id="stats">
+  <div class="stat"><div class="stat-val" id="s-layers">0</div><div class="stat-label">레이어</div></div>
+  <div class="stat"><div class="stat-val" id="s-features">0</div><div class="stat-label">침수지점</div></div>
+  <div class="stat"><div class="stat-val" id="s-visible">0</div><div class="stat-label">표시중</div></div>
+</div>
+
+<script>
+// === Canvas renderer for massive performance gain ===
+const canvasRenderer = L.canvas({ padding: 0.5 });
+
+const map = L.map('map', {
+  center: [37.5665, 126.978],
+  zoom: 12,
+  zoomControl: false,
+  renderer: canvasRenderer,
+  preferCanvas: true
+});
+
+L.control.zoom({ position: 'topright' }).addTo(map);
+
+// Base layers
+const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap', maxZoom: 19
+});
+const topo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+  attribution: '&copy; Esri', maxZoom: 19
+});
+const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  attribution: '&copy; Esri', maxZoom: 19
+});
+const satLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+  maxZoom: 19, pane: 'overlayPane'
+});
+const satHybrid = L.layerGroup([satellite, satLabels]);
+const dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; CARTO', maxZoom: 19
+});
+
+osm.addTo(map);
+
+L.control.layers({
+  '🗺️ 일반 지도': osm,
+  '🏔️ 지형 지도 (건물)': topo,
+  '🛰️ 위성 지도': satellite,
+  '🛰️ 위성+라벨': satHybrid,
+  '🌙 다크 모드': dark
+}, null, { position: 'topright', collapsed: false }).addTo(map);
+
+// Year colors
+const YEAR_COLORS = {
+  2013:'#60a5fa',2014:'#34d399',2016:'#a78bfa',2017:'#f472b6',
+  2018:'#fb923c',2019:'#facc15',2020:'#2dd4bf',2022:'#f87171',
+  2023:'#818cf8',2024:'#4ade80',2025:'#e879f9'
+};
+
+function depthColor(depth) {
+  if (depth <= 0.2) return '#fef08a';
+  if (depth <= 0.5) return '#fbbf24';
+  if (depth <= 1.0) return '#f97316';
+  if (depth <= 2.0) return '#ef4444';
+  return '#991b1b';
+}
+
+function popupContent(props, year) {
+  const rows = [];
+  if (props.F_ZONE_NM) rows.push(['위치', props.F_ZONE_NM]);
+  if (props.GU_NAM) rows.push(['구', props.GU_NAM]);
+  if (props.F_SHIM != null) rows.push(['침수심', props.F_SHIM + 'm']);
+  if (props.F_AREA != null) rows.push(['침수면적', Number(props.F_AREA).toFixed(1) + '㎡']);
+  if (props.F_DISA_NM) rows.push(['재해명', props.F_DISA_NM]);
+  if (props.F_SAT_YMD) rows.push(['침수시작', props.F_SAT_YMD]);
+  if (props.F_END_YMD) rows.push(['침수종료', props.F_END_YMD]);
+  if (props.F_RSN_DTL) rows.push(['원인', props.F_RSN_DTL]);
+  if (props.TYPE) rows.push(['피해종류', props.TYPE]);
+  const rowsHtml = rows.map(r => `<div class="popup-row"><span class="popup-label">${r[0]}</span><span class="popup-value">${r[1]}</span></div>`).join('');
+  return `<div class="popup-title">${year}년 침수흔적</div>${rowsHtml}`;
+}
+
+// State
+const layers = {};
+let minDepth = 0;
+let fillOp = 0.35;
+
+// Debounce utility
+function debounce(fn, ms) {
+  let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+}
+
+// Style function (reused everywhere)
+function getStyle(props, year) {
+  const d = props.F_SHIM || 0;
+  const hidden = d < minDepth;
+  return {
+    fillColor: depthColor(d),
+    color: YEAR_COLORS[year],
+    weight: hidden ? 0 : 1.5,
+    opacity: hidden ? 0 : 0.8,
+    fillOpacity: hidden ? 0 : fillOp
+  };
+}
+
+// Apply styles without rebuilding layers
+function refreshStyles() {
+  let visCount = 0;
+  Object.values(layers).forEach(l => {
+    if (!l.visible || !l.geoLayer) return;
+    l.geoLayer.eachLayer(sub => {
+      const s = getStyle(sub.feature.properties, l.year);
+      sub.setStyle(s);
+      if (s.fillOpacity > 0) visCount++;
+    });
+  });
+  document.getElementById('s-visible').textContent = visCount.toLocaleString();
+}
+
+// Depth slider
+const slider = document.getElementById('depth-slider');
+const depthValEl = document.getElementById('depth-val');
+slider.addEventListener('input', debounce(() => {
+  minDepth = slider.value / 100;
+  depthValEl.textContent = minDepth.toFixed(2) + 'm 이상';
+  refreshStyles();
+}, 80));
+
+// Opacity slider
+const opSlider = document.getElementById('opacity-slider');
+const opValEl = document.getElementById('opacity-val');
+opSlider.addEventListener('input', debounce(() => {
+  fillOp = opSlider.value / 100;
+  opValEl.textContent = opSlider.value + '%';
+  refreshStyles();
+}, 80));
+
+function updateStats() {
+  const active = Object.values(layers).filter(l => l.visible);
+  document.getElementById('s-layers').textContent = active.length;
+  const total = Object.values(layers).reduce((s, l) => s + l.featureCount, 0);
+  document.getElementById('s-features').textContent = total.toLocaleString();
+  let vis = 0;
+  active.forEach(l => {
+    if (l.geoLayer) l.geoLayer.eachLayer(sub => {
+      if ((sub.feature.properties.F_SHIM || 0) >= minDepth) vis++;
+    });
+  });
+  document.getElementById('s-visible').textContent = vis.toLocaleString();
+}
+
+// Build GeoJSON layer once per year (never rebuild)
+function buildGeoLayer(geojson, year) {
+  return L.geoJSON(geojson, {
+    renderer: canvasRenderer,
+    style: f => getStyle(f.properties, year),
+    onEachFeature: (f, layer) => {
+      layer.bindPopup(() => popupContent(f.properties, year), { maxWidth: 320 });
+    }
+  });
+}
+
+// Toggle layer
+function toggleLayer(year) {
+  const l = layers[year];
+  l.visible = !l.visible;
+  if (l.visible) {
+    if (!l.geoLayer) {
+      l.geoLayer = buildGeoLayer(l.geojson, year);
+    }
+    l.geoLayer.addTo(map);
+  } else {
+    if (l.geoLayer) map.removeLayer(l.geoLayer);
+  }
+  updateLayerUI();
+  updateStats();
+}
+
+function updateLayerUI() {
+  Object.entries(layers).forEach(([year, l]) => {
+    const el = document.getElementById('li-' + year);
+    if (!el) return;
+    el.classList.toggle('active', l.visible);
+    el.querySelector('.layer-toggle').classList.toggle('on', l.visible);
+  });
+}
+
+function toggleAll(on) {
+  Object.entries(layers).forEach(([year, l]) => {
+    l.visible = on;
+    if (on) {
+      if (!l.geoLayer) l.geoLayer = buildGeoLayer(l.geojson, parseInt(year));
+      l.geoLayer.addTo(map);
+    } else {
+      if (l.geoLayer) map.removeLayer(l.geoLayer);
+    }
+  });
+  updateLayerUI();
+  updateStats();
+}
+
+function fitAll() {
+  const allBounds = [];
+  Object.values(layers).filter(l => l.visible && l.geoLayer).forEach(l => {
+    const b = l.geoLayer.getBounds();
+    if (b.isValid()) allBounds.push(b);
+  });
+  if (allBounds.length) {
+    let combined = allBounds[0];
+    allBounds.slice(1).forEach(b => combined.extend(b));
+    map.fitBounds(combined, { padding: [40, 40] });
+  }
+}
+
+function togglePanel() {
+  document.getElementById('panel').classList.toggle('collapsed');
+}
+
+// === Address Search (Nominatim) ===
+let searchMarker = null;
+async function searchAddress() {
+  const q = document.getElementById('search-input').value.trim();
+  const msg = document.getElementById('search-msg');
+  if (!q) return;
+  msg.textContent = '검색 중...';
+  msg.style.color = '#60a5fa';
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q + ' 서울')}&limit=1&accept-language=ko`;
+    const resp = await fetch(url, { headers: { 'User-Agent': 'SeoulFloodViewer/1.0' } });
+    const data = await resp.json();
+    if (!data.length) {
+      msg.textContent = '결과 없음. 더 구체적인 주소를 입력해주세요.';
+      msg.style.color = '#f87171';
+      return;
+    }
+    const { lat, lon, display_name } = data[0];
+    if (searchMarker) map.removeLayer(searchMarker);
+    searchMarker = L.marker([lat, lon]).addTo(map)
+      .bindPopup(`<div class="popup-title">📍 검색 위치</div><div class="popup-row"><span class="popup-value">${display_name}</span></div>`, { maxWidth: 300 })
+      .openPopup();
+    map.setView([lat, lon], 17);
+    msg.textContent = display_name.substring(0, 60);
+    msg.style.color = '#34d399';
+    // Save to URL for sharing
+    const params = new URLSearchParams(window.location.search);
+    params.set('q', q);
+    history.replaceState(null, '', '?' + params.toString());
+  } catch (e) {
+    msg.textContent = '검색 오류: ' + e.message;
+    msg.style.color = '#f87171';
+  }
+}
+
+function buildLayerItem(year, count) {
+  return `<div class="layer-item" id="li-${year}" onclick="toggleLayer(${year})">
+    <div class="layer-toggle"></div>
+    <div class="layer-color" style="background:${YEAR_COLORS[year]}"></div>
+    <div class="layer-info">
+      <div class="layer-name">${year}년 침수흔적</div>
+      <div class="layer-meta">${count.toLocaleString()}개 폴리곤</div>
+    </div>
+    <div class="layer-badge">${count.toLocaleString()}</div>
+  </div>`;
+}
+
+// Load data (GeoJSON loaded into memory, but layers start OFF)
+const YEARS = [2013,2014,2016,2017,2018,2019,2020,2022,2023,2024,2025];
+
+async function loadAll() {
+  const progress = document.getElementById('load-progress');
+  const listEl = document.getElementById('layer-list');
+
+  for (let i = 0; i < YEARS.length; i++) {
+    const year = YEARS[i];
+    progress.textContent = `${year}년 로딩 중... (${i+1}/${YEARS.length})`;
+    try {
+      const resp = await fetch(`./data/flood_${year}.geojson`);
+      const geojson = await resp.json();
+      layers[year] = { year, geojson, geoLayer: null, visible: false, featureCount: geojson.features.length };
+      listEl.innerHTML += buildLayerItem(year, geojson.features.length);
+    } catch (e) {
+      console.error(`Failed to load ${year}:`, e);
+    }
+  }
+
+  updateStats();
+  document.getElementById('loading').classList.add('hidden');
+  map.fitBounds([[37.413, 126.764], [37.715, 127.183]]);
+
+  // Auto-search from URL query param
+  const urlQ = new URLSearchParams(window.location.search).get('q');
+  if (urlQ) {
+    document.getElementById('search-input').value = urlQ;
+    searchAddress();
+  }
+}
+
+loadAll();
+</script>
+</body>
+</html>
