@@ -1,413 +1,512 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="M0/M1/M2 통화량, 화폐가치 하락 분석, ETF 투자 시뮬레이션, Top10 리밸런싱 전략 백테스트">
-<title>경제 지식 · 화폐가치와 투자전략</title>
-<link rel="stylesheet" href="style.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="M0/M1/M2 통화량, 화폐가치 하락 분석, ETF 투자 시뮬레이션, Top10 리밸런싱 전략 백테스트">
+  <title>경제 지식 · 화폐가치와 투자전략</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 </head>
+
 <body>
 
-<nav>
-  <div class="logo">💰 Finance Lab</div>
-  <div class="nav-links">
-    <a href="#definitions">통화량 정의</a>
-    <a href="#data-compare">한·미 통화량</a>
-    <a href="#depreciation">화폐가치 하락</a>
-    <a href="#etf-sim">ETF 시뮬레이션</a>
-    <a href="#top10">Top10 전략</a>
-    <a href="#philosophy">공개된 원리</a>
-  </div>
-</nav>
-
-<!-- HERO -->
-<header class="hero">
-  <h1>화폐의 가치는 매년 줄어들고 있다</h1>
-  <p>M0·M1·M2 통화량 변화, CPI, 환율 데이터로 보는 화폐가치 하락과 이에 대응하는 투자 전략 분석</p>
-
-  <div style="max-width:800px;margin:32px auto 0;text-align:left;font-size:.85rem;line-height:2;color:var(--text2)">
-    <p style="margin-bottom:12px;color:var(--gold);font-weight:600;font-size:.9rem">📋 이 페이지에서 다루는 내용</p>
-    <p>① <a href="#data-compare" style="color:var(--cyan)">통화량 비교</a> — 한국·미국 중앙은행이 매년 찍어내는 돈의 양. 한국 M2는 20년간 <b>4.2배</b> 증가.</p>
-    <p>② <a href="#depreciation" style="color:var(--red)">화폐가치 하락</a> — 현금 보유는 매년 7~8%씩 가치 손실. 20년간 <b>실질 가치 절반 이하</b>로 하락. (계산기로 아무 물건값 넣으면 체감됩니다)</p>
-    <p>③ <a href="#etf-sim" style="color:var(--green)">ETF 적립 투자</a> — 매월 <b>10만원씩</b> 3개 인덱스 ETF에 30년 적립하면? 차트 안 보고 자동이체만 해도 <b>원금 대비 5~15배</b> 성장.</p>
-    <p>④ <a href="#top10" style="color:var(--gold)">Top 10 리밸런싱</a> — 시가총액 상위 10개에 넣어두고, <b>1년에 딱 한 번</b> 비율만 맞춰주면? 20년간 S&P 500 대비 <b>초과 수익</b> 달성.</p>
-    <p style="margin-top:16px;padding:12px 16px;background:rgba(245,158,11,0.08);border-radius:8px;border:1px solid rgba(245,158,11,0.2)">
-      <span style="color:var(--gold)">💡 결론:</span> 투기가 아닙니다. <b>부담 없는 금액을 꾸준히, 규칙대로</b> 투자하는 것만으로도 화폐가치 하락을 방어하고 연금처럼 운용할 수 있습니다.
-    </p>
-  </div>
-</header>
-
-<!-- ========== SECTION 1: 통화량 정의 ========== -->
-<section id="definitions" class="fade-in">
-  <div class="section-title">
-    <span class="icon" style="background:var(--grad1)">📊</span>
-    통화량이란? (M0 · M1 · M2)
-  </div>
-  <p class="section-sub">중앙은행이 경제 내 유통되는 돈의 양을 측정하는 지표입니다.</p>
-  <div class="card-grid">
-    <div class="card">
-      <span class="tag" style="background:rgba(245,158,11,0.15);color:var(--gold)">M0 본원통화</span>
-      <h3>화폐발행액 + 한은예치금</h3>
-      <p style="color:var(--text2);font-size:.9rem">중앙은행이 직접 공급하는 통화. 시중에 유통되는 <b>현금</b>과 금융기관이 한국은행에 예치한 <b>지급준비금</b>의 합계입니다. 통화정책의 출발점이 되는 가장 기초적인 화폐량.</p>
+  <nav>
+    <div class="logo">💰 Finance Lab</div>
+    <div class="nav-links">
+      <a href="#definitions">통화량 정의</a>
+      <a href="#data-compare">한·미 통화량</a>
+      <a href="#depreciation">화폐가치 하락</a>
+      <a href="#etf-sim">ETF 시뮬레이션</a>
+      <a href="#top10">Top10 전략</a>
+      <a href="#philosophy">공개된 원리</a>
     </div>
-    <div class="card">
-      <span class="tag" style="background:rgba(6,182,212,0.15);color:var(--cyan)">M1 협의통화</span>
-      <h3>현금 + 요구불예금 + 수시입출식</h3>
-      <p style="color:var(--text2);font-size:.9rem"><b>즉시 사용 가능한 돈</b>의 총량. 현금통화에 요구불예금, 수시입출식 저축성예금을 더한 것으로, 유동성이 매우 높은 금융자산만 포함합니다.</p>
-    </div>
-    <div class="card">
-      <span class="tag" style="background:rgba(139,92,246,0.15);color:var(--purple)">M2 광의통화</span>
-      <h3>M1 + 정기예적금 + 시장형 상품</h3>
-      <p style="color:var(--text2);font-size:.9rem">경제 분석에 <b>가장 널리 사용</b>되는 통화 지표. M1에 만기 2년 미만의 정기예적금, CD, RP, 실적배당형 상품 등을 포함합니다. 시중 유동성을 가장 잘 반영.</p>
-    </div>
-  </div>
-</section>
+  </nav>
 
-<!-- ========== SECTION 2: 한·미 통화량 비교 + 환율 ========== -->
-<section id="data-compare" class="fade-in">
-  <div class="section-title">
-    <span class="icon" style="background:var(--grad2)">🌐</span>
-    한·미 통화량 비교 & 환율
-  </div>
-  <p class="section-sub">
-    한국과 미국의 중앙은행이 매년 얼마나 돈을 찍어내는지, 그리고 그것이 환율에 어떤 영향을 미치는지를 데이터로 확인합니다.
-  </p>
-  <div id="data-sources-box" style="margin-bottom:20px"></div>
+  <!-- HERO -->
+  <header class="hero">
+    <h1>화폐의 가치는 매년 줄어들고 있다</h1>
+    <p>M0·M1·M2 통화량 변화, CPI, 환율 데이터로 보는 화폐가치 하락과 이에 대응하는 투자 전략 분석</p>
+    <p style="font-size:.95rem;color:var(--text);line-height:1.9;margin:0">
+      지금의 5만원으로 할 수 있는 일은 20년 전에는 1만원으로 할 수 있었습니다. 20년 동안 1만원을 금고에 그냥 넣어놨다면, 아무것도 안 했는데도 4만원을 손해 본 것과 같습니다. <b>이것이 돈을
+        가만히 두면 안 되는 이유입니다.</b><br><br>
 
-  <p style="font-size:.85rem;color:var(--text2);margin-bottom:12px;line-height:1.7">
-    📋 <b>아래 표의 핵심:</b> 한국의 M2(광의통화)는 2005년 1,022조원에서 2024년 4,289조원으로 <b>약 4.2배</b> 증가했습니다. 같은 기간 미국 M2는 약 3.1배 증가했습니다.
-    <b style="color:var(--gold)">돈이 더 빠르게 풀리는 나라의 화폐가 더 빠르게 가치를 잃습니다.</b>
-  </p>
-  <div class="table-wrap"><table id="compare-table"><thead></thead><tbody></tbody></table></div>
+      정부와 은행이 돈을 계속 찍어내면 시중에 돈이 흔해져 내 돈의 가치가 떨어집니다. 즉, 물가 상승은 <b>'현금을 그대로 들고 투자하지 않은 사람들에게 몰래 걷어가는 세금'</b>과도
+      같습니다.<br><br>
 
-  <h3 style="margin-top:40px;font-size:1.1rem">📈 한·미 M2 통화량 추이</h3>
-  <p style="font-size:.82rem;color:var(--text2);margin-bottom:8px">양국 중앙은행이 얼마나 많은 돈을 시중에 풀었는지를 보여줍니다. 두 나라 모두 꾸준히 증가하는 것이 핵심입니다.</p>
-  <div class="chart-container"><canvas id="chart-m2-compare"></canvas></div>
+      하지만 이 돈을 개인의 장난질이 불가능한 미국 시장에, 50년 이상 검증된 교과서적인 방법으로 꾸준히 모으기만 했다면 어땠을까요? 지난 20년간 투자금은 배당을 포함해 무려 15배로 불어났습니다.
+      <b>1만원이 15만원이 된 것입니다.</b><br><br>
 
-  <h3 style="margin-top:40px;font-size:1.1rem">💱 원/달러 환율 추이</h3>
-  <p style="font-size:.82rem;color:var(--text2);margin-bottom:8px">환율이 오르면 원화가 약해진 것(같은 달러를 사려면 더 많은 원화가 필요), 내리면 원화가 강해진 것입니다.</p>
-  <div class="chart-container"><canvas id="chart-exchange"></canvas></div>
-
-  <h3 style="margin-top:40px;font-size:1.1rem">🔗 한·미 M2 증가율 차이 vs 환율 변동</h3>
-  <p style="font-size:.82rem;color:var(--text2);margin-bottom:8px">
-    <b style="color:var(--red)">빨간 막대</b>: 한국이 미국보다 돈을 더 많이 찍었을 때 (원화 약세 압력) · <b style="color:var(--green)">초록 막대</b>: 미국이 더 많이 찍었을 때 (원화 강세 압력)<br>
-    <b style="color:var(--purple)">보라선</b>: 실제 환율 변동. M2 차이가 클수록 환율이 같은 방향으로 움직이는 경향이 있습니다.
-  </p>
-  <div class="chart-container"><canvas id="chart-m2-fx-correlation"></canvas></div>
-
-  <div class="card" style="margin-top:24px;border-left:3px solid var(--purple)">
-    <h3 style="font-size:.95rem;margin-bottom:8px">📌 환율 전망에 대한 시사점</h3>
-    <p style="font-size:.85rem;color:var(--text2);line-height:1.8">
-      환율은 두 나라의 <b>통화량 증가 속도 차이</b>에 영향을 받습니다. 한국이 미국보다 돈을 더 빠르게 풀면 원화 가치가 하락(환율 상승)하고, 반대면 원화가 강세(환율 하락)입니다.<br>
-      2020~2021년 미국이 코로나 대응으로 M2를 급격히 늘렸을 때 오히려 원화가 강세였던 것이 이를 증명합니다.
-      <b style="color:var(--gold)">장기적으로 한국 M2 증가율이 미국보다 높은 추세가 유지된다면, 환율은 상승(원화 약세) 방향으로 갈 가능성이 높습니다.</b>
-      이는 달러 자산을 보유하는 것이 환율 상승에 따른 추가 수익을 기대할 수 있다는 의미이기도 합니다.
+      <span style="color:var(--gold);font-weight:600">지금 불어난 이 15만원을 과거 가치로 환산하면 대략 3만원이 됩니다. 같은 시점의 가격으로 통일해서 비교해보면,
+        가만히 둔 돈은 80% 손해를 봤고 투자한 돈은 3배로 불어난 것입니다. 즉, 투자는 대박을 노리는 게 아니라 최소한 내 돈의 가치를 '유지 이상' 하기 위한 핵심 생존 수단입니다.</span>
     </p>
-  </div>
-</section>
 
-<!-- ========== SECTION 3: 화폐가치 하락 ========== -->
-<section id="depreciation" class="fade-in">
-  <div class="section-title">
-    <span class="icon" style="background:linear-gradient(135deg,#ef4444,#f59e0b)">🔥</span>
-    화폐가치 하락 분석
-  </div>
-  <p class="section-sub">
-    공식: <code style="background:var(--bg2);padding:4px 10px;border-radius:4px;color:var(--gold)">CPI(%) + M2증가율(%) × 0.732</code> 로 연간 실질 화폐가치 하락률을 계산합니다.
-  </p>
+    <div style="max-width:800px;margin:32px auto 0;text-align:left;font-size:.85rem;line-height:2;color:var(--text2)">
+      <p style="margin-bottom:12px;color:var(--gold);font-weight:600;font-size:.9rem">📋 이 페이지에서 다루는 내용</p>
+      <p>① <a href="#data-compare" style="color:var(--cyan)">통화량 비교</a> — 한국·미국 중앙은행이 매년 찍어내는 돈의 양. 한국 M2는 20년간
+        <b>4.2배</b> 증가.
+      </p>
+      <p>② <a href="#depreciation" style="color:var(--red)">화폐가치 하락</a> — 현금 보유는 매년 7~8%씩 가치 손실. 20년간 <b>실질 가치 절반
+          이하</b>로 하락. (계산기로 아무 물건값 넣으면 체감됩니다)</p>
+      <p>③ <a href="#etf-sim" style="color:var(--green)">ETF 적립 투자</a> — 매월 <b>10만원씩</b> 3개 인덱스 ETF에 30년 적립하면? 차트 안 보고
+        자동이체만 해도 <b>원금 대비 5~15배</b> 성장.</p>
+      <p>④ <a href="#top10" style="color:var(--gold)">Top 10 리밸런싱</a> — 시가총액 상위 10개에 넣어두고, <b>1년에 딱 한 번</b> 비율만 맞춰주면?
+        20년간 S&P 500 대비 <b>초과 수익</b> 달성.</p>
+      <p
+        style="margin-top:16px;padding:12px 16px;background:rgba(245,158,11,0.08);border-radius:8px;border:1px solid rgba(245,158,11,0.2)">
+        <span style="color:var(--gold)">💡 결론:</span> 투기가 아닙니다. <b>부담 없는 금액을 꾸준히, 규칙대로</b> 투자하는 것만으로도 화폐가치 하락을 방어하고 연금처럼
+        운용할 수 있습니다.
+      </p>
+    </div>
+  </header>
 
-  <div class="card" style="margin-bottom:20px;border-left:3px solid var(--gold)">
-    <p style="font-size:.85rem;color:var(--text2);line-height:1.8">
-      <b>🤔 왜 이 공식인가요?</b> CPI(소비자물가지수)는 실제 물건값이 얼마나 올랐는지를 보여줍니다.
-      하지만 정부가 찍어낸 돈(M2)이 아직 물가에 반영되지 않은 <b>"숨겨진 인플레이션"</b>도 있습니다.
-      M2 증가분에 0.732(통화 승수 보정계수)를 곱해서 이 효과까지 합산한 것이 <b>실질 화폐가치 하락률</b>입니다.<br><br>
-      <span style="color:var(--gold)">쉽게 말하면:</span> "은행에 넣어둬도 이자가 이 수치를 못 이기면, 실질적으로 돈을 잃고 있는 것"입니다.
+  <!-- ========== SECTION 1: 통화량 정의 ========== -->
+  <section id="definitions" class="fade-in">
+    <div class="section-title">
+      <span class="icon" style="background:var(--grad1)">📊</span>
+      통화량이란? (M0 · M1 · M2)
+    </div>
+    <p class="section-sub">중앙은행이 경제 내 유통되는 돈의 양을 측정하는 지표입니다.</p>
+    <div class="card-grid">
+      <div class="card">
+        <span class="tag" style="background:rgba(245,158,11,0.15);color:var(--gold)">M0 본원통화</span>
+        <h3>화폐발행액 + 한은예치금</h3>
+        <p style="color:var(--text2);font-size:.9rem">중앙은행이 직접 공급하는 통화. 시중에 유통되는 <b>현금</b>과 금융기관이 한국은행에 예치한
+          <b>지급준비금</b>의 합계입니다. 통화정책의 출발점이 되는 가장 기초적인 화폐량.
+        </p>
+      </div>
+      <div class="card">
+        <span class="tag" style="background:rgba(6,182,212,0.15);color:var(--cyan)">M1 협의통화</span>
+        <h3>현금 + 요구불예금 + 수시입출식</h3>
+        <p style="color:var(--text2);font-size:.9rem"><b>즉시 사용 가능한 돈</b>의 총량. 현금통화에 요구불예금, 수시입출식 저축성예금을 더한 것으로, 유동성이 매우
+          높은 금융자산만 포함합니다.</p>
+      </div>
+      <div class="card">
+        <span class="tag" style="background:rgba(139,92,246,0.15);color:var(--purple)">M2 광의통화</span>
+        <h3>M1 + 정기예적금 + 시장형 상품</h3>
+        <p style="color:var(--text2);font-size:.9rem">경제 분석에 <b>가장 널리 사용</b>되는 통화 지표. M1에 만기 2년 미만의 정기예적금, CD, RP, 실적배당형
+          상품 등을 포함합니다. 시중 유동성을 가장 잘 반영.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SECTION 2: 한·미 통화량 비교 + 환율 ========== -->
+  <section id="data-compare" class="fade-in">
+    <div class="section-title">
+      <span class="icon" style="background:var(--grad2)">🌐</span>
+      한·미 통화량 비교 & 환율
+    </div>
+    <p class="section-sub">
+      한국과 미국의 중앙은행이 매년 얼마나 돈을 찍어내는지, 그리고 그것이 환율에 어떤 영향을 미치는지를 데이터로 확인합니다.
     </p>
-  </div>
+    <div id="data-sources-box" style="margin-bottom:20px"></div>
 
-  <div class="card" style="margin-bottom:24px;border-color:var(--gold);border-width:1px">
-    <h3 style="font-size:.95rem;margin-bottom:12px;color:var(--gold)">🧮 화폐가치 계산기</h3>
-    <p style="font-size:.82rem;color:var(--text2);margin-bottom:16px">아무 연도에 금액을 입력하면, 다른 연도의 실질 등가 금액이 자동 계산됩니다. (예: 2012년에 2,000원 → 2024년에는?)</p>
+    <p style="font-size:.85rem;color:var(--text2);margin-bottom:12px;line-height:1.7">
+      📋 <b>아래 표의 핵심:</b> 한국의 M2(광의통화)는 2005년 1,022조원에서 2024년 4,289조원으로 <b>약 4.2배</b> 증가했습니다. 같은 기간 미국 M2는 약 3.1배
+      증가했습니다.
+      <b style="color:var(--gold)">돈이 더 빠르게 풀리는 나라의 화폐가 더 빠르게 가치를 잃습니다.</b>
+    </p>
+    <div class="table-wrap">
+      <table id="compare-table">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:40px;font-size:1.1rem">📈 한·미 M2 통화량 추이</h3>
+    <p style="font-size:.82rem;color:var(--text2);margin-bottom:8px">양국 중앙은행이 얼마나 많은 돈을 시중에 풀었는지를 보여줍니다. 두 나라 모두 꾸준히
+      증가하는 것이 핵심입니다.</p>
+    <div class="chart-container"><canvas id="chart-m2-compare"></canvas></div>
+
+    <h3 style="margin-top:40px;font-size:1.1rem">💱 원/달러 환율 추이</h3>
+    <p style="font-size:.82rem;color:var(--text2);margin-bottom:8px">환율이 오르면 원화가 약해진 것(같은 달러를 사려면 더 많은 원화가 필요), 내리면 원화가
+      강해진 것입니다.</p>
+    <div class="chart-container"><canvas id="chart-exchange"></canvas></div>
+
+    <h3 style="margin-top:40px;font-size:1.1rem">🔗 한·미 M2 증가율 차이 vs 환율 변동</h3>
+    <p style="font-size:.82rem;color:var(--text2);margin-bottom:8px">
+      <b style="color:var(--red)">빨간 막대</b>: 한국이 미국보다 돈을 더 많이 찍었을 때 (원화 약세 압력) · <b style="color:var(--green)">초록
+        막대</b>: 미국이 더 많이 찍었을 때 (원화 강세 압력)<br>
+      <b style="color:var(--purple)">보라선</b>: 실제 환율 변동. M2 차이가 클수록 환율이 같은 방향으로 움직이는 경향이 있습니다.
+    </p>
+    <div class="chart-container"><canvas id="chart-m2-fx-correlation"></canvas></div>
+
+    <div class="card" style="margin-top:24px;border-left:3px solid var(--purple)">
+      <h3 style="font-size:.95rem;margin-bottom:8px">📌 환율 전망에 대한 시사점</h3>
+      <p style="font-size:.85rem;color:var(--text2);line-height:1.8">
+        환율은 두 나라의 <b>통화량 증가 속도 차이</b>에 영향을 받습니다. 한국이 미국보다 돈을 더 빠르게 풀면 원화 가치가 하락(환율 상승)하고, 반대면 원화가 강세(환율 하락)입니다.<br>
+        2020~2021년 미국이 코로나 대응으로 M2를 급격히 늘렸을 때 오히려 원화가 강세였던 것이 이를 증명합니다.
+        <b style="color:var(--gold)">장기적으로 한국 M2 증가율이 미국보다 높은 추세가 유지된다면, 환율은 상승(원화 약세) 방향으로 갈 가능성이 높습니다.</b>
+        이는 달러 자산을 보유하는 것이 환율 상승에 따른 추가 수익을 기대할 수 있다는 의미이기도 합니다.
+      </p>
+    </div>
+  </section>
+
+  <!-- ========== SECTION 3: 화폐가치 하락 ========== -->
+  <section id="depreciation" class="fade-in">
+    <div class="section-title">
+      <span class="icon" style="background:linear-gradient(135deg,#ef4444,#f59e0b)">🔥</span>
+      화폐가치 하락 분석
+    </div>
+    <p class="section-sub">
+      공식: <code
+        style="background:var(--bg2);padding:4px 10px;border-radius:4px;color:var(--gold)">CPI(%) + M2증가율(%) × 0.732</code>
+      로 연간 실질 화폐가치 하락률을 계산합니다.
+    </p>
+
+    <div class="card" style="margin-bottom:20px;border-left:3px solid var(--gold)">
+      <p style="font-size:.85rem;color:var(--text2);line-height:1.8">
+        <b>🤔 왜 이 공식인가요?</b> CPI(소비자물가지수)는 실제 물건값이 얼마나 올랐는지를 보여줍니다.
+        하지만 정부가 찍어낸 돈(M2)이 아직 물가에 반영되지 않은 <b>"숨겨진 인플레이션"</b>도 있습니다.
+        M2 증가분에 0.732(통화 승수 보정계수)를 곱해서 이 효과까지 합산한 것이 <b>실질 화폐가치 하락률</b>입니다.<br><br>
+        <span style="color:var(--gold)">쉽게 말하면:</span> "은행에 넣어둬도 이자가 이 수치를 못 이기면, 실질적으로 돈을 잃고 있는 것"입니다.
+      </p>
+    </div>
+
+    <div class="card" style="margin-bottom:24px;border-color:var(--gold);border-width:1px">
+      <h3 style="font-size:.95rem;margin-bottom:12px;color:var(--gold)">🧮 화폐가치 계산기</h3>
+      <p style="font-size:.82rem;color:var(--text2);margin-bottom:16px">아무 연도에 금액을 입력하면, 다른 연도의 실질 등가 금액이 자동 계산됩니다. (예:
+        2012년에 2,000원 → 2024년에는?)</p>
+      <div class="input-group">
+        <label>기준 연도:</label>
+        <select id="dep-calc-year"
+          style="background:var(--bg2);border:1px solid var(--card-border);color:var(--text);padding:8px 12px;border-radius:8px;font-family:inherit"></select>
+        <label>금액 (원):</label>
+        <input type="number" id="dep-calc-amount" value="10000" min="1" style="width:140px">
+        <span id="dep-calc-label" style="color:var(--gold);font-weight:600">10,000원</span>
+      </div>
+    </div>
+
+    <p style="font-size:.82rem;color:var(--text2);margin-bottom:8px">📋 <b>환산 금액 열</b>을 보세요: 기준 연도의 금액이 과거에는 더 작은 금액과
+      같았고, 미래에는 더 큰 금액이 필요합니다.</p>
+    <div class="table-wrap">
+      <table id="depreciation-table">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <p style="font-size:.82rem;color:var(--text2);margin:16px 0 8px">📉 아래 차트의 <b style="color:var(--red)">빨간선</b>:
+      100만원의 실질 가치가 해마다 줄어드는 모습. <b style="color:var(--gold)">노란 막대</b>: 그 해의 하락률.</p>
+    <div class="chart-container"><canvas id="chart-depreciation"></canvas></div>
+    <div class="result-cards" id="depreciation-summary"></div>
+
+    <div class="card" style="margin-top:32px;border-left:3px solid var(--red)">
+      <h3 style="font-size:.95rem;margin-bottom:12px">📌 핵심: "투자 안 하는 것"이 진짜 위험한 이유</h3>
+      <p style="font-size:.85rem;color:var(--text2);line-height:1.8">
+        <b style="color:var(--red)">현금을 그대로 보유하면 매년 7~8%씩 가치가 사라집니다.</b>
+        은행 예금 이자가 연 3~4%라면, 실질적으로는 <b>매년 3~4%씩 손해</b>를 보는 셈입니다.<br><br>
+        📊 <b>구체적 예시:</b><br>
+        · 2005년에 <b>1,000만원</b>을 은행에 넣고 20년간 예금(연 3%)으로만 굴렸다면 → 약 1,806만원<br>
+        · 하지만 같은 기간 화폐가치가 절반 이하로 떨어졌으므로 → 실질 가치는 약 <b style="color:var(--red)">900만원 수준</b><br>
+        · 즉, 열심히 저축했는데 <b>오히려 100만원을 잃은 것</b>과 같습니다.<br><br>
+        <span style="color:var(--gold)">💡 그래서 어떻게 해야 하나요?</span> 주식 투기가 아닙니다. 아래 전략들처럼
+        <b>부담 없는 소액을 꾸준히 ETF에 적립</b>하거나 <b>정해진 규칙대로 리밸런싱</b>하는 것만으로도
+        화폐가치 하락을 방어하고, 오히려 자산을 크게 불릴 수 있습니다.
+      </p>
+    </div>
+  </section>
+
+  <!-- ========== SECTION 4: ETF 시뮬레이션 ========== -->
+  <section id="etf-sim" class="fade-in">
+    <div class="section-title">
+      <span class="icon" style="background:var(--grad3)">📈</span>
+      ETF 30년 투자 시뮬레이션
+    </div>
+    <p class="section-sub">매월 일정 금액을 투자하고 배당을 전액 재투자할 때 30년 후 예상 자산을 시뮬레이션합니다.</p>
+    <div id="etf-sources-box" style="margin-bottom:16px"></div>
+
+    <div class="card" style="margin-bottom:24px">
+      <table style="width:100%;font-size:.85rem">
+        <thead>
+          <tr>
+            <th>ETF</th>
+            <th>배당 주기</th>
+            <th>연 배당률</th>
+            <th>연 성장률</th>
+            <th>설명</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="color:var(--cyan);font-weight:600">QQQ</td>
+            <td>연</td>
+            <td>2.2%</td>
+            <td>15%</td>
+            <td>나스닥100 지수추종</td>
+          </tr>
+          <tr>
+            <td style="color:var(--green);font-weight:600">SCHD</td>
+            <td>분기</td>
+            <td>3.2%</td>
+            <td>12%</td>
+            <td>미국 배당성장주</td>
+          </tr>
+          <tr>
+            <td style="color:var(--purple);font-weight:600">SPHD</td>
+            <td>월</td>
+            <td>4.4%</td>
+            <td>9.5%</td>
+            <td>고배당 저변동</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
     <div class="input-group">
-      <label>기준 연도:</label>
-      <select id="dep-calc-year" style="background:var(--bg2);border:1px solid var(--card-border);color:var(--text);padding:8px 12px;border-radius:8px;font-family:inherit"></select>
-      <label>금액 (원):</label>
-      <input type="number" id="dep-calc-amount" value="10000" min="1" style="width:140px">
-      <span id="dep-calc-label" style="color:var(--gold);font-weight:600">10,000원</span>
+      <label>월 투자금 (만원):</label>
+      <input type="number" id="monthly-input" value="100" min="1" max="10000" style="width:120px">
+      <input type="range" id="monthly-slider" min="10" max="1000" value="100" step="10">
+      <span id="monthly-display" style="color:var(--gold);font-weight:600;font-size:1.1rem">100만원</span>
     </div>
-  </div>
 
-  <p style="font-size:.82rem;color:var(--text2);margin-bottom:8px">📋 <b>환산 금액 열</b>을 보세요: 기준 연도의 금액이 과거에는 더 작은 금액과 같았고, 미래에는 더 큰 금액이 필요합니다.</p>
-  <div class="table-wrap"><table id="depreciation-table"><thead></thead><tbody></tbody></table></div>
+    <div class="result-cards" id="etf-results"></div>
+    <div id="etf-krw-note" style="margin:12px 0;font-size:.82rem;color:var(--text2)"></div>
+    <div class="chart-container"><canvas id="chart-etf-sim"></canvas></div>
 
-  <p style="font-size:.82rem;color:var(--text2);margin:16px 0 8px">📉 아래 차트의 <b style="color:var(--red)">빨간선</b>: 100만원의 실질 가치가 해마다 줄어드는 모습. <b style="color:var(--gold)">노란 막대</b>: 그 해의 하락률.</p>
-  <div class="chart-container"><canvas id="chart-depreciation"></canvas></div>
-  <div class="result-cards" id="depreciation-summary"></div>
+    <h3 style="margin-top:40px;font-size:1.1rem">📊 과거 실제 수익률 (백테스트)</h3>
+    <div class="table-wrap">
+      <table id="etf-backtest-table">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
 
-  <div class="card" style="margin-top:32px;border-left:3px solid var(--red)">
-    <h3 style="font-size:.95rem;margin-bottom:12px">📌 핵심: "투자 안 하는 것"이 진짜 위험한 이유</h3>
-    <p style="font-size:.85rem;color:var(--text2);line-height:1.8">
-      <b style="color:var(--red)">현금을 그대로 보유하면 매년 7~8%씩 가치가 사라집니다.</b>
-      은행 예금 이자가 연 3~4%라면, 실질적으로는 <b>매년 3~4%씩 손해</b>를 보는 셈입니다.<br><br>
-      📊 <b>구체적 예시:</b><br>
-      · 2005년에 <b>1,000만원</b>을 은행에 넣고 20년간 예금(연 3%)으로만 굴렸다면 → 약 1,806만원<br>
-      · 하지만 같은 기간 화폐가치가 절반 이하로 떨어졌으므로 → 실질 가치는 약 <b style="color:var(--red)">900만원 수준</b><br>
-      · 즉, 열심히 저축했는데 <b>오히려 100만원을 잃은 것</b>과 같습니다.<br><br>
-      <span style="color:var(--gold)">💡 그래서 어떻게 해야 하나요?</span> 주식 투기가 아닙니다. 아래 전략들처럼
-      <b>부담 없는 소액을 꾸준히 ETF에 적립</b>하거나 <b>정해진 규칙대로 리밸런싱</b>하는 것만으로도
-      화폐가치 하락을 방어하고, 오히려 자산을 크게 불릴 수 있습니다.
-    </p>
-  </div>
-</section>
+    <div class="card" style="margin-top:32px;border-color:var(--cyan);border-width:1px">
+      <h3 style="font-size:.95rem;margin-bottom:12px;color:var(--cyan)">🧮 ETF 백테스트 계산기</h3>
+      <p style="font-size:.82rem;color:var(--text2);margin-bottom:16px">특정 연도에 일정 금액을 투자했다면, 실제 수익률 기반으로 현재까지 얼마가 되었을지
+        계산합니다.</p>
+      <div class="input-group">
+        <label>투자 시작 연도:</label>
+        <select id="bt-start-year"
+          style="background:var(--bg2);border:1px solid var(--card-border);color:var(--text);padding:8px 12px;border-radius:8px;font-family:inherit"></select>
+        <label>투자금 ($):</label>
+        <input type="number" id="bt-amount" value="10000" min="100" style="width:140px">
+        <label>기준 환율 (₩/$):</label>
+        <input type="number" id="bt-exchange" value="1363" min="800" max="2000" style="width:120px">
+      </div>
+      <div class="result-cards" id="bt-results" style="margin-top:16px"></div>
+      <div class="table-wrap" style="margin-top:16px">
+        <table id="bt-detail-table">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
 
-<!-- ========== SECTION 4: ETF 시뮬레이션 ========== -->
-<section id="etf-sim" class="fade-in">
-  <div class="section-title">
-    <span class="icon" style="background:var(--grad3)">📈</span>
-    ETF 30년 투자 시뮬레이션
-  </div>
-  <p class="section-sub">매월 일정 금액을 투자하고 배당을 전액 재투자할 때 30년 후 예상 자산을 시뮬레이션합니다.</p>
-  <div id="etf-sources-box" style="margin-bottom:16px"></div>
+    <div class="card" style="margin-top:32px;border-left:3px solid var(--green)">
+      <h3 style="font-size:.95rem;margin-bottom:12px">📌 이 전략이 '투기'가 아닌 이유</h3>
+      <p style="font-size:.85rem;color:var(--text2);line-height:1.8">
+        <b style="color:var(--gold)">가정:</b> 과거 실제 총수익률(CAGR)이 미래에도 유사하게 유지된다고 가정합니다. 배당금 재투자를 포함한 실적 데이터입니다.<br><br>
+        <b style="color:var(--cyan)">월 10만원만 투자해도:</b><br>
+        · 30년 총 납입: 360회 × 10만원 = <b>3,600만원</b><br>
+        · QQQ 기준 예상: 약 <b>1.5~2억원</b> (원금의 4~6배)<br>
+        · 같은 돈을 현금으로 보유했다면? 실질 가치 <b>약 700만원</b> (80% 증발)<br><br>
+        <span style="color:var(--red)">현금 보유 → 3,600만원이 700만원으로 축소</span><br>
+        <span style="color:var(--green)">ETF 적립 → 3,600만원이 1.5~2억으로 증가</span><br><br>
+        차트를 보거나 종목을 고를 필요가 <b>전혀 없습니다.</b>
+        증권 앱에서 <b>매월 자동매수</b>만 설정하면 끝입니다.<br><br>
+        <span style="color:var(--gold)">💡 연령대별 활용:</span><br>
+        · <b>20~40대</b>: QQQ로 자산 증식 (하락기 = 저가 매수 기회)<br>
+        · <b>40~50대</b>: SCHD로 분기 배당 + 안정 성장<br>
+        · <b>은퇴 후</b>: SPHD 월배당으로 매달 생활비 확보
+      </p>
+    </div>
 
-  <div class="card" style="margin-bottom:24px">
-    <table style="width:100%;font-size:.85rem">
-      <thead><tr><th>ETF</th><th>배당 주기</th><th>연 배당률</th><th>연 성장률</th><th>설명</th></tr></thead>
-      <tbody>
-        <tr><td style="color:var(--cyan);font-weight:600">QQQ</td><td>연</td><td>2.2%</td><td>15%</td><td>나스닥100 지수추종</td></tr>
-        <tr><td style="color:var(--green);font-weight:600">SCHD</td><td>분기</td><td>3.2%</td><td>12%</td><td>미국 배당성장주</td></tr>
-        <tr><td style="color:var(--purple);font-weight:600">SPHD</td><td>월</td><td>4.4%</td><td>9.5%</td><td>고배당 저변동</td></tr>
-      </tbody>
-    </table>
-  </div>
+    <div class="card" style="margin-top:16px;border-left:3px solid var(--purple)">
+      <h3 style="font-size:.95rem;margin-bottom:12px">⚠️ 리스크 요인</h3>
+      <p style="font-size:.85rem;color:var(--text2);line-height:1.8">
+        • <b>환율 리스크</b>: 원/달러 환율 변동이 원화 기준 수익률에 큰 영향. 환율 상승기(원화 약세)에는 달러 자산의 원화 가치가 증가하여 추가 수익 발생<br>
+        • <b>시장 하락 리스크</b>: 2008년(-41%), 2022년(-32%) 같은 대폭락기에 손실 발생. 그러나 적립식 투자는 하락기에 저가 매수 효과<br>
+        • <b>과거 수익률 ≠ 미래 보장</b>: 시뮬레이션은 과거 평균 기준이며, 실제 결과는 다를 수 있음
+      </p>
+    </div>
+  </section>
 
-  <div class="input-group">
-    <label>월 투자금 (만원):</label>
-    <input type="number" id="monthly-input" value="100" min="1" max="10000" style="width:120px">
-    <input type="range" id="monthly-slider" min="10" max="1000" value="100" step="10">
-    <span id="monthly-display" style="color:var(--gold);font-weight:600;font-size:1.1rem">100만원</span>
-  </div>
+  <!-- ========== SECTION 5: Top 10 리밸런싱 ========== -->
+  <section id="top10" class="fade-in">
+    <div class="section-title">
+      <span class="icon" style="background:linear-gradient(135deg,#f59e0b,#8b5cf6)">🏆</span>
+      미장 Top 10 리밸런싱 전략
+    </div>
+    <p class="section-sub">매년 초 미국 시가총액 상위 10개 종목에 동일비중(10%) 투자 → 1년 후 새 Top 10으로 리밸런싱하는 전략의 백테스트 결과</p>
+    <div id="top10-sources-box" style="margin-bottom:16px"></div>
 
-  <div class="result-cards" id="etf-results"></div>
-  <div id="etf-krw-note" style="margin:12px 0;font-size:.82rem;color:var(--text2)"></div>
-  <div class="chart-container"><canvas id="chart-etf-sim"></canvas></div>
+    <div class="card" style="margin-bottom:24px">
+      <h3 style="font-size:.95rem;margin-bottom:12px">💡 전략 규칙</h3>
+      <ul style="color:var(--text2);font-size:.85rem;padding-left:20px">
+        <li>매년 1월 1일 시가총액 기준 Top 10 선정</li>
+        <li>10개 종목에 <b>동일비중(10%씩)</b> 투자</li>
+        <li>1년 후 새로운 Top 10으로 교체: 탈락 종목 <span style="color:var(--red)">전량 매도</span>, 신규 종목 <span
+            style="color:var(--green)">매수</span></li>
+        <li>기존 유지 종목은 동일비중으로 <b>재조정</b> (상승분 매도, 하락분 추가매수)</li>
+        <li>거래비용·세금 미반영</li>
+      </ul>
+    </div>
 
-  <h3 style="margin-top:40px;font-size:1.1rem">📊 과거 실제 수익률 (백테스트)</h3>
-  <div class="table-wrap"><table id="etf-backtest-table"><thead></thead><tbody></tbody></table></div>
-
-  <div class="card" style="margin-top:32px;border-color:var(--cyan);border-width:1px">
-    <h3 style="font-size:.95rem;margin-bottom:12px;color:var(--cyan)">🧮 ETF 백테스트 계산기</h3>
-    <p style="font-size:.82rem;color:var(--text2);margin-bottom:16px">특정 연도에 일정 금액을 투자했다면, 실제 수익률 기반으로 현재까지 얼마가 되었을지 계산합니다.</p>
     <div class="input-group">
-      <label>투자 시작 연도:</label>
-      <select id="bt-start-year" style="background:var(--bg2);border:1px solid var(--card-border);color:var(--text);padding:8px 12px;border-radius:8px;font-family:inherit"></select>
-      <label>투자금 ($):</label>
-      <input type="number" id="bt-amount" value="10000" min="100" style="width:140px">
       <label>기준 환율 (₩/$):</label>
-      <input type="number" id="bt-exchange" value="1363" min="800" max="2000" style="width:120px">
+      <input type="number" id="top10-exchange" value="1363" min="800" max="2000" style="width:120px">
     </div>
-    <div class="result-cards" id="bt-results" style="margin-top:16px"></div>
-    <div class="table-wrap" style="margin-top:16px"><table id="bt-detail-table"><thead></thead><tbody></tbody></table></div>
-  </div>
+    <div class="result-cards" id="top10-summary"></div>
+    <div class="chart-container"><canvas id="chart-top10"></canvas></div>
+    <div class="table-wrap">
+      <table id="top10-table">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
 
-  <div class="card" style="margin-top:32px;border-left:3px solid var(--green)">
-    <h3 style="font-size:.95rem;margin-bottom:12px">📌 이 전략이 '투기'가 아닌 이유</h3>
-    <p style="font-size:.85rem;color:var(--text2);line-height:1.8">
-      <b style="color:var(--gold)">가정:</b> 과거 실제 총수익률(CAGR)이 미래에도 유사하게 유지된다고 가정합니다. 배당금 재투자를 포함한 실적 데이터입니다.<br><br>
-      <b style="color:var(--cyan)">월 10만원만 투자해도:</b><br>
-      · 30년 총 납입: 360회 × 10만원 = <b>3,600만원</b><br>
-      · QQQ 기준 예상: 약 <b>1.5~2억원</b> (원금의 4~6배)<br>
-      · 같은 돈을 현금으로 보유했다면? 실질 가치 <b>약 700만원</b> (80% 증발)<br><br>
-      <span style="color:var(--red)">현금 보유 → 3,600만원이 700만원으로 축소</span><br>
-      <span style="color:var(--green)">ETF 적립 → 3,600만원이 1.5~2억으로 증가</span><br><br>
-      차트를 보거나 종목을 고를 필요가 <b>전혀 없습니다.</b>
-      증권 앱에서 <b>매월 자동매수</b>만 설정하면 끝입니다.<br><br>
-      <span style="color:var(--gold)">💡 연령대별 활용:</span><br>
-      · <b>20~40대</b>: QQQ로 자산 증식 (하락기 = 저가 매수 기회)<br>
-      · <b>40~50대</b>: SCHD로 분기 배당 + 안정 성장<br>
-      · <b>은퇴 후</b>: SPHD 월배당으로 매달 생활비 확보
+    <div class="card" style="margin-top:32px;border-left:3px solid var(--gold)">
+      <h3 style="font-size:.95rem;margin-bottom:12px">📌 시사점: 리밸런싱의 효용과 한계</h3>
+      <p style="font-size:.85rem;color:var(--text2);line-height:1.8">
+        <b style="color:var(--gold)">효용:</b> 시가총액 Top 10에 동일비중으로 투자하고 연 1회 리밸런싱하는 전략은,
+        별도의 종목 분석 없이도 <b>시장의 승자를 자동으로 따라가는</b> 효과가 있습니다.
+        2017~2024년 기간에는 FAANG+AI 랠리 덕분에 S&P 500을 크게 초과하는 성과를 보였습니다.<br><br>
+        <b style="color:var(--red)">리스크:</b> 단 10개 종목에 집중하므로 <b>분산 투자 효과가 제한적</b>입니다.
+        2022년처럼 대형 기술주가 일제히 하락하면 S&P 500보다 더 큰 손실을 볼 수 있습니다 (-31.9% vs -18.1%).
+        또한 동일비중 리밸런싱은 "상승한 종목을 매도"하는 전략이므로, 강한 모멘텀 장에서는 수익을 제한할 수 있습니다.<br><br>
+        <span style="color:var(--gold)">💡 결론:</span> 정해진 금액을 Top 10에 균등 분배하고 연 1회 리밸런싱만 하는 것으로도,
+        <b>화폐가치 하락을 방어하면서 장기적으로 자산을 크게 증식</b>시킬 수 있습니다.
+        복잡한 분석 없이 <b>"시장이 선택한 최강 기업"에 기계적으로 투자</b>하는 것만으로도 충분한 성과를 달성할 수 있다는 점이 이 전략의 핵심 매력입니다.
+      </p>
+    </div>
+  </section>
+
+  <!-- ========== SECTION 6: 공개된 원리, 검증된 전략 ========== -->
+  <section id="philosophy" class="fade-in">
+    <div class="section-title">
+      <span class="icon" style="background:linear-gradient(135deg,#10b981,#06b6d4)">📖</span>
+      이것은 비밀 전략이 아닙니다
+    </div>
+    <p class="section-sub">
+      위의 모든 내용은 수십 년간 학술적으로 검증되고, 세계 최고의 투자자들이 공개적으로 권장해온 원리입니다.<br>
+      <b style="color:var(--gold)">누구나 알 수 있지만, 아무나 실천하지는 못합니다.</b>
     </p>
-  </div>
 
-  <div class="card" style="margin-top:16px;border-left:3px solid var(--purple)">
-    <h3 style="font-size:.95rem;margin-bottom:12px">⚠️ 리스크 요인</h3>
-    <p style="font-size:.85rem;color:var(--text2);line-height:1.8">
-      • <b>환율 리스크</b>: 원/달러 환율 변동이 원화 기준 수익률에 큰 영향. 환율 상승기(원화 약세)에는 달러 자산의 원화 가치가 증가하여 추가 수익 발생<br>
-      • <b>시장 하락 리스크</b>: 2008년(-41%), 2022년(-32%) 같은 대폭락기에 손실 발생. 그러나 적립식 투자는 하락기에 저가 매수 효과<br>
-      • <b>과거 수익률 ≠ 미래 보장</b>: 시뮬레이션은 과거 평균 기준이며, 실제 결과는 다를 수 있음
-    </p>
-  </div>
-</section>
+    <!-- 선행연구자 인용 -->
+    <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
 
-<!-- ========== SECTION 5: Top 10 리밸런싱 ========== -->
-<section id="top10" class="fade-in">
-  <div class="section-title">
-    <span class="icon" style="background:linear-gradient(135deg,#f59e0b,#8b5cf6)">🏆</span>
-    미장 Top 10 리밸런싱 전략
-  </div>
-  <p class="section-sub">매년 초 미국 시가총액 상위 10개 종목에 동일비중(10%) 투자 → 1년 후 새 Top 10으로 리밸런싱하는 전략의 백테스트 결과</p>
-  <div id="top10-sources-box" style="margin-bottom:16px"></div>
+      <div class="card" style="border-left:3px solid #f59e0b">
+        <span class="tag" style="background:rgba(245,158,11,0.15);color:var(--gold)">Warren Buffett</span>
+        <p style="font-size:.92rem;color:var(--text);line-height:1.8;margin:12px 0;font-style:italic">
+          "대부분의 투자자들에게 가장 합리적인 방법은 S&P 500 인덱스 펀드를 사서 오래 보유하는 것이다."
+        </p>
+        <p style="font-size:.8rem;color:var(--text2);line-height:1.7">
+          2013년 버크셔 해서웨이 주주서한에서 아내에게 남기는 유산 운용 방침으로 <b>"자산의 90%를 S&P 500 인덱스 펀드에, 10%를 단기 국채에"</b> 넣으라고 공개적으로 밝혔습니다. 세계
+          최고의 종목 선별 투자자가 정작 가족에게는 인덱스를 추천한 것입니다.
+        </p>
+      </div>
 
-  <div class="card" style="margin-bottom:24px">
-    <h3 style="font-size:.95rem;margin-bottom:12px">💡 전략 규칙</h3>
-    <ul style="color:var(--text2);font-size:.85rem;padding-left:20px">
-      <li>매년 1월 1일 시가총액 기준 Top 10 선정</li>
-      <li>10개 종목에 <b>동일비중(10%씩)</b> 투자</li>
-      <li>1년 후 새로운 Top 10으로 교체: 탈락 종목 <span style="color:var(--red)">전량 매도</span>, 신규 종목 <span style="color:var(--green)">매수</span></li>
-      <li>기존 유지 종목은 동일비중으로 <b>재조정</b> (상승분 매도, 하락분 추가매수)</li>
-      <li>거래비용·세금 미반영</li>
-    </ul>
-  </div>
+      <div class="card" style="border-left:3px solid #06b6d4">
+        <span class="tag" style="background:rgba(6,182,212,0.15);color:var(--cyan)">John C. Bogle</span>
+        <p style="font-size:.92rem;color:var(--text);line-height:1.8;margin:12px 0;font-style:italic">
+          "건초더미에서 바늘을 찾으려 하지 마라. 건초더미 전체를 사라."
+        </p>
+        <p style="font-size:.8rem;color:var(--text2);line-height:1.7">
+          뱅가드 그룹 창립자이자 <b>인덱스 펀드의 아버지</b>. 1976년 세계 최초의 개인 투자자용 인덱스 펀드를 출시했습니다. 그의 핵심 철학: 시장 전체를 사고, 비용을 최소화하고, 절대 팔지
+          마라. 이 원칙은 50년간 검증되어 현재 뱅가드 운용자산 <b>$9조 이상</b>으로 증명되었습니다.
+        </p>
+      </div>
 
-  <div class="input-group">
-    <label>기준 환율 (₩/$):</label>
-    <input type="number" id="top10-exchange" value="1363" min="800" max="2000" style="width:120px">
-  </div>
-  <div class="result-cards" id="top10-summary"></div>
-  <div class="chart-container"><canvas id="chart-top10"></canvas></div>
-  <div class="table-wrap"><table id="top10-table"><thead></thead><tbody></tbody></table></div>
+      <div class="card" style="border-left:3px solid #8b5cf6">
+        <span class="tag" style="background:rgba(139,92,246,0.15);color:var(--purple)">Eugene Fama</span>
+        <p style="font-size:.92rem;color:var(--text);line-height:1.8;margin:12px 0;font-style:italic">
+          "시장은 이미 모든 정보를 가격에 반영하고 있다. 그 누구도 지속적으로 시장을 이길 수 없다."
+        </p>
+        <p style="font-size:.8rem;color:var(--text2);line-height:1.7">
+          2013년 노벨 경제학상 수상자. <b>효율적 시장 가설(EMH)</b>의 창시자로, 수십 년간의 데이터로 증명했습니다: 전문 펀드매니저의 80% 이상이 장기적으로 인덱스를 이기지 못합니다. 이것이
+          인덱스 투자의 학술적 기반입니다.
+        </p>
+      </div>
 
-  <div class="card" style="margin-top:32px;border-left:3px solid var(--gold)">
-    <h3 style="font-size:.95rem;margin-bottom:12px">📌 시사점: 리밸런싱의 효용과 한계</h3>
-    <p style="font-size:.85rem;color:var(--text2);line-height:1.8">
-      <b style="color:var(--gold)">효용:</b> 시가총액 Top 10에 동일비중으로 투자하고 연 1회 리밸런싱하는 전략은,
-      별도의 종목 분석 없이도 <b>시장의 승자를 자동으로 따라가는</b> 효과가 있습니다.
-      2017~2024년 기간에는 FAANG+AI 랠리 덕분에 S&P 500을 크게 초과하는 성과를 보였습니다.<br><br>
-      <b style="color:var(--red)">리스크:</b> 단 10개 종목에 집중하므로 <b>분산 투자 효과가 제한적</b>입니다.
-      2022년처럼 대형 기술주가 일제히 하락하면 S&P 500보다 더 큰 손실을 볼 수 있습니다 (-31.9% vs -18.1%).
-      또한 동일비중 리밸런싱은 "상승한 종목을 매도"하는 전략이므로, 강한 모멘텀 장에서는 수익을 제한할 수 있습니다.<br><br>
-      <span style="color:var(--gold)">💡 결론:</span> 정해진 금액을 Top 10에 균등 분배하고 연 1회 리밸런싱만 하는 것으로도,
-      <b>화폐가치 하락을 방어하면서 장기적으로 자산을 크게 증식</b>시킬 수 있습니다.
-      복잡한 분석 없이 <b>"시장이 선택한 최강 기업"에 기계적으로 투자</b>하는 것만으로도 충분한 성과를 달성할 수 있다는 점이 이 전략의 핵심 매력입니다.
-    </p>
-  </div>
-</section>
+      <div class="card" style="border-left:3px solid #10b981">
+        <span class="tag" style="background:rgba(16,185,129,0.15);color:var(--green)">Burton Malkiel</span>
+        <p style="font-size:.92rem;color:var(--text);line-height:1.8;margin:12px 0;font-style:italic">
+          "눈을 가린 원숭이가 다트를 던져 고른 포트폴리오도 전문가 못지않은 성과를 낸다."
+        </p>
+        <p style="font-size:.8rem;color:var(--text2);line-height:1.7">
+          프린스턴 대학 경제학 교수. 1973년 출간한 <b>《랜덤 워크》(A Random Walk Down Wall Street)</b>는 50년간 12판이 발행된 투자 고전입니다. 핵심 메시지: 종목을
+          고르려 하지 말고, 인덱스에 투자하고, 시간을 우군으로 만들어라.
+        </p>
+      </div>
 
-<!-- ========== SECTION 6: 공개된 원리, 검증된 전략 ========== -->
-<section id="philosophy" class="fade-in">
-  <div class="section-title">
-    <span class="icon" style="background:linear-gradient(135deg,#10b981,#06b6d4)">📖</span>
-    이것은 비밀 전략이 아닙니다
-  </div>
-  <p class="section-sub">
-    위의 모든 내용은 수십 년간 학술적으로 검증되고, 세계 최고의 투자자들이 공개적으로 권장해온 원리입니다.<br>
-    <b style="color:var(--gold)">누구나 알 수 있지만, 아무나 실천하지는 못합니다.</b>
-  </p>
+      <div class="card" style="border-left:3px solid #ef4444">
+        <span class="tag" style="background:rgba(239,68,68,0.15);color:var(--red)">Charlie Munger</span>
+        <p style="font-size:.92rem;color:var(--text);line-height:1.8;margin:12px 0;font-style:italic">
+          "투자의 첫 번째 규칙은 돈을 잃지 않는 것이고, 두 번째 규칙은 첫 번째 규칙을 잊지 않는 것이다."
+        </p>
+        <p style="font-size:.8rem;color:var(--text2);line-height:1.7">
+          워런 버핏의 반세기 파트너. 복리의 힘을 누구보다 강조했으며, <b>"아무것도 하지 않는 것이 가장 어려운 투자 전략"</b>이라고 말했습니다. 매매를 줄이고 장기 보유하는 것 자체가 가장 강력한
+          엣지(edge)라는 뜻입니다.
+        </p>
+      </div>
 
-  <!-- 선행연구자 인용 -->
-  <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
+      <div class="card" style="border-left:3px solid #64748b">
+        <span class="tag" style="background:rgba(100,116,139,0.15);color:#94a3b8">Benjamin Graham</span>
+        <p style="font-size:.92rem;color:var(--text);line-height:1.8;margin:12px 0;font-style:italic">
+          "투자자의 가장 큰 적은 시장이 아니라 자기 자신이다."
+        </p>
+        <p style="font-size:.8rem;color:var(--text2);line-height:1.7">
+          <b>가치투자의 아버지</b>이자 워런 버핏의 스승. 1949년 <b>《현명한 투자자》</b>에서 "방어적 투자자는 인덱스 수준의 분산 투자를 하고 절대로 시장 타이밍을 잡으려 하지 말라"고
+          권고했습니다. 70년 전의 조언이 지금도 유효합니다.
+        </p>
+      </div>
 
-    <div class="card" style="border-left:3px solid #f59e0b">
-      <span class="tag" style="background:rgba(245,158,11,0.15);color:var(--gold)">Warren Buffett</span>
-      <p style="font-size:.92rem;color:var(--text);line-height:1.8;margin:12px 0;font-style:italic">
-        "대부분의 투자자들에게 가장 합리적인 방법은 S&P 500 인덱스 펀드를 사서 오래 보유하는 것이다."
-      </p>
-      <p style="font-size:.8rem;color:var(--text2);line-height:1.7">
-        2013년 버크셔 해서웨이 주주서한에서 아내에게 남기는 유산 운용 방침으로 <b>"자산의 90%를 S&P 500 인덱스 펀드에, 10%를 단기 국채에"</b> 넣으라고 공개적으로 밝혔습니다. 세계 최고의 종목 선별 투자자가 정작 가족에게는 인덱스를 추천한 것입니다.
+    </div>
+
+    <!-- 알면서도 못 하는 이유 -->
+    <div class="card" style="margin-top:32px;border-left:3px solid var(--red)">
+      <h3 style="font-size:.95rem;margin-bottom:12px">🧠 그런데, 왜 알면서도 실천을 못 할까?</h3>
+      <p style="font-size:.85rem;color:var(--text2);line-height:1.9">
+        <b style="color:var(--red)">① 손실 회피 편향</b> — 주가가 -20% 떨어지면 "더 떨어지기 전에 팔아야지"라는 공포가 이성을 압도합니다. 하지만 역사적으로 모든 폭락은 결국
+        회복했습니다.<br>
+        <b style="color:var(--gold)">② 과신 편향</b> — "나는 더 좋은 종목을 고를 수 있다"는 착각. 실제로는 전문 펀드매니저의 80%도 인덱스를 이기지 못합니다.<br>
+        <b style="color:var(--cyan)">③ 단기 만족 추구</b> — 30년 뒤의 복리보다 내일 오를 주식이 더 매력적으로 느껴집니다. 이것이 인간의 본능입니다.<br>
+        <b style="color:var(--purple)">④ 뉴스와 소음</b> — 매일 쏟아지는 "폭락 경고", "지금이 기회" 같은 뉴스가 꾸준한 적립을 방해합니다.<br>
+        <b style="color:var(--green)">⑤ 주변 비교</b> — 친구가 코인으로 2배 벌었다는 소리에 흔들립니다. 하지만 손실 얘기는 아무도 안 합니다.
       </p>
     </div>
 
-    <div class="card" style="border-left:3px solid #06b6d4">
-      <span class="tag" style="background:rgba(6,182,212,0.15);color:var(--cyan)">John C. Bogle</span>
-      <p style="font-size:.92rem;color:var(--text);line-height:1.8;margin:12px 0;font-style:italic">
-        "건초더미에서 바늘을 찾으려 하지 마라. 건초더미 전체를 사라."
-      </p>
-      <p style="font-size:.8rem;color:var(--text2);line-height:1.7">
-        뱅가드 그룹 창립자이자 <b>인덱스 펀드의 아버지</b>. 1976년 세계 최초의 개인 투자자용 인덱스 펀드를 출시했습니다. 그의 핵심 철학: 시장 전체를 사고, 비용을 최소화하고, 절대 팔지 마라. 이 원칙은 50년간 검증되어 현재 뱅가드 운용자산 <b>$9조 이상</b>으로 증명되었습니다.
-      </p>
-    </div>
-
-    <div class="card" style="border-left:3px solid #8b5cf6">
-      <span class="tag" style="background:rgba(139,92,246,0.15);color:var(--purple)">Eugene Fama</span>
-      <p style="font-size:.92rem;color:var(--text);line-height:1.8;margin:12px 0;font-style:italic">
-        "시장은 이미 모든 정보를 가격에 반영하고 있다. 그 누구도 지속적으로 시장을 이길 수 없다."
-      </p>
-      <p style="font-size:.8rem;color:var(--text2);line-height:1.7">
-        2013년 노벨 경제학상 수상자. <b>효율적 시장 가설(EMH)</b>의 창시자로, 수십 년간의 데이터로 증명했습니다: 전문 펀드매니저의 80% 이상이 장기적으로 인덱스를 이기지 못합니다. 이것이 인덱스 투자의 학술적 기반입니다.
+    <!-- 결론 메시지 -->
+    <div class="card" style="margin-top:24px;border:1px solid var(--gold);background:rgba(245,158,11,0.04)">
+      <h3 style="font-size:1rem;margin-bottom:16px;color:var(--gold);text-align:center">💡 이 페이지의 최종 메시지</h3>
+      <p style="font-size:.92rem;color:var(--text);line-height:2;text-align:center;max-width:700px;margin:0 auto">
+        이 전략은 <b>비밀이 아닙니다.</b><br>
+        이미 수십 년간 학술적으로 검증되었고,<br>
+        세계 최고의 투자자들이 공개적으로 같은 이야기를 하고 있습니다.<br><br>
+        <span style="font-size:1.05rem;color:var(--gold);font-weight:700">
+          핵심은 "아는 것"이 아니라, "꾸준히 실행하는 것"입니다.
+        </span><br><br>
+        <span style="color:var(--text2);font-size:.85rem">
+          부담 없는 금액으로 시작하고, 자동이체를 설정하고, 뉴스를 끄세요.<br>
+          30년 뒤, 가장 큰 차이를 만드는 것은 타이밍도 종목 선택도 아닌 <b style="color:var(--green)">"시작 여부"</b>입니다.
+        </span>
       </p>
     </div>
 
-    <div class="card" style="border-left:3px solid #10b981">
-      <span class="tag" style="background:rgba(16,185,129,0.15);color:var(--green)">Burton Malkiel</span>
-      <p style="font-size:.92rem;color:var(--text);line-height:1.8;margin:12px 0;font-style:italic">
-        "눈을 가린 원숭이가 다트를 던져 고른 포트폴리오도 전문가 못지않은 성과를 낸다."
-      </p>
-      <p style="font-size:.8rem;color:var(--text2);line-height:1.7">
-        프린스턴 대학 경제학 교수. 1973년 출간한 <b>《랜덤 워크》(A Random Walk Down Wall Street)</b>는 50년간 12판이 발행된 투자 고전입니다. 핵심 메시지: 종목을 고르려 하지 말고, 인덱스에 투자하고, 시간을 우군으로 만들어라.
-      </p>
+    <!-- 학술 참고문헌 -->
+    <div class="card" style="margin-top:24px;border-left:3px solid var(--text2)">
+      <h3 style="font-size:.85rem;margin-bottom:8px;color:var(--text2)">📚 참고 문헌 & 선행연구</h3>
+      <ul style="font-size:.78rem;color:var(--text2);line-height:1.9;padding-left:16px;margin:0">
+        <li>Fama, E. (1970). "Efficient Capital Markets: A Review of Theory and Empirical Work." <i>Journal of
+            Finance</i></li>
+        <li>Malkiel, B. (1973). <i>A Random Walk Down Wall Street</i>. W.W. Norton & Company. (12th Ed., 2023)</li>
+        <li>Bogle, J. (2007). <i>The Little Book of Common Sense Investing</i>. Wiley.</li>
+        <li>Graham, B. (1949). <i>The Intelligent Investor</i>. Harper & Brothers. (Revised Ed., 2006)</li>
+        <li>Buffett, W. (2013). Berkshire Hathaway Annual Letter to Shareholders.</li>
+        <li>S&P Dow Jones Indices. <i>SPIVA Scorecard</i> — 장기적으로 80% 이상의 액티브 펀드가 인덱스 대비 저조한 성과</li>
+      </ul>
     </div>
+  </section>
 
-    <div class="card" style="border-left:3px solid #ef4444">
-      <span class="tag" style="background:rgba(239,68,68,0.15);color:var(--red)">Charlie Munger</span>
-      <p style="font-size:.92rem;color:var(--text);line-height:1.8;margin:12px 0;font-style:italic">
-        "투자의 첫 번째 규칙은 돈을 잃지 않는 것이고, 두 번째 규칙은 첫 번째 규칙을 잊지 않는 것이다."
-      </p>
-      <p style="font-size:.8rem;color:var(--text2);line-height:1.7">
-        워런 버핏의 반세기 파트너. 복리의 힘을 누구보다 강조했으며, <b>"아무것도 하지 않는 것이 가장 어려운 투자 전략"</b>이라고 말했습니다. 매매를 줄이고 장기 보유하는 것 자체가 가장 강력한 엣지(edge)라는 뜻입니다.
-      </p>
-    </div>
+  <footer>
+    <p>본 페이지의 데이터는 공공데이터(한국은행 ECOS, 통계청 KOSIS, FRED)를 기반으로 하며, 투자 권유가 아닙니다.</p>
+    <p style="margin-top:8px">© 2024 Finance Lab · 데이터 출처는 각 섹션의 링크를 참고하세요.</p>
+  </footer>
 
-    <div class="card" style="border-left:3px solid #64748b">
-      <span class="tag" style="background:rgba(100,116,139,0.15);color:#94a3b8">Benjamin Graham</span>
-      <p style="font-size:.92rem;color:var(--text);line-height:1.8;margin:12px 0;font-style:italic">
-        "투자자의 가장 큰 적은 시장이 아니라 자기 자신이다."
-      </p>
-      <p style="font-size:.8rem;color:var(--text2);line-height:1.7">
-        <b>가치투자의 아버지</b>이자 워런 버핏의 스승. 1949년 <b>《현명한 투자자》</b>에서 "방어적 투자자는 인덱스 수준의 분산 투자를 하고 절대로 시장 타이밍을 잡으려 하지 말라"고 권고했습니다. 70년 전의 조언이 지금도 유효합니다.
-      </p>
-    </div>
-
-  </div>
-
-  <!-- 알면서도 못 하는 이유 -->
-  <div class="card" style="margin-top:32px;border-left:3px solid var(--red)">
-    <h3 style="font-size:.95rem;margin-bottom:12px">🧠 그런데, 왜 알면서도 실천을 못 할까?</h3>
-    <p style="font-size:.85rem;color:var(--text2);line-height:1.9">
-      <b style="color:var(--red)">① 손실 회피 편향</b> — 주가가 -20% 떨어지면 "더 떨어지기 전에 팔아야지"라는 공포가 이성을 압도합니다. 하지만 역사적으로 모든 폭락은 결국 회복했습니다.<br>
-      <b style="color:var(--gold)">② 과신 편향</b> — "나는 더 좋은 종목을 고를 수 있다"는 착각. 실제로는 전문 펀드매니저의 80%도 인덱스를 이기지 못합니다.<br>
-      <b style="color:var(--cyan)">③ 단기 만족 추구</b> — 30년 뒤의 복리보다 내일 오를 주식이 더 매력적으로 느껴집니다. 이것이 인간의 본능입니다.<br>
-      <b style="color:var(--purple)">④ 뉴스와 소음</b> — 매일 쏟아지는 "폭락 경고", "지금이 기회" 같은 뉴스가 꾸준한 적립을 방해합니다.<br>
-      <b style="color:var(--green)">⑤ 주변 비교</b> — 친구가 코인으로 2배 벌었다는 소리에 흔들립니다. 하지만 손실 얘기는 아무도 안 합니다.
-    </p>
-  </div>
-
-  <!-- 결론 메시지 -->
-  <div class="card" style="margin-top:24px;border:1px solid var(--gold);background:rgba(245,158,11,0.04)">
-    <h3 style="font-size:1rem;margin-bottom:16px;color:var(--gold);text-align:center">💡 이 페이지의 최종 메시지</h3>
-    <p style="font-size:.92rem;color:var(--text);line-height:2;text-align:center;max-width:700px;margin:0 auto">
-      이 전략은 <b>비밀이 아닙니다.</b><br>
-      이미 수십 년간 학술적으로 검증되었고,<br>
-      세계 최고의 투자자들이 공개적으로 같은 이야기를 하고 있습니다.<br><br>
-      <span style="font-size:1.05rem;color:var(--gold);font-weight:700">
-        핵심은 "아는 것"이 아니라, "꾸준히 실행하는 것"입니다.
-      </span><br><br>
-      <span style="color:var(--text2);font-size:.85rem">
-        부담 없는 금액으로 시작하고, 자동이체를 설정하고, 뉴스를 끄세요.<br>
-        30년 뒤, 가장 큰 차이를 만드는 것은 타이밍도 종목 선택도 아닌 <b style="color:var(--green)">"시작 여부"</b>입니다.
-      </span>
-    </p>
-  </div>
-
-  <!-- 학술 참고문헌 -->
-  <div class="card" style="margin-top:24px;border-left:3px solid var(--text2)">
-    <h3 style="font-size:.85rem;margin-bottom:8px;color:var(--text2)">📚 참고 문헌 & 선행연구</h3>
-    <ul style="font-size:.78rem;color:var(--text2);line-height:1.9;padding-left:16px;margin:0">
-      <li>Fama, E. (1970). "Efficient Capital Markets: A Review of Theory and Empirical Work." <i>Journal of Finance</i></li>
-      <li>Malkiel, B. (1973). <i>A Random Walk Down Wall Street</i>. W.W. Norton & Company. (12th Ed., 2023)</li>
-      <li>Bogle, J. (2007). <i>The Little Book of Common Sense Investing</i>. Wiley.</li>
-      <li>Graham, B. (1949). <i>The Intelligent Investor</i>. Harper & Brothers. (Revised Ed., 2006)</li>
-      <li>Buffett, W. (2013). Berkshire Hathaway Annual Letter to Shareholders.</li>
-      <li>S&P Dow Jones Indices. <i>SPIVA Scorecard</i> — 장기적으로 80% 이상의 액티브 펀드가 인덱스 대비 저조한 성과</li>
-    </ul>
-  </div>
-</section>
-
-<footer>
-  <p>본 페이지의 데이터는 공공데이터(한국은행 ECOS, 통계청 KOSIS, FRED)를 기반으로 하며, 투자 권유가 아닙니다.</p>
-  <p style="margin-top:8px">© 2024 Finance Lab · 데이터 출처는 각 섹션의 링크를 참고하세요.</p>
-</footer>
-
-<script src="app.js"></script>
+  <script src="app.js"></script>
 </body>
+
 </html>
