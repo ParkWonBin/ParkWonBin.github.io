@@ -1,0 +1,33 @@
+{
+  "title": "미국 통화량 (M0·M1·M2)",
+  "unit": "조 달러 ($T, Seasonally Adjusted)",
+  "sources": [
+    {"name": "Federal Reserve (FRED) - M1", "url": "https://fred.stlouisfed.org/series/M1SL", "note": "M1 Money Stock"},
+    {"name": "Federal Reserve (FRED) - M2", "url": "https://fred.stlouisfed.org/series/M2SL", "note": "M2 Money Stock"},
+    {"name": "Federal Reserve (FRED) - Monetary Base", "url": "https://fred.stlouisfed.org/series/BOGMBASE", "note": "Monetary Base (M0)"},
+    {"name": "Fed H.6 Release", "url": "https://www.federalreserve.gov/releases/h6/current/", "note": "Money Stock Measures"}
+  ],
+  "notes": "M0=Monetary Base(통화+은행지급준비금). M1 정의가 2020.5월 변경(저축예금 포함)되어 2020년부터 M1이 급증. M2=M1+소액정기예금+소매MMF 등.",
+  "data": [
+    {"year":2005,"m0":0.79,"m1":1.38,"m2":6.55},
+    {"year":2006,"m0":0.81,"m1":1.37,"m2":6.96},
+    {"year":2007,"m0":0.83,"m1":1.38,"m2":7.42},
+    {"year":2008,"m0":1.70,"m1":1.61,"m2":8.20},
+    {"year":2009,"m0":2.02,"m1":1.70,"m2":8.47},
+    {"year":2010,"m0":1.99,"m1":1.84,"m2":8.78},
+    {"year":2011,"m0":2.62,"m1":2.16,"m2":9.63},
+    {"year":2012,"m0":2.65,"m1":2.46,"m2":10.42},
+    {"year":2013,"m0":3.67,"m1":2.65,"m2":10.97},
+    {"year":2014,"m0":4.01,"m1":2.93,"m2":11.66},
+    {"year":2015,"m0":3.84,"m1":3.14,"m2":12.33},
+    {"year":2016,"m0":3.57,"m1":3.33,"m2":13.21},
+    {"year":2017,"m0":3.85,"m1":3.59,"m2":13.88},
+    {"year":2018,"m0":3.37,"m1":3.73,"m2":14.39},
+    {"year":2019,"m0":3.33,"m1":3.99,"m2":15.33},
+    {"year":2020,"m0":4.79,"m1":16.29,"m2":19.13},
+    {"year":2021,"m0":6.41,"m1":20.37,"m2":21.46},
+    {"year":2022,"m0":5.35,"m1":19.86,"m2":21.22},
+    {"year":2023,"m0":5.32,"m1":17.98,"m2":20.78},
+    {"year":2024,"m0":5.59,"m1":18.39,"m2":21.49}
+  ]
+}

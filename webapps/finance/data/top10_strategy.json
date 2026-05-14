@@ -1,0 +1,154 @@
+{
+  "title": "미국 시가총액 Top 10 연간 리밸런싱 전략 백테스트",
+  "description": "매년 초 시가총액 기준 상위 10개 종목에 동일비중(10%)으로 투자 후, 1년 뒤 새로운 Top 10으로 리밸런싱. 탈락 종목은 전량 매도, 신규 종목 편입, 기존 종목은 동일비중으로 재조정.",
+  "sources": [
+    {"name": "Visual Capitalist", "url": "https://www.visualcapitalist.com/the-biggest-companies-in-the-world-over-time/", "note": "연도별 시가총액 순위"},
+    {"name": "CompaniesMarketCap", "url": "https://companiesmarketcap.com/", "note": "실시간 및 과거 시가총액"},
+    {"name": "Yahoo Finance", "url": "https://finance.yahoo.com/", "note": "개별 종목 수익률 검증"},
+    {"name": "MacroTrends", "url": "https://www.macrotrends.net/", "note": "과거 주가 데이터"},
+    {"name": "S&P 500 (FRED)", "url": "https://fred.stlouisfed.org/series/SP500", "note": "벤치마크 비교"}
+  ],
+  "notes": "각 연도 초(1월) 시가총액 기준 Top 10을 선정. 개별 종목 수익률은 해당 연도의 총수익률(배당포함). 동일비중 포트폴리오 수익률은 10개 종목의 단순평균. 실제 거래비용·세금 미반영.",
+  "yearly": [
+    {
+      "year": 2005,
+      "top10": ["XOM","GE","MSFT","C","BAC","PG","JNJ","IBM","PFE","AIG"],
+      "returns": [29.2,-2.9,-0.8,-11.5,-3.5,5.1,-3.0,-15.8,-8.1,4.0],
+      "portfolio_return": -0.7,
+      "spy_return": 4.9
+    },
+    {
+      "year": 2006,
+      "top10": ["XOM","GE","MSFT","C","BAC","PG","JNJ","AIG","JPM","IBM"],
+      "returns": [39.2,9.4,15.8,19.0,19.3,3.2,-7.5,-2.7,23.5,19.8],
+      "portfolio_return": 13.9,
+      "spy_return": 15.8
+    },
+    {
+      "year": 2007,
+      "top10": ["XOM","GE","MSFT","C","AAPL","BAC","PG","JNJ","JPM","AIG"],
+      "returns": [24.3,1.6,20.8,-47.2,133.5,-19.5,12.5,-2.1,-5.0,-51.4],
+      "portfolio_return": 6.7,
+      "spy_return": 5.5
+    },
+    {
+      "year": 2008,
+      "top10": ["XOM","GE","MSFT","AAPL","PG","JNJ","JPM","CVX","WMT","IBM"],
+      "returns": [-13.8,-56.2,-44.4,-56.9,-16.1,-7.1,-25.8,-19.3,18.0,-20.8],
+      "portfolio_return": -24.2,
+      "spy_return": -37.0
+    },
+    {
+      "year": 2009,
+      "top10": ["XOM","MSFT","WMT","PG","JNJ","AAPL","JPM","IBM","CVX","GE"],
+      "returns": [-12.8,60.5,11.5,8.3,2.5,147.0,30.6,58.6,20.9,-3.0],
+      "portfolio_return": 32.4,
+      "spy_return": 26.5
+    },
+    {
+      "year": 2010,
+      "top10": ["XOM","MSFT","AAPL","WMT","BRK.B","PG","JNJ","JPM","IBM","GE"],
+      "returns": [10.2,-7.2,53.1,1.3,21.9,-1.3,-0.2,1.5,14.4,21.2],
+      "portfolio_return": 11.5,
+      "spy_return": 15.1
+    },
+    {
+      "year": 2011,
+      "top10": ["XOM","AAPL","MSFT","BRK.B","GE","CVX","IBM","WMT","PG","JNJ"],
+      "returns": [18.7,25.6,-4.5,-4.7,0.3,19.5,27.4,12.9,5.5,10.2],
+      "portfolio_return": 11.1,
+      "spy_return": 2.1
+    },
+    {
+      "year": 2012,
+      "top10": ["AAPL","XOM","MSFT","IBM","CVX","WMT","GE","PG","JNJ","BRK.B"],
+      "returns": [33.0,4.7,6.0,-4.3,3.0,17.8,17.5,5.3,10.5,17.6],
+      "portfolio_return": 11.1,
+      "spy_return": 16.0
+    },
+    {
+      "year": 2013,
+      "top10": ["AAPL","XOM","MSFT","BRK.B","GE","JNJ","WMT","CVX","PG","JPM"],
+      "returns": [8.3,17.6,44.3,32.7,35.1,34.9,16.9,17.9,26.4,35.5],
+      "portfolio_return": 26.9,
+      "spy_return": 32.4
+    },
+    {
+      "year": 2014,
+      "top10": ["AAPL","XOM","MSFT","BRK.B","GE","JNJ","GOOG","WMT","CVX","PG"],
+      "returns": [40.6,-6.3,27.6,26.6,-7.4,17.3,-5.4,9.1,-6.7,15.8],
+      "portfolio_return": 11.1,
+      "spy_return": 13.7
+    },
+    {
+      "year": 2015,
+      "top10": ["AAPL","GOOG","XOM","MSFT","BRK.B","JNJ","GE","WFC","PG","JPM"],
+      "returns": [-3.0,46.6,-13.7,22.7,12.5,0.4,-5.8,-1.4,2.0,8.4],
+      "portfolio_return": 6.9,
+      "spy_return": 1.4
+    },
+    {
+      "year": 2016,
+      "top10": ["AAPL","GOOG","MSFT","BRK.B","XOM","AMZN","META","JNJ","JPM","GE"],
+      "returns": [12.5,-1.9,15.1,23.4,19.8,11.0,10.0,15.3,33.6,-0.3],
+      "portfolio_return": 13.9,
+      "spy_return": 12.0
+    },
+    {
+      "year": 2017,
+      "top10": ["AAPL","GOOG","MSFT","AMZN","META","BRK.B","JPM","JNJ","XOM","BAC"],
+      "returns": [48.5,32.9,40.7,56.0,53.4,21.9,26.7,23.0,-3.8,35.0],
+      "portfolio_return": 33.4,
+      "spy_return": 21.8
+    },
+    {
+      "year": 2018,
+      "top10": ["AAPL","GOOG","MSFT","AMZN","META","BRK.B","JPM","JNJ","XOM","V"],
+      "returns": [-5.1,0.8,20.8,28.4,-25.7,3.0,-8.7,5.9,-15.1,16.5],
+      "portfolio_return": 2.1,
+      "spy_return": -4.4
+    },
+    {
+      "year": 2019,
+      "top10": ["MSFT","AAPL","AMZN","GOOG","META","BRK.B","JPM","JNJ","V","PG"],
+      "returns": [57.6,88.9,23.0,28.2,56.6,11.0,47.3,15.3,43.7,35.7],
+      "portfolio_return": 40.7,
+      "spy_return": 31.5
+    },
+    {
+      "year": 2020,
+      "top10": ["AAPL","MSFT","GOOG","AMZN","META","BRK.B","V","JPM","JNJ","WMT"],
+      "returns": [82.3,42.5,30.9,76.3,33.1,-3.6,17.1,-5.5,10.6,21.3],
+      "portfolio_return": 30.5,
+      "spy_return": 18.4
+    },
+    {
+      "year": 2021,
+      "top10": ["AAPL","MSFT","AMZN","GOOG","META","TSLA","BRK.B","V","JPM","JNJ"],
+      "returns": [34.6,52.5,2.4,65.3,23.1,49.8,29.6,-0.5,28.5,12.0],
+      "portfolio_return": 29.7,
+      "spy_return": 28.7
+    },
+    {
+      "year": 2022,
+      "top10": ["AAPL","MSFT","GOOG","AMZN","TSLA","META","NVDA","BRK.B","UNH","JNJ"],
+      "returns": [-26.4,-28.0,-39.1,-49.6,-65.0,-64.2,-50.3,3.3,3.8,-3.6],
+      "portfolio_return": -31.9,
+      "spy_return": -18.1
+    },
+    {
+      "year": 2023,
+      "top10": ["AAPL","MSFT","GOOG","AMZN","BRK.B","UNH","XOM","V","JNJ","NVDA"],
+      "returns": [49.0,58.2,58.8,80.9,15.8,-1.0,-6.4,25.0,-10.2,239.0],
+      "portfolio_return": 50.9,
+      "spy_return": 26.3
+    },
+    {
+      "year": 2024,
+      "top10": ["MSFT","AAPL","NVDA","GOOG","AMZN","META","BRK.B","LLY","AVGO","TSLA"],
+      "returns": [12.6,33.0,171.2,36.8,47.2,65.4,27.8,10.1,29.1,62.5],
+      "portfolio_return": 49.6,
+      "spy_return": 25.0
+    }
+  ]
+}

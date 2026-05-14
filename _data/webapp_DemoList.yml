@@ -1,4 +1,15 @@
 # Demo
+- title : 경제 지식 · 화폐가치와 투자전략
+  url : /finance
+  url_app : /webapps/finance/app.html
+  repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/finance/index.html
+  thumbnail :
+  type : demo
+  desc : <strong> Chart.js, 경제 데이터 시각화 </strong>
+    <br> M2 통화량·화폐가치 하락 분석
+    <br> - ETF 투자 시뮬레이션
+    <br> - Top10 리밸런싱 전략 백테스트
+
 - title : 서울시 침수흔적도 뷰어
   url : /flood_map
   url_app : /webapps/flood_map/app.html

@@ -1,0 +1,103 @@
+{
+  "title": "ETF 연간 총수익률 (배당 재투자 포함)",
+  "sources": [
+    {"name": "Invesco QQQ Trust", "url": "https://www.invesco.com/qqq-etf/en/performance.html", "note": "QQQ 공식 퍼포먼스"},
+    {"name": "Schwab SCHD", "url": "https://www.schwabassetmanagement.com/products/schd", "note": "SCHD 공식 퍼포먼스"},
+    {"name": "Invesco SPHD", "url": "https://www.invesco.com/us/financial-products/etfs/product-detail?audienceType=Investor&productId=ETF-SPHD", "note": "SPHD 공식 퍼포먼스"},
+    {"name": "TotalRealReturns", "url": "https://totalrealreturns.com/", "note": "ETF 총수익률 검증"},
+    {"name": "Morningstar", "url": "https://www.morningstar.com/", "note": "ETF 퍼포먼스 데이터"}
+  ],
+  "etfs": {
+    "QQQ": {
+      "name": "Invesco QQQ Trust",
+      "description": "나스닥100 지수추종",
+      "dividend_type": "연 배당",
+      "annual_dividend_yield": 2.2,
+      "annual_growth": 15.0,
+      "inception": 1999,
+      "returns": [
+        {"year":2005,"return":2.23},
+        {"year":2006,"return":6.95},
+        {"year":2007,"return":19.10},
+        {"year":2008,"return":-41.59},
+        {"year":2009,"return":54.58},
+        {"year":2010,"return":20.15},
+        {"year":2011,"return":3.68},
+        {"year":2012,"return":18.26},
+        {"year":2013,"return":36.63},
+        {"year":2014,"return":19.11},
+        {"year":2015,"return":9.50},
+        {"year":2016,"return":7.10},
+        {"year":2017,"return":32.66},
+        {"year":2018,"return":-0.12},
+        {"year":2019,"return":38.96},
+        {"year":2020,"return":48.62},
+        {"year":2021,"return":27.42},
+        {"year":2022,"return":-32.58},
+        {"year":2023,"return":54.85},
+        {"year":2024,"return":33.31}
+      ]
+    },
+    "SCHD": {
+      "name": "Schwab US Dividend Equity ETF",
+      "description": "미국 배당성장주 (분기배당)",
+      "dividend_type": "분기 배당",
+      "annual_dividend_yield": 3.2,
+      "annual_growth": 12.0,
+      "inception": 2011,
+      "returns": [
+        {"year":2012,"return":14.81},
+        {"year":2013,"return":30.40},
+        {"year":2014,"return":15.94},
+        {"year":2015,"return":-8.53},
+        {"year":2016,"return":25.04},
+        {"year":2017,"return":2.91},
+        {"year":2018,"return":-5.90},
+        {"year":2019,"return":26.22},
+        {"year":2020,"return":11.63},
+        {"year":2021,"return":27.28},
+        {"year":2022,"return":-5.56},
+        {"year":2023,"return":15.08},
+        {"year":2024,"return":29.87}
+      ]
+    },
+    "SPHD": {
+      "name": "Invesco S&P 500 High Dividend Low Volatility ETF",
+      "description": "고배당 저변동 (월배당)",
+      "dividend_type": "월 배당",
+      "annual_dividend_yield": 4.4,
+      "annual_growth": 9.5,
+      "inception": 2012,
+      "returns": [
+        {"year":2013,"return":20.81},
+        {"year":2014,"return":19.99},
+        {"year":2015,"return":5.18},
+        {"year":2016,"return":22.37},
+        {"year":2017,"return":11.90},
+        {"year":2018,"return":-6.17},
+        {"year":2019,"return":20.26},
+        {"year":2020,"return":-9.98},
+        {"year":2021,"return":24.98},
+        {"year":2022,"return":0.57},
+        {"year":2023,"return":1.32},
+        {"year":2024,"return":18.08}
+      ]
+    }
+  },
+  "spy_benchmark": {
+    "name": "S&P 500 (SPY)",
+    "url": "https://fred.stlouisfed.org/series/SP500",
+    "returns": [
+      {"year":2005,"return":4.9},{"year":2006,"return":15.8},
+      {"year":2007,"return":5.5},{"year":2008,"return":-37.0},
+      {"year":2009,"return":26.5},{"year":2010,"return":15.1},
+      {"year":2011,"return":2.1},{"year":2012,"return":16.0},
+      {"year":2013,"return":32.4},{"year":2014,"return":13.7},
+      {"year":2015,"return":1.4},{"year":2016,"return":12.0},
+      {"year":2017,"return":21.8},{"year":2018,"return":-4.4},
+      {"year":2019,"return":31.5},{"year":2020,"return":18.4},
+      {"year":2021,"return":28.7},{"year":2022,"return":-18.1},
+      {"year":2023,"return":26.3},{"year":2024,"return":25.0}
+    ]
+  }
+}
