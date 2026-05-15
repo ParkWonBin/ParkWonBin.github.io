@@ -58,7 +58,7 @@ nav .nav-links a:hover{color:var(--gold);background:rgba(211,84,0,0.08)}
 .disclaimer-not .not-icon{
   color:#c0392b;font-weight:700;font-size:1rem;flex-shrink:0;margin-top:2px}
 .disclaimer-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:16px 0}
-.etf-summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
+.etf-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:20px}
 
 /* HERO */
 .hero{min-height:50vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -169,5 +169,5 @@ select{background:#fff !important;color:var(--text) !important;border:1px solid 
   .disclaimer-banner .highlight-box{padding:12px 14px}
   .disclaimer-grid{grid-template-columns:1fr;gap:12px}
   .disclaimer-check,.disclaimer-not{font-size:.82rem}
-  .etf-summary-grid{grid-template-columns:1fr;gap:12px}
+  .etf-summary-grid{gap:12px}
 }
