@@ -1,6 +1,3 @@
-﻿---
-layout: dev_apps
----
 <!DOCTYPE html>
 <html lang="ko">
 
@@ -16,8 +13,12 @@ layout: dev_apps
 <body>
 
   <nav>
-    <div class="logo">💰 Finance Lab</div>
+    <a href="https://wbpark.app" class="logo" style="text-decoration:none;display:flex;align-items:center;gap:8px">
+      <img src="/assets/images/logo.svg" alt="logo" style="width:32px;height:32px">
+      <span>wbpark Dev Blog</span>
+    </a>
     <div class="nav-links">
+      <a href="https://wbpark.app" style="font-weight:600">🏠 블로그 홈</a>
       <a href="#definitions">통화량 정의</a>
       <a href="#data-compare">한·미 통화량</a>
       <a href="#depreciation">화폐가치 하락</a>
@@ -36,7 +37,7 @@ layout: dev_apps
         매월 한 번, 혹은 매년 한 번 — 누구의 도움도 없이, <b>스스로 규칙에 따라 돈을 모으고 지키는 방법</b>을 다룹니다.
       </p>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:16px 0">
+      <div class="disclaimer-grid">
         <div>
           <p style="font-weight:700;color:#27ae60;margin-bottom:8px;font-size:.9rem">✅ 이 문서는</p>
           <div class="disclaimer-check"><span class="check-icon">✓</span> 본인이 직접 증권 앱에서 실행하는 셀프 투자 가이드</div>
@@ -89,7 +90,7 @@ layout: dev_apps
           아래 3개 ETF에 각각 매월 10만원씩, 배당은 나온 만큼 해당 종목에 재투자. 총 360회 납부 기준 (과거 실적 CAGR 기반 시뮬레이션)
         </p>
 
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px">
+        <div class="etf-summary-grid">
           <!-- QQQ -->
           <div
             style="background:#fff;border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(0,119,182,0.2);box-shadow:0 2px 8px rgba(0,0,0,0.04)">
@@ -626,7 +627,9 @@ layout: dev_apps
 
   <footer>
     <p>본 페이지의 데이터는 공공데이터(한국은행 ECOS, 통계청 KOSIS, FRED)를 기반으로 하며, 투자 권유가 아닙니다.</p>
-    <p style="margin-top:8px">© 2024 Finance Lab · 데이터 출처는 각 섹션의 링크를 참고하세요.</p>
+    <p style="margin-top:8px">
+      © 2025 <a href="https://wbpark.app" style="color:var(--gold);text-decoration:none">wbpark Dev Blog</a> · 데이터 출처는 각 섹션의 링크를 참고하세요.
+    </p>
   </footer>
 
   <script src="app.js"></script>
