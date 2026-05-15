@@ -27,8 +27,41 @@ layout: dev_apps
     </div>
   </nav>
 
-  <!-- HERO -->
+  <!-- DISCLAIMER BANNER -->
   <header class="hero">
+    <div class="disclaimer-banner">
+      <h2>📢 이 문서를 읽기 전에</h2>
+      <p>
+        이 페이지는 <b style="color:#d35400">본인이 직접 돈을 관리하는 방법</b>에 대한 가이드입니다.<br>
+        매월 한 번, 혹은 매년 한 번 — 누구의 도움도 없이, <b>스스로 규칙에 따라 돈을 모으고 지키는 방법</b>을 다룹니다.
+      </p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:16px 0">
+        <div>
+          <p style="font-weight:700;color:#27ae60;margin-bottom:8px;font-size:.9rem">✅ 이 문서는</p>
+          <div class="disclaimer-check"><span class="check-icon">✓</span> 본인이 직접 증권 앱에서 실행하는 셀프 투자 가이드</div>
+          <div class="disclaimer-check"><span class="check-icon">✓</span> 50년 이상 학술적으로 검증된 교과서적 원리 설명</div>
+          <div class="disclaimer-check"><span class="check-icon">✓</span> 공공 데이터(한국은행, FRED 등)를 기반으로 한 팩트 정리</div>
+          <div class="disclaimer-check"><span class="check-icon">✓</span> 가족·지인에게 공유하기 위해 만든 비영리 교육 자료</div>
+        </div>
+        <div>
+          <p style="font-weight:700;color:#c0392b;margin-bottom:8px;font-size:.9rem">❌ 이 문서는 아닙니다</p>
+          <div class="disclaimer-not"><span class="not-icon">✗</span> 타인에게 돈을 맡기라는 투자 권유 글</div>
+          <div class="disclaimer-not"><span class="not-icon">✗</span> 중간에 사람이나 기관을 끼워 수수료를 챙기기 위한 글</div>
+          <div class="disclaimer-not"><span class="not-icon">✗</span> 특정 종목·상품을 추천하거나 매수를 유도하는 글</div>
+          <div class="disclaimer-not"><span class="not-icon">✗</span> 단기 수익을 약속하는 투자 사기·다단계 문서</div>
+        </div>
+      </div>
+
+      <div class="highlight-box">
+        <p style="text-align:center;color:#d35400;font-weight:600">
+          💡 핵심: 여기 적힌 모든 전략은 <b>본인이 직접</b> 증권사 앱(키움, 토스증권, 한투 등)에서 실행합니다.<br>
+          누구에게도 돈을 보내거나, 수수료를 낼 필요가 없습니다.<br>
+          <span style="font-size:.85rem;color:#555">자기가 들고 있는 돈의 가치를 스스로 지키는 방법에 대한 정리입니다.</span>
+        </p>
+      </div>
+    </div>
+
     <h1>화폐의 가치는 매년 줄어들고 있다</h1>
     <p>M0·M1·M2 통화량 변화, CPI, 환율 데이터로 보는 화폐가치 하락과 이에 대응하는 투자 전략 분석</p>
     <p style="font-size:.95rem;color:var(--text);line-height:1.9;margin:0">
@@ -45,6 +78,93 @@ layout: dev_apps
         가만히 둔 돈은 80% 손해를 봤고 투자한 돈은 3배로 불어난 것입니다. 즉, 투자는 대박을 노리는 게 아니라 최소한 내 돈의 가치를 '유지 이상' 하기 위한 핵심 생존 수단입니다.</span>
     </p>
 
+    <!-- 30년 적립 투자 시뮬레이션 요약 -->
+    <div style="max-width:900px;margin:36px auto 0;text-align:left">
+      <div
+        style="background:linear-gradient(135deg,#fff8f0,#fff3e6);border:2px solid #e67e22;border-radius:16px;padding:28px 32px;box-shadow:0 4px 20px rgba(211,84,0,0.08)">
+        <h3 style="font-size:1.1rem;font-weight:700;color:#d35400;margin-bottom:6px;text-align:center">
+          💰 그래서, 매월 10만원씩 30년간 넣으면 어떻게 되나요?
+        </h3>
+        <p style="text-align:center;font-size:.85rem;color:#666;margin-bottom:20px">
+          아래 3개 ETF에 각각 매월 10만원씩, 배당은 나온 만큼 해당 종목에 재투자. 총 360회 납부 기준 (과거 실적 CAGR 기반 시뮬레이션)
+        </p>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px">
+          <!-- QQQ -->
+          <div
+            style="background:#fff;border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(0,119,182,0.2);box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+            <div style="font-size:.8rem;color:#888;margin-bottom:4px">나스닥100 추종</div>
+            <div style="font-size:1.1rem;font-weight:700;color:#0077b6;margin-bottom:8px">QQQ</div>
+            <div style="font-size:.8rem;color:#888">원금 <b style="color:#333">3,600만원</b></div>
+            <div style="font-size:1.8rem;font-weight:800;color:#0077b6;margin:8px 0">약 6.9억원</div>
+            <div style="font-size:.82rem;color:#888">원금 대비 <b style="color:#0077b6">약 19배</b></div>
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee">
+              <div style="font-size:.78rem;color:#888">예상 월 배당</div>
+              <div style="font-size:1.1rem;font-weight:700;color:#d35400">약 127만원</div>
+              <div style="font-size:.7rem;color:#aaa">연 배당률 2.2% 기준</div>
+            </div>
+          </div>
+
+          <!-- SCHD -->
+          <div
+            style="background:#fff;border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(39,174,96,0.2);box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+            <div style="font-size:.8rem;color:#888;margin-bottom:4px">미국 배당성장주 (분기배당)</div>
+            <div style="font-size:1.1rem;font-weight:700;color:#27ae60;margin-bottom:8px">SCHD</div>
+            <div style="font-size:.8rem;color:#888">원금 <b style="color:#333">3,600만원</b></div>
+            <div style="font-size:1.8rem;font-weight:800;color:#27ae60;margin:8px 0">약 3.5억원</div>
+            <div style="font-size:.82rem;color:#888">원금 대비 <b style="color:#27ae60">약 10배</b></div>
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee">
+              <div style="font-size:.78rem;color:#888">예상 월 배당 (분기÷3)</div>
+              <div style="font-size:1.1rem;font-weight:700;color:#d35400">약 93만원</div>
+              <div style="font-size:.7rem;color:#aaa">연 배당률 3.2% 기준</div>
+            </div>
+          </div>
+
+          <!-- SPHD -->
+          <div
+            style="background:#fff;border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(108,52,131,0.2);box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+            <div style="font-size:.8rem;color:#888;margin-bottom:4px">고배당 저변동 (월배당)</div>
+            <div style="font-size:1.1rem;font-weight:700;color:#6c3483;margin-bottom:8px">SPHD</div>
+            <div style="font-size:.8rem;color:#888">원금 <b style="color:#333">3,600만원</b></div>
+            <div style="font-size:1.8rem;font-weight:800;color:#6c3483;margin:8px 0">약 2.0억원</div>
+            <div style="font-size:.82rem;color:#888">원금 대비 <b style="color:#6c3483">약 6배</b></div>
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee">
+              <div style="font-size:.78rem;color:#888">예상 월 배당</div>
+              <div style="font-size:1.1rem;font-weight:700;color:#d35400">약 73만원</div>
+              <div style="font-size:.7rem;color:#aaa">연 배당률 4.4% 기준</div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          style="background:#fff;border-radius:10px;padding:16px 20px;margin-bottom:16px;border:1px solid rgba(0,119,182,0.15)">
+          <p style="font-size:.88rem;color:#0077b6;font-weight:700;margin-bottom:8px">🤔 QQQ가 가장 잘 나가는데, 왜 3개에 나눠 넣나요?
+          </p>
+          <p style="font-size:.84rem;color:#444;line-height:1.8;margin:0">
+            QQQ는 수익률은 높지만 <b>폭락할 때도 가장 크게 떨어집니다</b> (2022년 -32%).
+            3개에 분산하면 <b>①</b> 하락장에서 SPHD·SCHD가 방어해주고,
+            <b>②</b> 매월 배당이 들어와서 생활비로 쓸 수 있으며,
+            <b>③</b> 나이가 들면서 QQQ→SCHD→SPHD로 자연스럽게 비중을 옮기기 쉽습니다.<br>
+            <span style="color:#d35400;font-weight:600">한마디로: 돈을 불리는 엔진(QQQ) + 안정적 현금흐름(SCHD·SPHD)을 동시에 갖추는 것입니다.</span>
+          </p>
+        </div>
+
+        <p style="text-align:center;font-size:.82rem;color:#888;line-height:1.7;margin-bottom:12px">
+          ※ 과거 실적(배당 재투자 포함 CAGR) 기반 시뮬레이션이며, 미래 수익을 보장하지 않습니다.<br>
+          ※ 원화 환산은 ₩1,363/$ 기준. 환율 변동에 따라 원화 가치는 달라질 수 있습니다.
+        </p>
+
+        <div style="background:#fff;border-radius:10px;padding:14px 20px;border:1px solid rgba(211,84,0,0.15)">
+          <p style="text-align:center;font-size:.88rem;color:#d35400;font-weight:600;margin:0">
+            👇 아래는 위 계산의 <b>근거가 되는 데이터와 분석</b>입니다
+          </p>
+          <p style="text-align:center;font-size:.82rem;color:#777;margin:4px 0 0">
+            통화량 변화 → 화폐가치 하락 → ETF 적립 시뮬레이션 → 리밸런싱 전략 순서로 정리했습니다
+          </p>
+        </div>
+      </div>
+    </div>
+
     <div style="max-width:800px;margin:32px auto 0;text-align:left;font-size:.85rem;line-height:2;color:var(--text2)">
       <p style="margin-bottom:12px;color:var(--gold);font-weight:600;font-size:.9rem">📋 이 페이지에서 다루는 내용</p>
       <p>① <a href="#data-compare" style="color:var(--cyan)">통화량 비교</a> — 한국·미국 중앙은행이 매년 찍어내는 돈의 양. 한국 M2는 20년간
@@ -57,7 +177,7 @@ layout: dev_apps
       <p>④ <a href="#top10" style="color:var(--gold)">Top 10 리밸런싱</a> — 시가총액 상위 10개에 넣어두고, <b>1년에 딱 한 번</b> 비율만 맞춰주면?
         20년간 S&P 500 대비 <b>초과 수익</b> 달성.</p>
       <p
-        style="margin-top:16px;padding:12px 16px;background:rgba(245,158,11,0.08);border-radius:8px;border:1px solid rgba(245,158,11,0.2)">
+        style="margin-top:16px;padding:12px 16px;background:rgba(211,84,0,0.06);border-radius:8px;border:1px solid rgba(211,84,0,0.2)">
         <span style="color:var(--gold)">💡 결론:</span> 투기가 아닙니다. <b>부담 없는 금액을 꾸준히, 규칙대로</b> 투자하는 것만으로도 화폐가치 하락을 방어하고 연금처럼
         운용할 수 있습니다.
       </p>
@@ -73,20 +193,20 @@ layout: dev_apps
     <p class="section-sub">중앙은행이 경제 내 유통되는 돈의 양을 측정하는 지표입니다.</p>
     <div class="card-grid">
       <div class="card">
-        <span class="tag" style="background:rgba(245,158,11,0.15);color:var(--gold)">M0 본원통화</span>
+        <span class="tag" style="background:rgba(211,84,0,0.1);color:var(--gold)">M0 본원통화</span>
         <h3>화폐발행액 + 한은예치금</h3>
         <p style="color:var(--text2);font-size:.9rem">중앙은행이 직접 공급하는 통화. 시중에 유통되는 <b>현금</b>과 금융기관이 한국은행에 예치한
           <b>지급준비금</b>의 합계입니다. 통화정책의 출발점이 되는 가장 기초적인 화폐량.
         </p>
       </div>
       <div class="card">
-        <span class="tag" style="background:rgba(6,182,212,0.15);color:var(--cyan)">M1 협의통화</span>
+        <span class="tag" style="background:rgba(0,119,182,0.1);color:var(--cyan)">M1 협의통화</span>
         <h3>현금 + 요구불예금 + 수시입출식</h3>
         <p style="color:var(--text2);font-size:.9rem"><b>즉시 사용 가능한 돈</b>의 총량. 현금통화에 요구불예금, 수시입출식 저축성예금을 더한 것으로, 유동성이 매우
           높은 금융자산만 포함합니다.</p>
       </div>
       <div class="card">
-        <span class="tag" style="background:rgba(139,92,246,0.15);color:var(--purple)">M2 광의통화</span>
+        <span class="tag" style="background:rgba(108,52,131,0.1);color:var(--purple)">M2 광의통화</span>
         <h3>M1 + 정기예적금 + 시장형 상품</h3>
         <p style="color:var(--text2);font-size:.9rem">경제 분석에 <b>가장 널리 사용</b>되는 통화 지표. M1에 만기 2년 미만의 정기예적금, CD, RP, 실적배당형
           상품 등을 포함합니다. 시중 유동성을 가장 잘 반영.</p>
@@ -149,7 +269,7 @@ layout: dev_apps
   <!-- ========== SECTION 3: 화폐가치 하락 ========== -->
   <section id="depreciation" class="fade-in">
     <div class="section-title">
-      <span class="icon" style="background:linear-gradient(135deg,#ef4444,#f59e0b)">🔥</span>
+      <span class="icon" style="background:linear-gradient(135deg,#c0392b,#d35400)">🔥</span>
       화폐가치 하락 분석
     </div>
     <p class="section-sub">
@@ -191,7 +311,7 @@ layout: dev_apps
     </div>
 
     <p style="font-size:.82rem;color:var(--text2);margin:16px 0 8px">📉 아래 차트의 <b style="color:var(--red)">빨간선</b>:
-      100만원의 실질 가치가 해마다 줄어드는 모습. <b style="color:var(--gold)">노란 막대</b>: 그 해의 하락률.</p>
+      100만원의 실질 가치가 해마다 줄어드는 모습. <b style="color:var(--gold)">주황 막대</b>: 그 해의 하락률.</p>
     <div class="chart-container"><canvas id="chart-depreciation"></canvas></div>
     <div class="result-cards" id="depreciation-summary"></div>
 
@@ -330,7 +450,7 @@ layout: dev_apps
   <!-- ========== SECTION 5: Top 10 리밸런싱 ========== -->
   <section id="top10" class="fade-in">
     <div class="section-title">
-      <span class="icon" style="background:linear-gradient(135deg,#f59e0b,#8b5cf6)">🏆</span>
+      <span class="icon" style="background:linear-gradient(135deg,#d35400,#6c3483)">🏆</span>
       미장 Top 10 리밸런싱 전략
     </div>
     <p class="section-sub">매년 초 미국 시가총액 상위 10개 종목에 동일비중(10%) 투자 → 1년 후 새 Top 10으로 리밸런싱하는 전략의 백테스트 결과</p>
@@ -380,7 +500,7 @@ layout: dev_apps
   <!-- ========== SECTION 6: 공개된 원리, 검증된 전략 ========== -->
   <section id="philosophy" class="fade-in">
     <div class="section-title">
-      <span class="icon" style="background:linear-gradient(135deg,#10b981,#06b6d4)">📖</span>
+      <span class="icon" style="background:linear-gradient(135deg,#27ae60,#0077b6)">📖</span>
       이것은 비밀 전략이 아닙니다
     </div>
     <p class="section-sub">
@@ -391,8 +511,8 @@ layout: dev_apps
     <!-- 선행연구자 인용 -->
     <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
 
-      <div class="card" style="border-left:3px solid #f59e0b">
-        <span class="tag" style="background:rgba(245,158,11,0.15);color:var(--gold)">Warren Buffett</span>
+      <div class="card" style="border-left:3px solid #d35400">
+        <span class="tag" style="background:rgba(211,84,0,0.1);color:var(--gold)">Warren Buffett</span>
         <p style="font-size:.92rem;color:var(--text);line-height:1.8;margin:12px 0;font-style:italic">
           "대부분의 투자자들에게 가장 합리적인 방법은 S&P 500 인덱스 펀드를 사서 오래 보유하는 것이다."
         </p>
@@ -402,8 +522,8 @@ layout: dev_apps
         </p>
       </div>
 
-      <div class="card" style="border-left:3px solid #06b6d4">
-        <span class="tag" style="background:rgba(6,182,212,0.15);color:var(--cyan)">John C. Bogle</span>
+      <div class="card" style="border-left:3px solid #0077b6">
+        <span class="tag" style="background:rgba(0,119,182,0.1);color:var(--cyan)">John C. Bogle</span>
         <p style="font-size:.92rem;color:var(--text);line-height:1.8;margin:12px 0;font-style:italic">
           "건초더미에서 바늘을 찾으려 하지 마라. 건초더미 전체를 사라."
         </p>
@@ -413,8 +533,8 @@ layout: dev_apps
         </p>
       </div>
 
-      <div class="card" style="border-left:3px solid #8b5cf6">
-        <span class="tag" style="background:rgba(139,92,246,0.15);color:var(--purple)">Eugene Fama</span>
+      <div class="card" style="border-left:3px solid #6c3483">
+        <span class="tag" style="background:rgba(108,52,131,0.1);color:var(--purple)">Eugene Fama</span>
         <p style="font-size:.92rem;color:var(--text);line-height:1.8;margin:12px 0;font-style:italic">
           "시장은 이미 모든 정보를 가격에 반영하고 있다. 그 누구도 지속적으로 시장을 이길 수 없다."
         </p>
@@ -424,8 +544,8 @@ layout: dev_apps
         </p>
       </div>
 
-      <div class="card" style="border-left:3px solid #10b981">
-        <span class="tag" style="background:rgba(16,185,129,0.15);color:var(--green)">Burton Malkiel</span>
+      <div class="card" style="border-left:3px solid #27ae60">
+        <span class="tag" style="background:rgba(39,174,96,0.1);color:var(--green)">Burton Malkiel</span>
         <p style="font-size:.92rem;color:var(--text);line-height:1.8;margin:12px 0;font-style:italic">
           "눈을 가린 원숭이가 다트를 던져 고른 포트폴리오도 전문가 못지않은 성과를 낸다."
         </p>
@@ -435,8 +555,8 @@ layout: dev_apps
         </p>
       </div>
 
-      <div class="card" style="border-left:3px solid #ef4444">
-        <span class="tag" style="background:rgba(239,68,68,0.15);color:var(--red)">Charlie Munger</span>
+      <div class="card" style="border-left:3px solid #c0392b">
+        <span class="tag" style="background:rgba(192,57,43,0.1);color:var(--red)">Charlie Munger</span>
         <p style="font-size:.92rem;color:var(--text);line-height:1.8;margin:12px 0;font-style:italic">
           "투자의 첫 번째 규칙은 돈을 잃지 않는 것이고, 두 번째 규칙은 첫 번째 규칙을 잊지 않는 것이다."
         </p>
@@ -446,8 +566,8 @@ layout: dev_apps
         </p>
       </div>
 
-      <div class="card" style="border-left:3px solid #64748b">
-        <span class="tag" style="background:rgba(100,116,139,0.15);color:#94a3b8">Benjamin Graham</span>
+      <div class="card" style="border-left:3px solid #7f8c8d">
+        <span class="tag" style="background:rgba(127,140,141,0.1);color:#7f8c8d">Benjamin Graham</span>
         <p style="font-size:.92rem;color:var(--text);line-height:1.8;margin:12px 0;font-style:italic">
           "투자자의 가장 큰 적은 시장이 아니라 자기 자신이다."
         </p>
@@ -473,7 +593,7 @@ layout: dev_apps
     </div>
 
     <!-- 결론 메시지 -->
-    <div class="card" style="margin-top:24px;border:1px solid var(--gold);background:rgba(245,158,11,0.04)">
+    <div class="card" style="margin-top:24px;border:1px solid var(--gold);background:rgba(211,84,0,0.04)">
       <h3 style="font-size:1rem;margin-bottom:16px;color:var(--gold);text-align:center">💡 이 페이지의 최종 메시지</h3>
       <p style="font-size:.92rem;color:var(--text);line-height:2;text-align:center;max-width:700px;margin:0 auto">
         이 전략은 <b>비밀이 아닙니다.</b><br>

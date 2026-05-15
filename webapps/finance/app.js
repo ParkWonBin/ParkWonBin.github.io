@@ -105,13 +105,13 @@ function renderM2Chart() {
     options: {
       responsive: true,
       interaction: { mode: 'index', intersect: false },
-      plugins: { legend: { labels: { color: '#e2e8f0' } } },
+      plugins: { legend: { labels: { color: '#333' } } },
       scales: {
-        x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-        y: { type: 'linear', position: 'left', title: { display: true, text: '한국 M2 (조원)', color: '#06b6d4' },
-          ticks: { color: '#06b6d4' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-        y1: { type: 'linear', position: 'right', title: { display: true, text: '미국 M2 ($T)', color: '#f59e0b' },
-          ticks: { color: '#f59e0b' }, grid: { drawOnChartArea: false } }
+        x: { ticks: { color: '#888' }, grid: { color: 'rgba(0,0,0,0.06)' } },
+        y: { type: 'linear', position: 'left', title: { display: true, text: '한국 M2 (조원)', color: '#0077b6' },
+          ticks: { color: '#0077b6' }, grid: { color: 'rgba(0,0,0,0.06)' } },
+        y1: { type: 'linear', position: 'right', title: { display: true, text: '미국 M2 ($T)', color: '#d35400' },
+          ticks: { color: '#d35400' }, grid: { drawOnChartArea: false } }
       }
     }
   });
@@ -133,10 +133,10 @@ function renderExchangeChart() {
     },
     options: {
       responsive: true,
-      plugins: { legend: { labels: { color: '#e2e8f0' } } },
+      plugins: { legend: { labels: { color: '#333' } } },
       scales: {
-        x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-        y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+        x: { ticks: { color: '#888' }, grid: { color: 'rgba(0,0,0,0.06)' } },
+        y: { ticks: { color: '#888' }, grid: { color: 'rgba(0,0,0,0.06)' } }
       }
     }
   });
@@ -172,11 +172,11 @@ function renderM2FxCorrelation() {
     },
     options: {
       responsive: true,
-      plugins: { legend: { labels: { color: '#e2e8f0' } } },
+      plugins: { legend: { labels: { color: '#333' } } },
       scales: {
-        x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-        y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' },
-          title: { display: true, text: '%p / %', color: '#94a3b8' } }
+        x: { ticks: { color: '#888' }, grid: { color: 'rgba(0,0,0,0.06)' } },
+        y: { ticks: { color: '#888' }, grid: { color: 'rgba(0,0,0,0.06)' },
+          title: { display: true, text: '%p / %', color: '#888' } }
       }
     }
   });
@@ -230,13 +230,13 @@ function renderDepreciation() {
     },
     options: {
       responsive: true,
-      plugins: { legend: { labels: { color: '#e2e8f0' } } },
+      plugins: { legend: { labels: { color: '#333' } } },
       scales: {
-        x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-        y: { position: 'left', title: { display: true, text: '잔존가치 (만원)', color: '#ef4444' },
-          ticks: { color: '#ef4444' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-        y1: { position: 'right', title: { display: true, text: '하락률 (%)', color: '#f59e0b' },
-          ticks: { color: '#f59e0b' }, grid: { drawOnChartArea: false } }
+        x: { ticks: { color: '#888' }, grid: { color: 'rgba(0,0,0,0.06)' } },
+        y: { position: 'left', title: { display: true, text: '잔존가치 (만원)', color: '#c0392b' },
+          ticks: { color: '#c0392b' }, grid: { color: 'rgba(0,0,0,0.06)' } },
+        y1: { position: 'right', title: { display: true, text: '하락률 (%)', color: '#d35400' },
+          ticks: { color: '#d35400' }, grid: { drawOnChartArea: false } }
       }
     }
   });
@@ -250,7 +250,7 @@ function updateDepTable(baseYear, amount) {
     const ratio = r.cumValue / baseCum;
     const equiv = Math.round(amount * (baseCum / r.cumValue));
     const isBase = r.year === baseYear;
-    return `<tr style="${isBase ? 'background:rgba(245,158,11,0.08)' : ''}">
+    return `<tr style="${isBase ? 'background:rgba(211,84,0,0.08)' : ''}">
       <td style="font-weight:600">${r.year}</td>
       <td>${r.cpi.toFixed(1)}</td><td>${r.m2_growth.toFixed(1)}</td>
       <td class="neg" style="font-weight:600">-${r.dep.toFixed(2)}%</td>
@@ -294,7 +294,7 @@ function getETFStats() {
     const data = ETF.etfs[key];
     const cagr = computeCAGR(data.returns);
     return {
-      key, cagr, color: key === 'QQQ' ? '#06b6d4' : key === 'SCHD' ? '#10b981' : '#8b5cf6',
+      key, cagr, color: key === 'QQQ' ? '#0077b6' : key === 'SCHD' ? '#27ae60' : '#6c3483',
       name: data.name, desc: data.description,
       divType: data.dividend_type,
       divYield: data.annual_dividend_yield,
@@ -394,7 +394,7 @@ function renderETFChart(results) {
     options: {
       responsive: true,
       plugins: {
-        legend: { labels: { color: '#e2e8f0' } },
+        legend: { labels: { color: '#333' } },
         tooltip: {
           callbacks: {
             label: ctx => `${ctx.dataset.label}: ${(ctx.parsed.y / 10000).toFixed(1)}억원`
@@ -402,9 +402,9 @@ function renderETFChart(results) {
         }
       },
       scales: {
-        x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-        y: { ticks: { color: '#94a3b8', callback: v => (v/10000).toFixed(0) + '억' },
-          grid: { color: 'rgba(255,255,255,0.05)' } }
+        x: { ticks: { color: '#888' }, grid: { color: 'rgba(0,0,0,0.06)' } },
+        y: { ticks: { color: '#888', callback: v => (v/10000).toFixed(0) + '억' },
+          grid: { color: 'rgba(0,0,0,0.06)' } }
       }
     }
   });
@@ -494,13 +494,13 @@ function renderTop10() {
     options: {
       responsive: true,
       plugins: {
-        legend: { labels: { color: '#e2e8f0' } },
+        legend: { labels: { color: '#333' } },
         tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: $${ctx.parsed.y.toLocaleString()}` } }
       },
       scales: {
-        x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-        y: { ticks: { color: '#94a3b8', callback: v => '$' + (v/1000).toFixed(0) + 'K' },
-          grid: { color: 'rgba(255,255,255,0.05)' } }
+        x: { ticks: { color: '#888' }, grid: { color: 'rgba(0,0,0,0.06)' } },
+        y: { ticks: { color: '#888', callback: v => '$' + (v/1000).toFixed(0) + 'K' },
+          grid: { color: 'rgba(0,0,0,0.06)' } }
       }
     }
   });
@@ -559,7 +559,7 @@ function setupBtCalc() {
     const amount = parseFloat(inp.value) || 10000;
     const fx = parseFloat(fxInp.value) || 1363;
     const etfKeys = ['QQQ', 'SCHD', 'SPHD'];
-    const colors = { QQQ: '#06b6d4', SCHD: '#10b981', SPHD: '#8b5cf6' };
+    const colors = { QQQ: '#0077b6', SCHD: '#27ae60', SPHD: '#6c3483' };
 
     // Calculate cumulative for each ETF from startYear
     const results = etfKeys.map(key => {
