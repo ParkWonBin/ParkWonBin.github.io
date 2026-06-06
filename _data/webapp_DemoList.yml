@@ -1,27 +1,4 @@
 # Demo
-- title : 경제 지식 · 화폐가치와 투자전략
-  url : /finance
-  url_app : /webapps/finance/app.html
-  repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/finance/index.html
-  thumbnail :
-  type : demo
-  desc : <strong> Chart.js, 경제 데이터 시각화 </strong>
-    <br> M2 통화량·화폐가치 하락 분석
-    <br> - ETF 투자 시뮬레이션
-    <br> - Top10 리밸런싱 전략 백테스트
-
-- title : 서울시 침수흔적도 뷰어
-  url : /flood_map
-  url_app : /webapps/flood_map/app.html
-  repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/flood_map/index.html
-  thumbnail :
-  type : demo
-  desc : <strong> Leaflet, GeoJSON, Canvas </strong>
-    <br> 서울시 침수흔적 데이터(2013~2025) 시각화
-    <br> - 연도별 레이어 토글
-    <br> - 침수심 필터 및 주소 검색
-
-
 - title : 물리 시뮬레이터
   url : /physics
   url_app : /webapps/demo_physicsSimulation/app.html
@@ -30,13 +7,6 @@
     <br>  물리학 실험 및 설명 페이지입니다.
     <br>  실시간으로 phase diagram을 확인하고
     <br>  csv 파일로 데이터를 받을 수 있습니다.
-
-- title : exhibition
-  url : /webapps/ex
-  url_app : /webapps/ex/app.html
-  type : demo 
-  desc : <strong> 전시관 3D </strong>
-    <br> 전시관 3D 웹뷰어입니다.
 
 - title : Earth 시뮬레이터
   url : /earth

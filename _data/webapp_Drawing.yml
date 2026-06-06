@@ -1,4 +1,11 @@
 # Demo
+- title : exhibition
+  url : /webapps/ex
+  url_app : /webapps/ex/app.html
+  type : test
+  desc : <strong> 전시관 3D </strong>
+    <br> 전시관 3D 웹뷰어입니다.
+
 - title : 펭귄의 날개
   url : /webapps/drawing/img/001_PenguinWings
   thumbnail : /webapps/drawing/img/001_PenguinWings_thm.png
@@ -28,12 +35,5 @@
   thumbnail : /webapps/drawing/img/003_Daily_thm.png
   type : test
   desc : <strong> 기억하고 재현하는 과정 </strong> 
-
-- title : exhibition
-  url : /webapps/ex
-  url_app : /webapps/ex/app.html
-  type : test
-  desc : <strong> 전시관 3D </strong>
-    <br> 전시관 3D 웹뷰어입니다.
 
 

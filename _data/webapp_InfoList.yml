@@ -1,0 +1,33 @@
+# 공익목적 정보글
+- title : 건강관리 · 인체사용설명서
+  url : /webapps/health
+  url_app : /webapps/health/index.html
+  repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/health/index.html
+  thumbnail :
+  type : info
+  desc : <strong> 식단·운동·수면·마인드·바이오해킹 </strong>
+    <br> 예땀(@yeddam_soul) 콘텐츠 요약 정리
+    <br> - 영양소·호르몬 사전 + 에피소드별 상세
+    <br> - 논문 기반 42건 레퍼런스
+
+- title : 경제 지식 · 화폐가치와 투자전략
+  url : /finance
+  url_app : /webapps/finance/app.html
+  repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/finance/index.html
+  thumbnail :
+  type : info
+  desc : <strong> Chart.js, 경제 데이터 시각화 </strong>
+    <br> M2 통화량·화폐가치 하락 분석
+    <br> - ETF 투자 시뮬레이션
+    <br> - Top10 리밸런싱 전략 백테스트
+
+- title : 서울시 침수흔적도 뷰어
+  url : /flood_map
+  url_app : /webapps/flood_map/app.html
+  repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/flood_map/index.html
+  thumbnail :
+  type : demo
+  desc : <strong> Leaflet, GeoJSON, Canvas </strong>
+    <br> 서울시 침수흔적 데이터(2013~2025) 시각화
+    <br> - 연도별 레이어 토글
+    <br> - 침수심 필터 및 주소 검색
