@@ -1,0 +1,1483 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>워해머 전투 계산 시뮬레이터</title>
+<!--
+  워해머 전투 계산 시뮬레이터 (2026-08-18).
+
+  ★ 이 파일은 혼자 선다. 빌드도 의존도 없다.
+  ★ 외부 데이터는 쓰지 않는다. 프로필은 사람이 표에 적는다.
+  ★ 하는 일은 하나다 — 해석으로 낸 기대값과 N 번 굴린 실측을 나란히 놓고, 어긋나면 드러낸다.
+
+  주의 1. 어긋났을 때 어느 쪽이 틀렸는지는 이 페이지가 정하지 않는다. 식이 틀렸을 수도,
+          굴림이 틀렸을 수도 있다. 판단은 사람이 한다 — 그래서 둘을 나란히 둔다.
+  주의 2. 읽지 못한 주사위 표기가 있으면 1 로 때우지 않고 멈춘다.
+  주의 3. 화면 말은 전부 L(ko/en) 사전에서 나오고, 칸 이름은 두 말을 나란히 적는다(병기).
+          화면에 글자를 박지 않는다 — 박으면 한쪽 말에서만 조용히 안 바뀐다.
+  주의 4. 좁은 화면에서는 표를 접고 요약 카드를 낸다. 값 하나에 한 줄을 쓰면 손가락으로 못 쓴다
+          — 고치는 것은 카드를 눌러 여는 세로 폼에서 한다.
+-->
+<style>
+  /* 테마는 흰색과 검은색뿐이다. 색으로 뜻을 나르지 않는다 —
+     판정은 짙기와 굵기로 가른다. 어긋난 것이 가장 짙고 굵다. */
+  :root{
+    --ink:#fdfdfd; --ink2:#ffffff; --ink3:#f4f4f4; --line:#e8e8e8;
+    --silver:#111111; --silver2:#828282; --silver3:#9b9b9b;
+    --accent:#111111; --on-accent:#fdfdfd; --bar:#444444;
+    --dim:#9b9b9b; --mid:#555555; --loud:#111111;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:var(--silver);padding:20px;
+       font:400 15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,
+            sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+       -webkit-text-size-adjust:100%}
+  h1{font-size:22px;font-weight:400;margin:0 0 4px;color:var(--loud);letter-spacing:-.01em}
+  h2{font-size:12px;margin:22px 0 8px;color:var(--silver2);text-transform:uppercase;letter-spacing:.08em}
+  p.lead{margin:0;color:var(--silver2);font-size:12.5px}
+  /* ⚠ 칸이 열다섯인 표를 800px 글줄에 맞추면 찌그러진다
+     — 넓은 화면에서는 표가 펴질 만큼 준다 */
+  .wrap{max-width:1400px;margin:0 auto}
+  .lead,.note{max-width:74ch}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}
+  .langsw{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;flex:0 0 auto}
+  .langsw button{border:0;border-radius:0;background:var(--ink2);padding:6px 12px;font-size:12.5px}
+  .langsw button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);font-weight:700}
+  .scroll{overflow-x:auto;border:1px solid var(--line);border-radius:6px}
+  table{border-collapse:collapse;width:100%;font-size:12.5px}
+  th,td{border-bottom:1px solid var(--line);padding:4px 6px;text-align:right;white-space:nowrap}
+  th{background:var(--ink3);color:var(--silver2);font-weight:600;font-size:11px}
+  td{background:var(--ink2)}
+  th:first-child,td:first-child{text-align:left}
+  /* 넓은 화면 머리글은 두 말을 위아래로 적는다 — 옆으로 붙이면 칸이 열다섯이라 표가 넓어진다 */
+  th .hd{display:inline-flex;align-items:center;gap:2px 4px;justify-content:flex-end;flex-wrap:wrap}
+  th .hd em{font-style:normal;color:var(--silver3);font-size:10px;flex-basis:100%;text-align:right}
+  th:first-child .hd{justify-content:flex-start}
+  th:first-child .hd em{text-align:left}
+  tbody tr:hover{background:var(--ink3)}
+  .lbl{display:none}
+  input,select{background:var(--ink2);color:var(--silver);border:1px solid var(--line);
+     border-radius:4px;padding:3px 5px;font:inherit;font-size:12.5px;text-align:right}
+  input[type=text].name{text-align:left;width:120px}
+  input[type=number]{width:58px}
+  input.expr{width:70px;text-align:center}
+  select{width:96px;text-align:left}
+  input:focus,select:focus{outline:1px solid var(--accent);border-color:var(--accent)}
+  button{background:var(--ink3);color:var(--silver);border:1px solid var(--line);
+     border-radius:4px;padding:5px 11px;font:inherit;cursor:pointer}
+  button:hover{border-color:var(--accent);color:var(--loud)}
+  button.run{background:var(--accent);border-color:var(--accent);
+     color:var(--on-accent);font-weight:700;padding:7px 18px}
+  button.x{padding:2px 8px;color:var(--silver2)}
+  /* 특수 규칙 — 체크박스가 아니라 누르면 켜지고 다시 누르면 꺼지는 버튼 (human 2026-08-18) */
+  button.pill{border-radius:999px;padding:3px 11px;font-size:12px;color:var(--silver3)}
+  button.pill[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
+  /* 물음표 — 누르면 그 칸이 무엇이고 계산에 어떻게 들어가는지 뜬다 */
+  button.q{width:18px;height:18px;padding:0;border-radius:50%;font-size:11px;font-weight:700;
+     line-height:1;color:var(--silver2);border-color:var(--line);flex:0 0 auto}
+  button.q:hover{border-color:var(--accent);color:var(--loud)}
+  .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0 4px}
+  .bar label{color:var(--silver2);font-size:12px;display:inline-flex;align-items:center;gap:6px}
+  .card{border:1px solid var(--line);border-radius:6px;margin-top:14px;overflow:hidden}
+  .card>header{background:var(--ink3);padding:6px 10px;font-size:13px;color:var(--loud);
+     display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .card>header .sub{color:var(--silver2);font-size:12px;font-weight:400}
+  /* 판정은 색이 아니라 밝기로 가른다 — 어긋난 것이 가장 밝고 굵다 */
+  .pass{color:var(--dim)} .warn{color:var(--mid)} .fail{color:var(--loud);font-weight:700}
+  .num{font-variant-numeric:tabular-nums}
+  .note{color:var(--silver2);font-size:11.5px;padding:7px 10px;border-top:1px solid var(--line)}
+  .err{color:var(--loud)}
+  .stage{color:var(--silver);text-align:left}
+  .hint{color:var(--silver3);font-size:11px}
+  b{color:var(--silver)}
+
+  /* 좁은 화면의 프로필 목록 — 넓은 화면에서는 표가 그 자리를 한다 */
+  #atklist,#deflist{display:none}
+  .pcard{border:1px solid var(--line);border-radius:8px;background:var(--ink2);
+     padding:10px 12px;margin-bottom:10px}
+  .pcard .r1{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .pcard .pname{font-size:15px;color:var(--silver);font-weight:600;
+     overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .pcard .sum{margin-top:6px;font-size:13px;color:var(--silver);font-variant-numeric:tabular-nums}
+  .pcard .sum span{display:block}
+  .pcard .sum .alt{color:var(--silver2);font-size:12px;margin-top:2px}
+  .pcard .tags{margin-top:7px;display:flex;flex-wrap:wrap;gap:5px}
+  .tag{border:1px solid var(--line);border-radius:999px;padding:2px 9px;font-size:11.5px;color:var(--mid)}
+
+  /* 묶음이 바뀌는 자리 — 모형 프로필과 그 위에 얹히는 것을 눈으로 가른다 */
+  th.gsep,td.gsep{border-left:2px solid var(--silver3)}
+
+  /* 공격 순서 — 접어 둔다. 펴면 어느 단계가 어느 값을 쓰는지 보인다 */
+  details.seq{border:1px solid var(--line);border-radius:8px;background:var(--ink2);margin-bottom:18px}
+  details.seq>summary{padding:11px 13px;cursor:pointer;font-size:13px;color:var(--silver);
+     display:flex;justify-content:space-between;gap:10px;align-items:center;list-style:none}
+  details.seq>summary::-webkit-details-marker{display:none}
+  /* 닫혀 있다는 것이 한눈에 보여야 한다 — 표식을 제목 앞에 둔다 */
+  details.seq>summary>span::before{content:'▶';color:var(--silver2);font-size:11px;margin-right:7px}
+  details.seq[open]>summary>span::before{content:'▼'}
+  .seqbody{padding:0 13px 12px}
+  .step{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+  .step .no{width:22px;height:22px;border:1px solid var(--line);border-radius:50%;
+     display:grid;place-items:center;font-size:11px;color:var(--silver2);flex:0 0 auto}
+  .step .sname{font-size:13.5px;color:var(--silver);font-weight:600}
+  .step .sname em{font-style:normal;font-weight:400;color:var(--silver2);font-size:12px;margin-left:4px}
+  .step .sref{font-size:11px;color:var(--silver3);margin-left:6px}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .chip{border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12px;
+     color:var(--silver2);background:transparent}
+  .chip em{font-style:normal;color:var(--silver3);font-size:10.5px;margin-left:3px}
+  /* 건너뛰는 자리 — 어느 단계에서 어느 단계로 넘어가는지 */
+  .skip{margin:0 0 0 32px;padding:7px 11px;border-left:2px solid var(--accent);
+     background:#0000000a;font-size:12.5px;color:var(--mid);border-radius:0 6px 6px 0}
+  .skip b{color:var(--loud)}
+
+  /* 세로 폼 — 이름과 값이 한 줄에 나란히 붙는다 (key-value) */
+  .fsec{margin-bottom:14px}
+  .fsec:last-child{margin-bottom:0}
+  .fsec>h4{margin:0 0 7px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+     color:var(--silver3);border-bottom:1px solid var(--line);padding-bottom:5px}
+  .form{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:8px}
+  .fld{display:flex;align-items:center;justify-content:space-between;gap:10px;
+     border:1px solid var(--line);border-radius:6px;background:var(--ink);padding:8px 10px}
+  /* ⚠ 격자 칸은 기본이 min-width:auto 라 긴 이름표를 만나면 칸이 부풀어 격자가 터진다.
+     0 으로 눌러 두고 이름표가 줄바꿈하게 한다 — 그래야 좁은 화면에서 두 칸이 선다 */
+  .form>*{min-width:0}
+  .fld .k{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 5px;flex:1 1 auto;
+     min-width:0;font-size:13.5px;color:var(--silver2);
+     word-break:keep-all}   /* 「명중 보정」이 "명중 보/정" 으로 끊기지 않게 */
+  .fld .k em{font-style:normal;font-size:11px;color:var(--silver3)}
+  .fld .v{display:flex;align-items:center;gap:5px;flex:0 0 auto}
+  .fld.wide{grid-column:1/-1}
+  .fld.wide input[type=text]{width:100%}
+  .fld.wide .v{flex:1 1 auto}
+
+  /* 히스토그램 — 계열이 하나라 범례 없이 제목이 계열을 말한다.
+     ⚠ SVG 로 그리면 글자가 그림과 함께 늘고 줄어 폰에서 읽을 수 없다.
+       막대는 상자로 긋고 글자는 그냥 글자로 둔다 — 어느 폭에서나 제 크기다 */
+  .chart{padding:12px 10px;border-top:1px solid var(--line)}
+  .chart .ttl{font-size:11.5px;color:var(--silver2);margin-bottom:9px}
+  .plot{position:relative}
+  .bars{display:flex;align-items:flex-end;gap:3px;height:150px;padding-top:18px;
+     border-bottom:1px solid var(--line)}
+  .bcol{flex:1 1 0;min-width:0;height:100%;display:flex;align-items:flex-end}
+  .bbar{width:100%;background:var(--bar);position:relative}
+  .bpct{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:3px;
+     font-size:10px;color:var(--silver2);white-space:nowrap}
+  .bxs{display:flex;gap:3px;margin-top:5px}
+  .bxs span{flex:1 1 0;min-width:0;text-align:center;font-size:10px;color:var(--silver3);
+     white-space:nowrap;overflow:hidden}
+  .mline{position:absolute;top:18px;bottom:0;border-left:2px dashed var(--loud)}
+  .mlbl{position:absolute;top:0;font-size:10px;color:var(--loud);white-space:nowrap;
+     transform:translateX(-50%)}
+  .statrow{display:flex;flex-wrap:wrap;gap:4px 16px;padding:0 10px 9px;font-size:11.5px;color:var(--silver2)}
+
+  /* 팝업 — 브라우저가 주는 <dialog> 를 쓴다. 겹쳐 열면 나중 것이 위에 선다 */
+  dialog{background:var(--ink2);color:var(--silver);border:1px solid var(--line);border-radius:10px;
+     padding:0;max-width:660px;width:calc(100% - 20px);box-shadow:0 12px 44px #00000026}
+  dialog::backdrop{background:#00000059}
+  dialog header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+     padding:12px 14px;border-bottom:1px solid var(--line);background:var(--ink3)}
+  dialog h3{margin:0;font-size:15px;color:var(--loud)}
+  dialog .ref{font-size:11.5px;color:var(--silver3);white-space:nowrap}
+  dialog .body{padding:13px 14px;font-size:13px;line-height:1.65;
+     max-height:min(72vh,620px);overflow:auto}
+  dialog .body p{margin:0 0 9px}
+  dialog .body .how{color:var(--mid)}
+  dialog .body ul{margin:6px 0 10px;padding-left:18px;color:var(--silver2)}
+  dialog .body li{margin:3px 0}
+  dialog .body table{font-size:12px;margin:4px 0 10px}
+  dialog .body td{white-space:normal;text-align:left;vertical-align:top;padding:3px 8px 3px 0}
+  dialog footer{padding:10px 14px;border-top:1px solid var(--line);
+     display:flex;justify-content:space-between;gap:10px}
+  /* 팝업 안에서 다른 항목으로 건너뛰는 자리 — 누르면 이 위에 또 뜬다 */
+  .seealso{display:flex;flex-wrap:wrap;gap:6px;padding-top:9px;border-top:1px solid var(--line)}
+  .seealso button{font-size:12px;padding:4px 10px;border-radius:999px}
+
+  @media (max-width: 820px){
+    body{padding:12px}
+    h1{font-size:17px}
+    .top{flex-direction:column;gap:10px}
+    .langsw{align-self:flex-start}
+    /* 값 하나에 한 줄을 쓰지 않는다 — 표를 접고 요약 카드를 낸다 */
+    #atkwrap,#defwrap{display:none}
+    #atklist,#deflist{display:block}
+    /* 결과표는 칸이 셋뿐이라 접지 않는다 — 표가 그대로 읽힌다 */
+    #out td.stage{white-space:normal}
+    #out .hint{display:block;font-size:10.5px}
+    /* 16px 미만이면 칸을 누를 때 iOS 가 화면을 확대한다 — 확대되면 표가 어긋나 보인다 */
+    input,select{font-size:16px;padding:7px 9px}
+    input[type=number]{width:4.6em}
+    input.expr{width:5.6em}
+    select{width:auto;min-width:8.5em}
+    button{padding:9px 13px}
+    button.q{width:23px;height:23px;font-size:12px}
+    button.pill{padding:7px 14px;font-size:13.5px}
+    button.run{flex:1 1 100%;padding:13px}
+    .bar label{justify-content:space-between;flex:1 1 100%;font-size:13.5px}
+    .bar .hint,#status{flex:1 1 100%}
+    .card>header{flex-direction:column;gap:3px}
+    /* 값 둘씩 나란히 — 한 줄에 하나는 낭비다 (human 2026-08-18) */
+    .form{grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:7px}
+    .fld{padding:7px 9px}
+    .fld .k{font-size:13px}
+    .fld input[type=number]{width:4.1em}
+    dialog .body{padding:11px}
+    .statrow{gap:3px 12px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div>
+      <h1 id="t-title"></h1>
+      <p class="lead" id="t-lead"></p>
+    </div>
+    <div class="langsw" id="langsw">
+      <button data-lang="ko">한국어</button><button data-lang="en">English</button>
+    </div>
+  </div>
+
+  <div class="bar" style="margin:0 0 10px"><button id="basics"></button></div>
+  <details class="seq" id="seq"></details>
+
+  <h2 id="t-atk"></h2>
+  <div class="scroll" id="atkwrap"><table id="atk"><thead><tr></tr></thead><tbody></tbody></table></div>
+  <div id="atklist"></div>
+  <div class="bar">
+    <button id="add"></button>
+    <span class="hint" id="t-exprhint"></span>
+  </div>
+
+  <h2 id="t-def"></h2>
+  <div class="scroll" id="defwrap"><table id="def"><thead><tr></tr></thead><tbody></tbody></table></div>
+  <div id="deflist"></div>
+
+  <h2 id="t-cfg"></h2>
+  <div class="bar">
+    <label><span id="t-runs"></span><input type="number" id="runs" min="1" max="1000000" step="1000" style="width:84px"></label>
+    <label><span id="t-seed"></span><input type="number" id="seed" style="width:130px;text-align:left"></label>
+    <label><span id="t-sigma"></span><input type="number" id="sigma" min="1" max="6" step="0.5" style="width:54px"></label>
+    <button class="run" id="run"></button>
+    <span id="status" class="hint"></span>
+  </div>
+
+  <div id="out"></div>
+
+  <p class="note" id="t-footnote" style="border:1px solid var(--line);border-radius:6px;margin-top:22px"></p>
+</div>
+
+<script>
+"use strict";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 주사위 — 시드를 주면 같은 판이 다시 나온다. 어긋난 결과를 다시 볼 수 있어야 한다
+// ─────────────────────────────────────────────────────────────────────────────
+const mulberry32 = (seed) => { let a = seed >>> 0; return () => {
+  a = (a + 0x6D2B79F5) | 0;
+  let t = Math.imul(a ^ (a >>> 15), 1 | a);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};};
+let rand = Math.random;
+const dN = (faces) => 1 + Math.floor(rand() * faces);
+const d6 = () => dN(6);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 주사위 식 — 한 번 뜯어서 굴림과 기대값 둘 다 이 결과로 낸다.
+// 두 번 뜯으면 굴림과 식이 조용히 갈라진다
+// ─────────────────────────────────────────────────────────────────────────────
+function parseExpr(str) {
+  const s = String(str == null ? '' : str).toUpperCase().replace(/\s+/g, '');
+  if (s === '') return null;
+  const chunks = s.match(/[+-]?[^+-]+/g);
+  if (!chunks) return null;
+  const terms = [];
+  for (const c of chunks) {
+    const sign = c.startsWith('-') ? -1 : 1;
+    const body = c.replace(/^[+-]/, '');
+    if (/^\d+$/.test(body)) { terms.push({ sign: sign, konst: parseInt(body, 10) }); continue; }
+    const m = body.match(/^(\d*)D(\d+)$/);
+    if (!m) return null;
+    const count = m[1] ? parseInt(m[1], 10) : 1;
+    const faces = parseInt(m[2], 10);
+    if (faces <= 0 || count <= 0 || count > 100) return null;
+    terms.push({ sign: sign, count: count, faces: faces });
+  }
+  return terms;
+}
+
+// 합은 0에서 끊는다 — "D3-1" 이 음수 피해를 내지 않는다
+const rollExpr = (terms) => {
+  let sum = 0;
+  for (const t of terms) {
+    if (t.konst != null) { sum += t.sign * t.konst; continue; }
+    for (let i = 0; i < t.count; i++) sum += t.sign * dN(t.faces);
+  }
+  return Math.max(0, sum);
+};
+
+// 기대값은 분포를 접어서 정확히 낸다. 3.5 를 곱하면 0 에서 끊기는 몫을 놓친다
+function meanExpr(terms) {
+  let pmf = new Map([[0, 1]]);
+  for (const t of terms) {
+    if (t.konst != null) {
+      const shifted = new Map();
+      for (const entry of pmf) shifted.set(entry[0] + t.sign * t.konst, entry[1]);
+      pmf = shifted;
+      continue;
+    }
+    for (let i = 0; i < t.count; i++) {
+      const n = new Map();
+      for (const entry of pmf) for (let f = 1; f <= t.faces; f++) {
+        const k = entry[0] + t.sign * f;
+        n.set(k, (n.get(k) || 0) + entry[1] / t.faces);
+      }
+      pmf = n;
+    }
+  }
+  let e = 0;
+  for (const entry of pmf) e += Math.max(0, entry[0]) * entry[1];
+  return e;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 판정 규칙
+// ─────────────────────────────────────────────────────────────────────────────
+const woundTarget = (s, t) => (s >= t * 2 ? 2 : s > t ? 3 : s === t ? 4 : s <= t / 2 ? 6 : 5);
+
+/** 재굴림은 한 번만 한다. 다시 굴린 눈은 좋든 나쁘든 그대로 쓴다 */
+const applyReroll = (rolls, type, isFail) => {
+  if (type === 'none') return rolls;
+  return rolls.map((die) => {
+    const re = type === 'all' ? true : type === '1s' ? die === 1 : isFail(die);
+    return re ? d6() : die;
+  });
+};
+
+/** 재굴림을 반영한 눈의 분포 — 굴림 쪽 applyReroll 과 같은 규칙이어야 한다 */
+function facePmf(type, isFail) {
+  const re = type === 'none' ? function () { return false; }
+    : type === 'all' ? function () { return true; }
+    : type === '1s' ? function (f) { return f === 1; }
+    : isFail;
+  let pRe = 0;
+  for (let f = 1; f <= 6; f++) if (re(f)) pRe += 1 / 6;
+  const p = new Array(7).fill(0);
+  for (let f = 1; f <= 6; f++) p[f] = (re(f) ? 0 : 1 / 6) + pRe / 6;
+  return p;
+}
+const pOf = (p, pred) => { let s = 0; for (let f = 1; f <= 6; f++) if (pred(f)) s += p[f]; return s; };
+
+/** 프로필 한 쌍에서 판정 기준을 뽑는다 — 굴림과 식이 같은 것을 본다 */
+function derive(a, d) {
+  const wt = woundTarget(a.strength, d.toughness);
+  const armor = d.save - a.ap;                       // AP 는 음수로 적는다
+  const st = d.inv > 0 && d.inv < armor ? d.inv : armor;
+  const anti = a.anti > 0 ? a.anti : 0;
+
+  return {
+    wt: wt, armor: armor, st: st, anti: anti,
+    // 무기마다 더 굴리는 공격 주사위 — [폭발] 24.05 와 [속사] 24.30
+    atkBonus: (a.blast > 0 ? a.blast * Math.floor(d.models / 5) : 0) +
+              (a.rapidFire > 0 && a.halfRange ? a.rapidFire : 0),
+    hitCrit:  (f) => f === 6,
+    hitOk:    (f) => f === 6 || (f !== 1 && f + a.hitMod >= a.hitTarget),
+    hitFail:  (f) => f !== 6 && (f === 1 || f + a.hitMod < a.hitTarget),
+    wCrit:    (f) => f === 6 || (anti > 0 && f >= anti),
+    wOk:      (f) => f === 6 || (anti > 0 && f >= anti) || (f !== 1 && f >= wt),
+    wFail:    (f) => !(f === 6 || (anti > 0 && f >= anti)) && f < wt,
+    saveOk:   (f) => f !== 1 && f >= st,
+    saveFail: (f) => f === 1 || f < st,
+    fnpKeep:  d.fnp > 0 ? (d.fnp - 1) / 6 : 1,
+  };
+}
+
+/** 사격 한 번을 끝까지 굴린다 */
+function simulateOnce(a, d, k, atkTerms, dmgTerms) {
+  // [위험] 24.15 — 모든 공격을 처리한 뒤 무기 수만큼 위험 굴림. 맞는 것은 자기 유닛이다.
+  // 공격이 하나도 없어도 굴린다(유닛이 사격에 선택된 것은 사실이므로) — 그래서 먼저 센다
+  let hazard = 0;
+  if (a.hazardous) for (let i = 0; i < Math.max(1, a.weapons); i++) if (d6() <= 2) hazard++;
+
+  let attacks = 0;
+  for (let i = 0; i < Math.max(1, a.weapons); i++) attacks += rollExpr(atkTerms) + k.atkBonus;
+  if (attacks <= 0) return { attacks: 0, hits: 0, wounds: 0, failed: 0, raw: 0, applied: 0, destroyed: 0, hazard: hazard };
+
+  // 명중 — [방사] 24.37 은 굴리지 않고 자동으로 맞는다.
+  // 굴림이 없으니 「보정 전 6」도 없다 → 결정적 명중이 생기지 않고, 거기 기대는
+  // [치명적 명중]·[지속 명중]도 발동하지 않는다
+  let successes = 0, crits = 0;
+  if (a.torrent) {
+    successes = attacks;
+  } else {
+    let hr = Array.from({ length: attacks }, d6);
+    hr = applyReroll(hr, a.hitReroll, k.hitFail);
+    for (const die of hr) { if (!k.hitOk(die)) continue; successes++; if (k.hitCrit(die)) crits++; }
+  }
+  const sustained = a.sustained > 0 ? crits * a.sustained : 0;
+  const lethal = a.lethal ? crits : 0;
+  const hits = successes + sustained;
+
+  // 상처 — 치명적 명중으로 자동 상처가 된 것은 굴리지 않는다
+  let wr = Array.from({ length: Math.max(0, hits - lethal) }, d6);
+  wr = applyReroll(wr, a.woundReroll, k.wFail);
+  let wSucc = 0, wCritN = 0;
+  for (const die of wr) { if (!k.wOk(die)) continue; wSucc++; if (k.wCrit(die)) wCritN++; }
+  const devast = a.devastating ? wCritN : 0;
+  const wounds = wSucc + lethal;
+
+  // 방호 — 파괴적 상처는 방호를 건너뛴다
+  const attempts = Math.max(0, wounds - devast);
+  let sr = Array.from({ length: attempts }, d6);
+  sr = applyReroll(sr, d.saveReroll, k.saveFail);
+  let saved = 0;
+  for (const die of sr) if (k.saveOk(die)) saved++;
+  const failed = (attempts - saved) + devast;
+
+  // 피해 — 원피해는 상한 없이 세고, 적용 피해는 모델 체력에 걸려 소멸하는 몫을 뺀다
+  let raw = 0, applied = 0, destroyed = 0, remaining = d.wounds;
+  for (let i = 0; i < failed; i++) {
+    let dmg = rollExpr(dmgTerms);
+    if (d.fnp > 0 && dmg > 0) {
+      let ignored = 0;
+      for (let x = 0; x < dmg; x++) if (d6() >= d.fnp) ignored++;
+      dmg = Math.max(0, dmg - ignored);
+    }
+    if (dmg <= 0) continue;
+    raw += dmg;
+    if (destroyed >= d.models) continue;            // 전멸한 뒤의 피해는 갈 곳이 없다
+    applied += Math.min(dmg, remaining);
+    if (dmg >= remaining) { destroyed++; remaining = d.wounds; } else { remaining -= dmg; }
+  }
+
+  return { attacks: attacks, hits: hits, wounds: wounds, failed: failed,
+           raw: raw, applied: applied, destroyed: destroyed, hazard: hazard };
+}
+
+/** 같은 프로필의 기대값 — 굴리지 않고 식으로 낸다 */
+function expected(a, d, k, atkTerms, dmgTerms) {
+  const ph = facePmf(a.hitReroll, k.hitFail);
+  const pw = facePmf(a.woundReroll, k.wFail);
+  const ps = facePmf(d.saveReroll, k.saveFail);
+
+  const attacks = Math.max(1, a.weapons) * (meanExpr(atkTerms) + k.atkBonus);
+  const pHit = a.torrent ? 1 : pOf(ph, k.hitOk);
+  const pHitCrit = a.torrent ? 0 : pOf(ph, (f) => k.hitOk(f) && k.hitCrit(f));
+
+  const hits = attacks * (pHit + (a.sustained > 0 ? a.sustained * pHitCrit : 0));
+  const lethal = attacks * (a.lethal ? pHitCrit : 0);
+
+  const woundDice = Math.max(0, hits - lethal);
+  const pWound = pOf(pw, k.wOk);
+  const pWoundCrit = pOf(pw, (f) => k.wOk(f) && k.wCrit(f));
+  const wounds = woundDice * pWound + lethal;
+  const devast = a.devastating ? woundDice * pWoundCrit : 0;
+
+  const attempts = Math.max(0, wounds - devast);
+  const failed = attempts * pOf(ps, k.saveFail) + devast;
+
+  return { attacks: attacks, hits: hits, wounds: wounds, failed: failed,
+           raw: failed * meanExpr(dmgTerms) * k.fnpKeep };
+}
+
+// 표 — 사람이 적는 자리
+// ─────────────────────────────────────────────────────────────────────────────
+// 화면 말 — 한국어와 영어 두 벌. 칸 이름은 두 말을 나란히 적는다(병기)
+// ─────────────────────────────────────────────────────────────────────────────
+const L = {
+ko: {
+  html: 'ko',
+  title: '워해머 전투 계산 시뮬레이터',
+  lead: '프로필을 적고 <b>N 번 굴린 실측</b>과 <b>식으로 낸 기대값</b>을 단계마다 나란히 본다. 어긋나면 그 단계에서 드러난다 — 어느 쪽이 틀렸는지는 사람이 정한다.',
+  atk: '공격 프로필', def: '방어 프로필', cfg: '계산 설정',
+  add: '＋ 프로필 추가', basics: '? 기초 설명', del: '지운다', dup: '복제', edit: '고친다',
+  secBase: '모형 프로필 Profile', secExtra: '추가 효과 Extra effects', on: '켬 ON', off: '끔 OFF',
+  countFirst: false, unit: (n) => n + '개',
+  seqTitle: '공격 순서 — 어느 단계가 어느 값을 쓰는가',
+  // 단계 이름은 코어룰의 것이다. 결과표의 측정 이름(명중·상처·방호 실패)과 섞지 않는다
+  phases: [
+    ['공격 횟수', 'Number of Attacks', '코어룰 10'],
+    ['명중 굴림', 'Hit Roll', '코어룰 05.01'],
+    ['상처 굴림', 'Wound Roll', '코어룰 05.02'],
+    ['방호 굴림', 'Saving Throw', '코어룰 05.03'],
+    ['피해 가하기', 'Inflict Damage', '코어룰 05.04'],
+  ],
+  skipLethal: '<b>Lethal Hits</b> — ②에서 보정 전 6(결정적 명중)이 나오면 <b>③ 상처 굴림을 건너뛰고</b> 곧장 ④ 방호로 간다.',
+  skipDevast: '<b>Devastating Wounds</b> — ③에서 결정적 상처가 나오면 <b>④ 방호 굴림을 건너뛰고</b> 곧장 ⑤ 피해로 간다.',
+  defName: '방어 프로필',
+  exprHint: '공격·피해는 식으로 적는다 — 2 · D6 · 2D3+1 · D6-1',
+  runs: '시행 횟수', seed: '시드', sigma: '판정 기준 ±', sigmaSuffix: 'σ', run: '돌린다',
+  seedPlaceholder: '비우면 무작위',
+  status: (n, p, ms, s) => n + '회 × ' + p + '프로필 · ' + ms + 'ms · 시드 ' + s,
+  footnote: '<b>기대값은 상한을 모른다.</b> 식은 「피해가 얼마나 나오는가」를 세고, 모델 체력에 걸려 버려지는 몫(초과 피해 소멸)은 세지 않는다. 그래서 <b>원피해</b>끼리 견준다. 체력 상한을 반영한 <b>적용 피해</b>·파괴 수·전멸률은 참고로만 둔다 — 견주지 않는다.',
+  profile: (n) => '프로필 ' + n,
+  reroll: { none: '없음', '1s': '1 나온 것', fails: '실패한 것', all: '전부' },
+  f: {
+    name: '이름', weapons: '무기 수', attacks: '공격', hitTarget: '명중', hitMod: '명중 보정',
+    hitReroll: '명중 리롤', strength: '위력', woundReroll: '상처 리롤', ap: '관통', damage: '피해',
+    lethal: '치명적 명중', sustained: '지속 명중', devastating: '파괴적 상처', anti: '특화',
+    blast: '폭발', rapidFire: '속사', halfRange: '사거리 절반', hazardous: '위험', torrent: '방사',
+    toughness: '내구력', save: '방호', inv: '무적', fnp: '고통 무시', wounds: '체력',
+    models: '모델 수', saveReroll: '방호 리롤',
+  },
+  cols: { stage: '단계', exp: '기대값', obs: '실측', diff: '차이', se: '표준오차', z: 'z', verdict: '판정' },
+  stage: {
+    attacks: ['공격 횟수', '무기 수 × 공격 식'],
+    hits: ['명중', '성공 + 지속 명중'],
+    wounds: ['상처', '상처 성공 + 치명적 명중의 자동 상처'],
+    failed: ['방호 실패', '방호 실패 + 파괴적 상처(방호 건너뜀)'],
+    raw: ['원피해', '고통 무시 뒤 · 체력 상한 전'],
+  },
+  wt: (v) => '상처 목표 <b>' + v + '+</b>',
+  stv: (v) => '방호 목표 <b>' + v + '</b>', noSave: '없음', usingInv: '(무적)',
+  allPass: '모든 단계 통과', someWarn: '애매한 단계가 있다', someFail: '어긋난 단계가 있다',
+  vPassFixed: '통과 (흔들리지 않는 값)', vFailFixed: '어긋남 (흔들리지 않는 값이 다르다)',
+  vPass: (s) => '통과 (' + s + 'σ 안)', vWarn: '애매 — 다시 돌려 본다', vFail: '어긋남',
+  refNote: '참고 (견주지 않는다)',
+  applied: '적용 피해', destroyed: '파괴 모델', wipe: '전멸률', lost: '소멸한 몫',
+  hazardNote: '위험 굴림 실패(자기 유닛 치명상)',
+  afterHazard: '<b>[위험] Hazardous</b> — 모든 공격을 처리한 <b>뒤에</b> 무기 수만큼 위험 굴림을 한다. 맞는 것은 대상이 아니라 <b>자기 유닛</b>이다.',
+  median: '중앙값', p10: '하위 10%', p90: '상위 10%', min: '최소', max: '최대', stdev: '표준편차',
+  chartTitle: '적용 피해 분포 — 시행 비율', chartMean: '평균',
+  chartNone: '피해가 한 번도 나지 않았다',
+  badExpr: (atk, dmg) => '식을 읽지 못했다 — 공격 「' + atk + '」 · 피해 「' + dmg + '」. 읽지 못한 식으로는 굴리지 않는다. 짐작해서 1 로 때우면 오타가 흔적 없이 사라진다.',
+  close: '닫기', helpAria: '설명 보기', seeAlso: '함께 보기',
+},
+en: {
+  html: 'en',
+  title: 'Warhammer Combat Simulator',
+  lead: 'Enter a profile, then read <b>what N rolls actually produced</b> next to <b>what the formula expects</b>, stage by stage. A mismatch shows up on its own row — which side is wrong is for you to decide.',
+  atk: 'Attacker profiles', def: 'Defender profile', cfg: 'Run settings',
+  add: '＋ Add profile', basics: '? Basics', del: 'Delete', dup: 'Duplicate', edit: 'Edit',
+  secBase: 'Profile', secExtra: 'Extra effects', on: 'ON', off: 'OFF',
+  countFirst: true, unit: (n) => n + ' ×',
+  seqTitle: 'Attack sequence — which values each step uses',
+  phases: [
+    ['Number of Attacks', '공격 횟수', 'core rules 10'],
+    ['Hit Roll', '명중 굴림', 'core rules 05.01'],
+    ['Wound Roll', '상처 굴림', 'core rules 05.02'],
+    ['Saving Throw', '방호 굴림', 'core rules 05.03'],
+    ['Inflict Damage', '피해 가하기', 'core rules 05.04'],
+  ],
+  skipLethal: '<b>Lethal Hits</b> — an unmodified 6 at ② <b>skips the wound roll at ③</b> and goes straight to ④.',
+  skipDevast: '<b>Devastating Wounds</b> — a critical wound at ③ <b>skips the save at ④</b> and goes straight to ⑤.',
+  defName: 'Defender profile',
+  exprHint: 'Attacks and Damage take dice notation — 2 · D6 · 2D3+1 · D6-1',
+  runs: 'Runs', seed: 'Seed', sigma: 'Pass within ±', sigmaSuffix: 'σ', run: 'Roll',
+  seedPlaceholder: 'blank = random',
+  status: (n, p, ms, s) => n + ' runs × ' + p + ' profiles · ' + ms + 'ms · seed ' + s,
+  footnote: '<b>The formula knows nothing about caps.</b> It counts how much damage is produced, not how much is thrown away when a model dies with wounds to spare. So the comparison is on <b>raw damage</b> only. <b>Applied damage</b>, models destroyed and wipe rate are shown for reference — they are not compared.',
+  profile: (n) => 'Profile ' + n,
+  reroll: { none: 'None', '1s': 'Rolls of 1', fails: 'Failed rolls', all: 'All' },
+  f: {
+    name: 'Name', weapons: 'Models', attacks: 'A', hitTarget: 'BS/WS', hitMod: 'Hit mod',
+    hitReroll: 'Hit reroll', strength: 'S', woundReroll: 'Wound reroll', ap: 'AP', damage: 'D',
+    lethal: 'Lethal Hits', sustained: 'Sustained Hits', devastating: 'Devastating Wounds', anti: 'Anti-X',
+    blast: 'Blast', rapidFire: 'Rapid Fire', halfRange: 'Half range', hazardous: 'Hazardous',
+    torrent: 'Torrent',
+    toughness: 'T', save: 'Sv', inv: 'Inv', fnp: 'FNP', wounds: 'W',
+    models: 'Models', saveReroll: 'Save reroll',
+  },
+  cols: { stage: 'Stage', exp: 'Expected', obs: 'Measured', diff: 'Diff', se: 'Std. error', z: 'z', verdict: 'Verdict' },
+  stage: {
+    attacks: ['Attacks', 'models × attack expression'],
+    hits: ['Hits', 'successes + sustained hits'],
+    wounds: ['Wounds', 'wound successes + auto-wounds from lethal hits'],
+    failed: ['Failed saves', 'failed saves + devastating wounds (save skipped)'],
+    raw: ['Raw damage', 'after Feel No Pain · before the wound cap'],
+  },
+  wt: (v) => 'wound on <b>' + v + '+</b>',
+  stv: (v) => 'save on <b>' + v + '</b>', noSave: 'none', usingInv: '(invuln)',
+  allPass: 'all stages pass', someWarn: 'a stage is borderline', someFail: 'a stage disagrees',
+  vPassFixed: 'pass (no variance)', vFailFixed: 'mismatch (a fixed value differs)',
+  vPass: (s) => 'pass (within ' + s + 'σ)', vWarn: 'borderline — roll again', vFail: 'mismatch',
+  refNote: 'reference (not compared)',
+  applied: 'applied damage', destroyed: 'models destroyed', wipe: 'wipe rate', lost: 'lost to overkill',
+  hazardNote: 'hazard rolls failed (mortal wounds to your own unit)',
+  afterHazard: '<b>Hazardous</b> — <b>after</b> all attacks are resolved, make one hazard roll per weapon. The damage lands on <b>your own unit</b>, not the target.',
+  median: 'median', p10: 'bottom 10%', p90: 'top 10%', min: 'min', max: 'max', stdev: 'std. dev',
+  chartTitle: 'Applied damage distribution — share of runs', chartMean: 'mean',
+  chartNone: 'no damage came through in any run',
+  badExpr: (atk, dmg) => 'Could not read the expression — attacks "' + atk + '" · damage "' + dmg + '". Nothing is rolled from an expression we cannot read: silently treating it as 1 would make the typo disappear without a trace.',
+  close: 'Close', helpAria: 'What is this?', seeAlso: 'See also',
+},
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 설명 사전
+// what = 무엇인가 · how = 계산에 어떻게 들어가는가 · list = 보기 · table = 상황표
+// see  = 팝업 안에서 건너뛸 곳. 누르면 이 팝업 위에 또 뜬다
+// ─────────────────────────────────────────────────────────────────────────────
+const HELP = {
+ko: {
+  weapons: { t: '무기 수',
+    what: '이 무기를 든 모델이 몇 기인가. 모델마다 따로 공격 횟수를 굴린다.',
+    list: ['10 → A가 1이면 주사위 10개',
+           '3 → A가 D6이면 D6을 세 번 굴려 합친다 (총 공격 수로는 3D6과 같다)'],
+    see: ['attacks'] },
+  attacks: { t: 'A 공격',
+    what: '무기 1정당 공격 횟수. 숫자로 고정할 수도, 주사위로 정해질 수도 있다.',
+    list: ['2 → 항상 2개', 'D6 → 1~6개', '2+D3 → 상수와 주사위를 더한다 (3~5개)',
+           '2D6 → 주사위 두 개를 굴려 합친다 (2~12개)', 'D6-1 → 빼기도 된다 (0~5개)'],
+    how: '주사위 표기는 숫자 · nDm · + · − 를 섞어 쓸 수 있다. 합이 음수면 0으로 끊는다. ' +
+         '읽지 못하는 표기는 이 페이지에서는 굴리지 않고 그렇다고 적는다 — 1로 때우지 않는다.',
+    see: ['weapons', 'damage'] },
+  hitTarget: { t: 'BS/WS 명중', ref: '코어룰 05.01',
+    what: '명중 필요값. 보정 전 1은 무조건 실패, 보정 전 6은 무조건 결정적 명중이다.',
+    how: '굴림값 + 보정 ≥ 목표면 명중.',
+    see: ['hitMod', 'hitReroll', 'lethal', 'sustained'] },
+  hitMod: { t: '명중 보정', ref: '코어룰 05.01',
+    what: '명중 굴림에 더하는 값. 룰상 보정의 합은 ±1을 넘지 않는다.',
+    how: '굴림값 + 보정 ≥ 목표면 명중. 보정과 무관하게 보정 전 1은 실패, 6은 결정적 명중이다.',
+    tableHead: ['이런 상황은', '이렇게', '왜'],
+    table: [
+      ['엄폐 효과 (13.08)', '명중 보정 −1', '사격 요구치를 1만큼 악화시킨다. 방호가 좋아지는 것이 아니다.'],
+      ['스텔스 (24.33)', '명중 보정 −1', '유닛 전원이 보유하면 원거리 공격에 대해 엄폐 효과를 받는다.'],
+      ['엄폐 무시 (24.18)', '명중 보정 0', '대상이 엄폐 중이어도 그 보정을 받지 않는다.'],
+      ['은폐 (13.09)', '표현 불가', '발각 범위(기본 15") 밖에서는 대상 지정 자체가 안 되는 규칙이라, 사거리·시야가 들어와야 다룰 수 있다.'],
+      ['중화기 · 정지 사격 (24.16)', '명중 보정 +1', '이동하지 않은 턴에 받는 보너스.'],
+    ],
+    see: ['hitTarget'] },
+  hitReroll: { t: '명중 리롤',
+    what: '조건에 맞는 주사위를 전부 다시 굴린다. 주사위 하나만 골라 다시 굴리는 것은 시뮬레이터의 개입 기능이다.',
+    how: '"실패한 것"은 Twin-linked(24.38)와 같다. "전부"는 조건 없이 다시 굴리므로 확률은 "없음"과 같다. 다시 굴린 눈은 좋든 나쁘든 그대로 쓴다.',
+    see: ['woundReroll', 'saveReroll'] },
+  strength: { t: 'S 위력', ref: '코어룰 05.02',
+    what: '무기 위력. 대상 내구력(T)과 비교해 상처 필요값이 정해진다.',
+    tableHead: ['견줌', '목표'],
+    table: [['위력 ≥ 내구력 × 2', '2+'], ['위력 > 내구력', '3+'], ['위력 = 내구력', '4+'],
+            ['위력 < 내구력', '5+'], ['위력 ≤ 내구력 ÷ 2', '6+']],
+    see: ['toughness', 'anti'] },
+  woundReroll: { t: '상처 리롤', ref: '코어룰 05.02',
+    what: '조건에 맞는 상처 주사위를 전부 다시 굴린다.',
+    how: '상처 굴림은 공격 플레이어가 굴리므로(05.02) 이 칸이 공격 쪽에 있다. "실패한 것"은 Twin-linked(24.38)와 같다.',
+    see: ['hitReroll', 'saveReroll'] },
+  ap: { t: 'AP 관통',
+    what: '방호를 깎는 값. 음수로 넣는다. AP −2면 방호 3+가 5+가 된다.',
+    how: '무적 방호는 AP를 무시하므로, AP가 높을수록 무적 쪽이 유리해진다.',
+    see: ['save', 'inv'] },
+  damage: { t: 'D 피해',
+    what: '방호에 실패한 공격 하나가 입히는 피해. A와 같은 주사위 표기를 쓴다.',
+    list: ['1 → 항상 1', 'D3 → 1~3', 'D6+1 → 2~7'],
+    how: '모델 체력을 넘는 몫은 소멸한다. 그래서 적용 피해는 원피해보다 작을 수 있다.',
+    see: ['wounds', 'fnp', 's_raw'] },
+  lethal: { t: 'Lethal Hits · 살상타', ref: '코어룰 24.23',
+    what: '명중 굴림에서 보정 전 6(결정적 명중)이 나오면, 상처 굴림을 건너뛰고 그 공격은 자동으로 상처를 입힌다.',
+    how: '결정적 명중 수만큼 상처 굴림 개수에서 빼고, 성공한 상처에 그대로 더한다. 매개변수 X는 없다.',
+    see: ['sustained', 'devastating'] },
+  sustained: { t: 'Sustained Hits X · 연타', ref: '코어룰 24.36',
+    what: '결정적 명중이 날 때마다 추가 명중 X개를 얻는다.',
+    how: '결정적 명중 수 × X 만큼 상처 굴림 개수를 늘린다. 0이면 미적용.',
+    see: ['lethal', 'hitTarget'] },
+  devastating: { t: 'Devastating Wounds · 궤멸적 피해', ref: '코어룰 24.10',
+    what: '상처 굴림이 결정적 상처가 되면 공격 순서가 거기서 끝나고, 무기의 D 수치만큼 모탈 운드를 입힌다.',
+    how: '그 수만큼 방호 굴림에서 빼고 실패분에 더한다. 매개변수 X는 없다 — 피해량은 D 칸을 따른다.',
+    see: ['anti', 'fnp'] },
+  anti: { t: 'Anti-X Y+ · 특화', ref: '코어룰 24.03',
+    what: '대상이 X 키워드를 가지면, 상처 굴림 Y+ 이상을 결정적 상처로 인정한다.',
+    how: '결정적 상처 기준을 6에서 Y로 낮춘다. 여기서는 키워드 확인 없이 기준값만 넣는다. 0이면 미적용.',
+    see: ['devastating', 'strength'] },
+  torrent: { t: '[방사] Torrent', ref: '코어룰 24.37',
+    what: '[방사] 무기로 공격할 때마다 그 공격은 대상에 자동으로 명중한다.',
+    how: '명중 굴림을 아예 하지 않는다. 그래서 「보정 전 6」도 없고, 결정적 명중이 생기지 않는다 — [치명적 명중]과 [지속 명중]은 결정적 명중에 기대므로 함께 발동하지 않는다. 켜면 명중·명중 보정·명중 리롤 칸은 계산에 쓰이지 않는다.',
+    see: ['hitTarget', 'lethal', 'sustained'] },
+  blast: { t: '[폭발] Blast', ref: '코어룰 24.05',
+    what: '대상 유닛의 모델 다섯 기마다 공격 주사위를 더 굴린다. [폭발]이면 다섯 기마다 한 개, [폭발 X]면 다섯 기마다 X개다(내림).',
+    how: '방어 프로필의 모델 수를 그대로 쓴다 — X × (모델 수 ÷ 5, 내림) 개를 무기마다 더한다. 0이면 미적용.',
+    list: ['[폭발 2] · 대상 12기 → 무기마다 주사위 4개 추가 (12÷5=2, 2×2)'],
+    see: ['models', 'attacks', 'weapons'] },
+  rapidFire: { t: '[속사] Rapid Fire X', ref: '코어룰 24.30',
+    what: '대상 지정 단계에서 대상 유닛이 무기 사거리의 절반 안에 있으면 공격 주사위를 X개 더 굴린다.',
+    how: '이 페이지에는 거리가 없다. 그래서 「사거리 절반」을 사람이 켜고 끈다 — 켜면 무기마다 X개를 더한다. 0이면 미적용.',
+    see: ['halfRange', 'attacks'] },
+  halfRange: { t: '사거리 절반 안', ref: '코어룰 24.30',
+    what: '대상이 무기 사거리의 절반 안에 있는가. 이 페이지는 판을 모르므로 사람이 정한다.',
+    how: '켜면 [속사 X]가 발동한다. [속사]가 0이면 켜도 아무 일도 없다.',
+    see: ['rapidFire'] },
+  hazardous: { t: '[위험] Hazardous', ref: '코어룰 24.15 · 06.03',
+    what: '유닛이 모든 공격을 처리한 뒤, 무기 선택 단계에서 고른 [위험] 무기 수만큼 위험 굴림을 한다. 1~2가 나오면 실패이고 그 유닛이 1 치명상을 입는다.',
+    how: '맞는 것은 대상이 아니라 자기 유닛이다. 그래서 피해 계산에 섞지 않고 참고로만 센다 — 견주지도 않는다. 유닛이 전원 괴물/기체면 실패마다 3 치명상인데(06.03), 이 페이지는 공격자가 무엇인지 모르므로 1로 센다.',
+    see: ['weapons'] },
+  toughness: { t: 'T 내구력', ref: '코어룰 05.02',
+    what: '대상의 내구력. 무기 위력(S)과 견줘 상처 필요값이 정해진다.',
+    see: ['strength'] },
+  save: { t: 'SV 방호', ref: '코어룰 05.03',
+    what: '대상의 방호. AP를 적용한 값으로 굴린다.',
+    how: '보정 전 1은 무조건 실패다. AP를 적용해 7 이상이 되면 방호를 굴리지 못한다.',
+    see: ['ap', 'inv', 'saveReroll'] },
+  inv: { t: 'INV 무적 방호', ref: '코어룰 05.03',
+    what: '관통력(AP)을 무시하는 방호. 0이면 없음.',
+    how: 'AP를 적용한 방호와 견줘 유리한 쪽 하나만 굴린다. AP가 높을수록 이쪽이 유리해진다.',
+    see: ['save', 'ap'] },
+  fnp: { t: 'Feel No Pain · 고통 무시',
+    what: '피해를 입을 때마다 굴려 성공하면 그 피해 1점을 무시한다.',
+    how: '피해 1점마다 D6을 굴린다. 5+면 약 33%, 4+면 50%를 덜어낸다. 모탈 운드에도 적용된다.',
+    see: ['damage', 'devastating'] },
+  wounds: { t: 'W 체력',
+    what: '모델 한 기의 체력.',
+    how: '초과 피해는 소멸한다 — 체력 2에 피해 6이 들어가도 2만 깎이고 나머지는 사라진다.',
+    see: ['models', 'damage', 's_raw'] },
+  models: { t: '모델 수',
+    what: '분대 인원.',
+    how: '파괴 수는 분대 인원을 넘지 않는다. 전멸한 뒤에 남은 피해는 갈 곳이 없다.',
+    see: ['wounds'] },
+  saveReroll: { t: '방호 리롤', ref: '코어룰 05.03',
+    what: '조건에 맞는 방호 주사위를 전부 다시 굴린다.',
+    how: '방호 굴림은 상대(방어) 플레이어가 굴리므로 이 칸이 방어 쪽에 있다.',
+    see: ['hitReroll', 'woundReroll'] },
+
+  // 단계 설명 — 결과표에서 누른다
+  s_attacks: { t: '공격 횟수', ref: '코어룰 10',
+    what: '첫 주사위가 몇 개인가. 무기를 든 모델마다 공격 식을 따로 굴려 합친다.',
+    how: '공격 식이 고정 숫자면 흔들리지 않으므로 표준오차가 0이고, 그때는 실측이 기대값과 정확히 같아야 한다.',
+    see: ['weapons', 'attacks'] },
+  s_hits: { t: '명중', ref: '코어룰 05.01',
+    what: '명중한 공격 수. 지속 명중으로 늘어난 몫을 포함한다.',
+    how: '보정 전 1은 실패, 6은 결정적 명중. 치명적 명중으로 자동 상처가 된 몫도 여기서는 명중으로 센다.',
+    see: ['hitTarget', 'sustained', 'lethal'] },
+  s_wounds: { t: '상처', ref: '코어룰 05.02',
+    what: '상처를 입힌 수. 치명적 명중으로 상처 굴림 없이 넘어온 몫을 포함한다.',
+    see: ['strength', 'toughness', 'anti'] },
+  s_failed: { t: '방호 실패', ref: '코어룰 05.03',
+    what: '방호에 실패해 피해로 넘어간 수. 파괴적 상처로 방호를 건너뛴 몫을 포함한다.',
+    see: ['save', 'inv', 'devastating'] },
+  s_raw: { t: '원피해',
+    what: '고통 무시를 거친 뒤, 체력 상한에 걸리기 전의 피해 총량.',
+    how: '견주는 것은 이 값뿐이다. 적용 피해는 초과 피해가 소멸해 식보다 작아지므로 견주면 늘 어긋난 것처럼 보인다.',
+    see: ['damage', 'fnp', 'wounds'] },
+  verdict: { t: '판정',
+    what: '실측이 기대값에서 표준오차 몇 배만큼 떨어져 있는가(z).',
+    how: '설정한 배수 안이면 통과, 1.5배까지는 애매, 그 밖은 어긋남이다. 시행을 늘리면 표준오차가 줄어 더 작은 어긋남도 잡힌다 — 1만 회면 표준오차는 표준편차의 1/100이다.' },
+  basics: { t: '기초 — 각 칸이 무엇이고 주사위는 어떻게 적는가',
+    what: '이 페이지는 워해머 데이터를 읽지 않는다. 아래 칸은 전부 사람이 적는 것이고, 적은 값으로만 굴린다. 하나씩 눌러 보면 자세한 설명이 뜬다.',
+    how: '주사위 표기는 숫자 · nDm · + · − 를 섞어 쓸 수 있다. 읽지 못하는 표기로는 굴리지 않는다.',
+    see: ['weapons', 'attacks', 'hitTarget', 'hitMod', 'strength', 'ap', 'damage',
+          'lethal', 'sustained', 'devastating', 'anti',
+          'toughness', 'save', 'inv', 'fnp', 'wounds', 'models', 'verdict'] },
+},
+en: {
+  weapons: { t: 'Models with this weapon',
+    what: 'How many models carry this weapon. Each model rolls its attack count separately.',
+    list: ['10 → if A is 1, that is 10 dice',
+           '3 → if A is D6, roll D6 three times and add them up (as a total, the same as 3D6)'],
+    see: ['attacks'] },
+  attacks: { t: 'A — Attacks',
+    what: 'Attacks per weapon. Either a fixed number or dice.',
+    list: ['2 → always 2', 'D6 → 1 to 6', '2+D3 → constant plus dice (3 to 5)',
+           '2D6 → two dice added together (2 to 12)', 'D6-1 → subtraction works too (0 to 5)'],
+    how: 'Dice notation mixes numbers, nDm, + and −. A negative total is clamped to 0. ' +
+         'An expression this page cannot read is not rolled at all — it says so instead of quietly treating it as 1.',
+    see: ['weapons', 'damage'] },
+  hitTarget: { t: 'BS/WS — Hit target', ref: 'core rules 05.01',
+    what: 'The number you need to hit. An unmodified 1 always fails; an unmodified 6 is always a critical hit.',
+    how: 'roll + modifier ≥ target means a hit.',
+    see: ['hitMod', 'hitReroll', 'lethal', 'sustained'] },
+  hitMod: { t: 'Hit modifier', ref: 'core rules 05.01',
+    what: 'Added to the hit roll. By the rules, modifiers never total more than ±1.',
+    how: 'roll + modifier ≥ target means a hit. Regardless of modifiers, an unmodified 1 fails and an unmodified 6 is a critical hit.',
+    tableHead: ['Situation', 'Set', 'Why'],
+    table: [
+      ['Benefit of Cover (13.08)', 'hit modifier −1', 'It worsens the hit roll by 1. It does not improve the save.'],
+      ['Stealth (24.33)', 'hit modifier −1', 'If every model has it, the unit gets cover against ranged attacks.'],
+      ['Ignores Cover (24.18)', 'hit modifier 0', 'The target gets no cover modifier even while in cover.'],
+      ['Concealed (13.09)', 'cannot be expressed', 'Outside the detection range (15" by default) the unit cannot be targeted at all — that needs range and line of sight.'],
+      ['Heavy · stationary (24.16)', 'hit modifier +1', 'The bonus for not having moved this turn.'],
+    ],
+    see: ['hitTarget'] },
+  hitReroll: { t: 'Hit reroll',
+    what: 'Rerolls every die that matches the condition. Rerolling one chosen die is a manual intervention in the simulator, not this.',
+    how: '"Failed rolls" is the same as Twin-linked (24.38). "All" rerolls unconditionally, so its probability equals "None". The second result stands, better or worse.',
+    see: ['woundReroll', 'saveReroll'] },
+  strength: { t: 'S — Strength', ref: 'core rules 05.02',
+    what: 'Weapon Strength. Compared against the target Toughness to get the wound target.',
+    tableHead: ['Comparison', 'Target'],
+    table: [['S ≥ T × 2', '2+'], ['S > T', '3+'], ['S = T', '4+'], ['S < T', '5+'], ['S ≤ T ÷ 2', '6+']],
+    see: ['toughness', 'anti'] },
+  woundReroll: { t: 'Wound reroll', ref: 'core rules 05.02',
+    what: 'Rerolls every wound die that matches the condition.',
+    how: 'The attacking player makes wound rolls (05.02), which is why this sits on the attacker side. "Failed rolls" is the same as Twin-linked (24.38).',
+    see: ['hitReroll', 'saveReroll'] },
+  ap: { t: 'AP — Armour Penetration',
+    what: 'Worsens the save. Enter it as a negative number: AP −2 turns a 3+ save into 5+.',
+    how: 'An invulnerable save ignores AP, so the higher the AP the more the invulnerable save is worth.',
+    see: ['save', 'inv'] },
+  damage: { t: 'D — Damage',
+    what: 'Damage from one attack that got through the save. Same dice notation as A.',
+    list: ['1 → always 1', 'D3 → 1 to 3', 'D6+1 → 2 to 7'],
+    how: 'Damage beyond a model wounds total is lost, so applied damage can be well below raw damage.',
+    see: ['wounds', 'fnp', 's_raw'] },
+  lethal: { t: 'Lethal Hits', ref: 'core rules 24.23',
+    what: 'An unmodified 6 to hit (a critical hit) skips the wound roll — that attack automatically wounds.',
+    how: 'Those hits are removed from the wound dice and added straight to successful wounds. There is no X parameter.',
+    see: ['sustained', 'devastating'] },
+  sustained: { t: 'Sustained Hits X', ref: 'core rules 24.36',
+    what: 'Each critical hit scores X additional hits.',
+    how: 'Adds (critical hits × X) to the wound dice. 0 turns it off.',
+    see: ['lethal', 'hitTarget'] },
+  devastating: { t: 'Devastating Wounds', ref: 'core rules 24.10',
+    what: 'A critical wound ends the attack sequence there and inflicts mortal wounds equal to the weapon Damage.',
+    how: 'Those are removed from the save dice and added to the failures. There is no X parameter — the amount comes from the D field.',
+    see: ['anti', 'fnp'] },
+  anti: { t: 'Anti-X Y+', ref: 'core rules 24.03',
+    what: 'Against a target with keyword X, a wound roll of Y+ counts as a critical wound.',
+    how: 'Lowers the critical-wound threshold from 6 to Y. This page takes the number only — it does not check keywords. 0 turns it off.',
+    see: ['devastating', 'strength'] },
+  torrent: { t: 'Torrent', ref: 'core rules 24.37',
+    what: 'Each time an attack is made with a Torrent weapon, that attack automatically hits the target.',
+    how: 'No hit roll is made at all, so there is no unmodified 6 and no critical hit — Lethal Hits and Sustained Hits both depend on critical hits and therefore do not trigger. With it on, the hit target, hit modifier and hit reroll fields take no part in the calculation.',
+    see: ['hitTarget', 'lethal', 'sustained'] },
+  blast: { t: 'Blast', ref: 'core rules 24.05',
+    what: 'Adds attack dice for every five models in the target unit. [BLAST] adds one per five models; [BLAST X] adds X per five models (rounding down).',
+    how: 'It reads the model count straight from the defender profile — X × floor(models ÷ 5) extra dice per weapon. 0 turns it off.',
+    list: ['[BLAST 2] vs a 12-model unit → 4 extra dice per weapon (12÷5=2, 2×2)'],
+    see: ['models', 'attacks', 'weapons'] },
+  rapidFire: { t: 'Rapid Fire X', ref: 'core rules 24.30',
+    what: 'Adds X attack dice if the target unit was within half range of the weapon in the Select Targets step.',
+    how: 'This page has no distances, so you say whether you are within half range. When it is on, each weapon gets X extra dice. 0 turns it off.',
+    see: ['halfRange', 'attacks'] },
+  halfRange: { t: 'Within half range', ref: 'core rules 24.30',
+    what: 'Whether the target sits within half of the weapon range. This page knows nothing about the board, so you decide.',
+    how: 'Turning it on triggers Rapid Fire X. With Rapid Fire at 0 it does nothing.',
+    see: ['rapidFire'] },
+  hazardous: { t: 'Hazardous', ref: 'core rules 24.15 · 06.03',
+    what: 'After the unit has resolved all of its attacks, make one hazard roll per Hazardous weapon selected. A 1-2 fails and the unit suffers 1 mortal wound.',
+    how: 'That damage lands on your own unit, not the target, so it stays out of the damage chain and is only counted for reference — never compared. If every model in the unit is a Monster or Vehicle each failure is 3 mortal wounds (06.03); this page does not know what the attacker is, so it counts 1.',
+    see: ['weapons'] },
+  toughness: { t: 'T — Toughness', ref: 'core rules 05.02',
+    what: 'The target Toughness, compared against weapon Strength to get the wound target.',
+    see: ['strength'] },
+  save: { t: 'Sv — Save', ref: 'core rules 05.03',
+    what: 'The target armour save, rolled after AP is applied.',
+    how: 'An unmodified 1 always fails. If AP pushes it to 7 or worse, no save is rolled at all.',
+    see: ['ap', 'inv', 'saveReroll'] },
+  inv: { t: 'Inv — Invulnerable save', ref: 'core rules 05.03',
+    what: 'A save that ignores AP. 0 means none.',
+    how: 'Compared against the AP-modified armour save; only the better of the two is rolled. The higher the AP, the more this is worth.',
+    see: ['save', 'ap'] },
+  fnp: { t: 'Feel No Pain',
+    what: 'Rolled each time damage is suffered; a success ignores that 1 point of damage.',
+    how: 'One D6 per point of damage. 5+ removes about 33%, 4+ removes 50%. It applies to mortal wounds too.',
+    see: ['damage', 'devastating'] },
+  wounds: { t: 'W — Wounds per model',
+    what: 'How many wounds a single model has.',
+    how: 'Excess damage is lost — 6 damage into a 2-wound model removes 2 and the rest disappears.',
+    see: ['models', 'damage', 's_raw'] },
+  models: { t: 'Models in the unit',
+    what: 'How many models are in the target unit.',
+    how: 'Destroyed models never exceed the unit size. Damage after a wipe has nowhere to go.',
+    see: ['wounds'] },
+  saveReroll: { t: 'Save reroll', ref: 'core rules 05.03',
+    what: 'Rerolls every save die that matches the condition.',
+    how: 'The defending player makes save rolls, which is why this sits on the defender side.',
+    see: ['hitReroll', 'woundReroll'] },
+
+  s_attacks: { t: 'Attacks', ref: 'core rules 10',
+    what: 'How many dice the sequence starts with. Every model with the weapon rolls the attack expression separately.',
+    how: 'A fixed attack expression has no variance, so the standard error is 0 and the measurement must match the formula exactly.',
+    see: ['weapons', 'attacks'] },
+  s_hits: { t: 'Hits', ref: 'core rules 05.01',
+    what: 'Attacks that hit, including extra hits from Sustained Hits.',
+    how: 'Unmodified 1 fails, unmodified 6 is a critical hit. Hits converted to auto-wounds by Lethal Hits are still counted as hits here.',
+    see: ['hitTarget', 'sustained', 'lethal'] },
+  s_wounds: { t: 'Wounds', ref: 'core rules 05.02',
+    what: 'Attacks that wounded, including the ones Lethal Hits carried through without a wound roll.',
+    see: ['strength', 'toughness', 'anti'] },
+  s_failed: { t: 'Failed saves', ref: 'core rules 05.03',
+    what: 'Attacks that got past the save, including Devastating Wounds that skipped it.',
+    see: ['save', 'inv', 'devastating'] },
+  s_raw: { t: 'Raw damage',
+    what: 'Total damage after Feel No Pain and before the wound cap.',
+    how: 'This is the only figure compared. Applied damage loses the overkill, so comparing it would always look like a mismatch.',
+    see: ['damage', 'fnp', 'wounds'] },
+  verdict: { t: 'Verdict',
+    what: 'How many standard errors the measurement sits from the expectation (z).',
+    how: 'Inside the chosen multiple it passes; up to 1.5× it is borderline; beyond that it is a mismatch. More runs shrink the standard error and catch smaller discrepancies — at 10,000 runs the standard error is a hundredth of the standard deviation.' },
+  basics: { t: 'Basics — what each field is, and how to write dice',
+    what: 'This page reads no Warhammer data. Every field below is typed in by hand, and only those values are rolled. Tap any of them for the details.',
+    how: 'Dice notation mixes numbers, nDm, + and −. Nothing is rolled from an expression that cannot be read.',
+    see: ['weapons', 'attacks', 'hitTarget', 'hitMod', 'strength', 'ap', 'damage',
+          'lethal', 'sustained', 'devastating', 'anti',
+          'toughness', 'save', 'inv', 'fnp', 'wounds', 'models', 'verdict'] },
+},
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 칸 정의 — 머리글·입력칸·이름표·요약·설명이 전부 여기서 나온다.
+// 칸을 늘릴 때 고칠 곳은 이 배열 하나다
+// ─────────────────────────────────────────────────────────────────────────────
+const COLS_ATK = [
+  // 모형이 데이터시트에 들고 있는 값
+  { k: 'name', t: 'text', g: 'base' }, { k: 'weapons', t: 'int', g: 'base' },
+  { k: 'attacks', t: 'expr', g: 'base' }, { k: 'hitTarget', t: 'plus', g: 'base' },
+  { k: 'strength', t: 'int', g: 'base' }, { k: 'ap', t: 'int', g: 'base' },
+  { k: 'damage', t: 'expr', g: 'base' },
+  // 그 위에 얹히는 것 — 보정 · 리롤 · 무기 특수 규칙
+  { k: 'hitMod', t: 'int', g: 'extra' }, { k: 'hitReroll', t: 'reroll', g: 'extra' },
+  { k: 'torrent', t: 'pill', g: 'extra' },
+  { k: 'woundReroll', t: 'reroll', g: 'extra' }, { k: 'lethal', t: 'pill', g: 'extra' },
+  { k: 'sustained', t: 'int', g: 'extra' }, { k: 'devastating', t: 'pill', g: 'extra' },
+  { k: 'anti', t: 'plusz', g: 'extra' },
+  { k: 'blast', t: 'int', g: 'extra' }, { k: 'rapidFire', t: 'int', g: 'extra' },
+  { k: 'halfRange', t: 'pill', g: 'extra' }, { k: 'hazardous', t: 'pill', g: 'extra' },
+];
+const COLS_DEF = [
+  { k: 'toughness', t: 'int', g: 'base' }, { k: 'save', t: 'plus', g: 'base' },
+  { k: 'wounds', t: 'int', g: 'base' }, { k: 'models', t: 'int', g: 'base' },
+  { k: 'inv', t: 'plusz', g: 'extra' }, { k: 'fnp', t: 'plusz', g: 'extra' },
+  { k: 'saveReroll', t: 'reroll', g: 'extra' },
+];
+/** 묶음이 바뀌는 첫 칸 — 표에서는 굵은 선으로, 폼에서는 소제목으로 갈린다 */
+const isGroupStart = (cols, i) => i > 0 && cols[i].g !== cols[i - 1].g;
+const LIMITS = {
+  weapons: [1, 999], hitTarget: [2, 6], hitMod: [-3, 3], strength: [1, 40], ap: [-6, 0],
+  sustained: [0, 6], anti: [0, 6], blast: [0, 6], rapidFire: [0, 6],
+  toughness: [1, 40], save: [2, 7], inv: [0, 6],
+  fnp: [0, 6], wounds: [1, 99], models: [1, 99],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 상태
+// ─────────────────────────────────────────────────────────────────────────────
+const KEY = 'bulk_html_v2';
+const T = () => L[state.lang] || L.ko;
+const H = () => HELP[state.lang] || HELP.ko;
+const newAttacker = (n) => ({
+  name: T().profile(n), weapons: 5, attacks: '2', hitTarget: 3, hitMod: 0, hitReroll: 'none',
+  strength: 4, woundReroll: 'none', ap: 0, damage: '1',
+  lethal: false, sustained: 0, devastating: false, anti: 0,
+  blast: 0, rapidFire: 0, halfRange: false, hazardous: false, torrent: false,
+});
+let state = {
+  lang: (navigator.language || 'ko').toLowerCase().startsWith('ko') ? 'ko' : 'en',
+  attackers: [],
+  defender: { toughness: 4, save: 3, inv: 0, fnp: 0, wounds: 2, models: 5, saveReroll: 'none' },
+  runs: 10000, seed: '', sigma: 2,
+};
+try {
+  const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+  if (saved && Array.isArray(saved.attackers) && saved.attackers.length) state = saved;
+} catch (e) { /* 깨진 저장물로 시작하지 않는다 */ }
+if (!state.attackers.length) state.attackers = [newAttacker(1)];
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+
+const num = (v, lo, hi) => { const n = Number(v); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : lo; };
+const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+const getPath = (p) => p.split('.').reduce((o, x) => o[x], state);
+const setPath = (p, v) => {
+  const parts = p.split('.');
+  let o = state;
+  for (const x of parts.slice(0, -1)) o = o[x];
+  o[parts[parts.length - 1]] = v;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 팝업 — 브라우저가 주는 <dialog> 를 쓴다. 하나씩 만들어 띄우므로 **겹쳐 열린다**
+// (팝업 안의 ? 를 누르면 그 위에 또 뜨고, 닫으면 아래 것이 그대로 남는다)
+// ─────────────────────────────────────────────────────────────────────────────
+function openDialog(title, ref, bodyHtml, footHtml) {
+  const d = document.createElement('dialog');
+  d.innerHTML = '<header><h3>' + esc(title) + '</h3><span class="ref">' + esc(ref || '') + '</span></header>' +
+    '<div class="body">' + bodyHtml + '</div>' +
+    '<footer>' + (footHtml || '<span></span>') +
+    '<button data-close>' + esc(T().close) + '</button></footer>';
+  document.body.appendChild(d);
+  d.addEventListener('click', (e) => {
+    if (e.target === d || e.target.closest('[data-close]')) d.close();   // 바깥을 눌러도 닫힌다
+  });
+  d.addEventListener('close', () => d.remove());
+  d.showModal();
+  return d;
+}
+
+function openHelp(key) {
+  const h = H()[key];
+  if (!h) return;
+  let body = '<p>' + esc(h.what) + '</p>';
+  if (h.list) body += '<ul>' + h.list.map((x) => '<li>' + esc(x) + '</li>').join('') + '</ul>';
+  if (h.table) {
+    body += '<table><tbody>' + h.table.map((r) =>
+      '<tr>' + r.map((c, i) => '<td' + (i === 1 ? ' style="color:var(--mid);white-space:nowrap"' : '') +
+        '>' + esc(c) + '</td>').join('') + '</tr>').join('') + '</tbody></table>';
+  }
+  if (h.how) body += '<p class="how">→ ' + esc(h.how) + '</p>';
+  if (h.see) {
+    body += '<div class="seealso"><span class="hint">' + esc(T().seeAlso) + '</span>' +
+      h.see.filter((k) => H()[k]).map((k) =>
+        '<button data-help="' + k + '">' + esc(H()[k].t) + '</button>').join('') + '</div>';
+  }
+  openDialog(h.t, h.ref, body);
+}
+
+/** 물음표 하나 — 머리글에도, 세로 폼에도, 팝업 안에도 같은 것이 붙는다 */
+const q = (key) => H()[key]
+  ? '<button class="q" data-help="' + key + '" aria-label="' + esc(T().helpAria) + '" title="' + esc(H()[key].t) + '">?</button>'
+  : '';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 칸 하나 그리기 — 이름은 두 말을 나란히(병기), 값은 종류에 맞는 입력칸
+// ─────────────────────────────────────────────────────────────────────────────
+const other = () => (state.lang === 'ko' ? 'en' : 'ko');
+/** 이름 병기 — 두 말이 같으면 한 번만 적는다 (AP 를 "AP AP" 로 적지 않는다) */
+function fieldName(k, tag) {
+  const a = L[state.lang].f[k], b = L[other()].f[k];
+  return esc(a) + (a === b ? '' : ' <' + tag + '>' + esc(b) + '</' + tag + '>');
+}
+
+const selectOf = (path, v) => '<select data-p="' + path + '">' +
+  Object.keys(T().reroll).map((k) => '<option value="' + k + '"' + (v === k ? ' selected' : '') + '>' +
+    esc(T().reroll[k]) + '</option>').join('') + '</select>';
+
+function cellInput(path, col, v) {
+  const lim = LIMITS[col.k] || [-999, 999];
+  const n = (extra) => '<input type="number" data-p="' + path + '" value="' + v +
+    '" min="' + lim[0] + '" max="' + lim[1] + '" step="1">' + (extra || '');
+  switch (col.t) {
+    case 'text':   return '<input type="text" class="name" data-p="' + path + '" value="' + esc(v) + '">';
+    case 'expr':   return '<input type="text" class="expr" data-p="' + path + '" value="' + esc(v) + '">';
+    // 특수 규칙은 체크박스가 아니라 누르면 켜지는 버튼이다 (human 2026-08-18)
+    case 'pill':   return '<button class="pill" data-toggle="' + path + '" aria-pressed="' + (v ? 'true' : 'false') +
+                          '">' + esc(v ? T().on : T().off) + '</button>';
+    case 'reroll': return selectOf(path, v);
+    case 'plus':   return n('+');
+    case 'plusz':  return n(v > 0 ? '+' : '');
+    default:       return n();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 공격 순서 — 단계마다 **그 단계가 쓰는 값**을 딱지로 단다. 딱지를 누르면 설명이 뜬다.
+// ⚠ 단계 이름과 참조번호는 설명 사전(s_*)에서 그대로 온다 — 두 벌로 적지 않는다
+// ─────────────────────────────────────────────────────────────────────────────
+const NUM = ['①', '②', '③', '④', '⑤'];
+const STEPS = [
+  { key: 's_attacks', fields: ['weapons', 'attacks', 'blast', 'rapidFire', 'halfRange'] },
+  { key: 's_hits',    fields: ['hitTarget', 'hitMod', 'hitReroll', 'torrent'] },
+  { key: 's_wounds',  fields: ['strength', 'toughness', 'woundReroll', 'anti'] },
+  { key: 's_failed',  fields: ['save', 'ap', 'inv', 'saveReroll'] },
+  { key: 's_raw',     fields: ['damage', 'fnp', 'wounds', 'models'] },
+];
+/** 건너뛰는 규칙 — 어느 단계 뒤에서 어느 단계를 건너뛰는지 */
+const SKIPS = [
+  { after: 2, help: 'lethal', text: 'skipLethal' },
+  { after: 3, help: 'devastating', text: 'skipDevast' },
+  { after: 5, help: 'hazardous', text: 'afterHazard' },
+];
+
+function renderSeq() {
+  const t = T();
+  let rows = '';
+  STEPS.forEach((st, i) => {
+    const ph = t.phases[i];
+    rows += '<div class="step"><span class="no">' + NUM[i] + '</span><div>' +
+      '<div><span class="sname">' + esc(ph[0]) + ' <em>' + esc(ph[1]) + '</em></span>' +
+        '<span class="sref">' + esc(ph[2]) + '</span> ' + q(st.key) + '</div>' +
+      '<div class="chips">' + st.fields.map((k) =>
+        '<button class="chip" data-help="' + k + '">' + fieldName(k, 'em') + '</button>').join('') + '</div>' +
+    '</div></div>';
+    for (const sk of SKIPS) if (sk.after === i + 1) rows += '<div class="skip">' + t[sk.text] + ' ' + q(sk.help) + '</div>';
+  });
+  document.getElementById('seq').innerHTML =
+    '<summary><span>' + esc(t.seqTitle) + '</span></summary><div class="seqbody">' + rows + '</div>';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 넓은 화면 — 표 하나에 다 보이고, 보는 자리가 곧 고치는 자리다
+// ─────────────────────────────────────────────────────────────────────────────
+const headRow = (cols, tail) =>
+  cols.map((c, i) => '<th' + (isGroupStart(cols, i) ? ' class="gsep"' : '') + '><span class="hd">' +
+    fieldName(c.k, 'em') + q(c.k) + '</span></th>').join('') + (tail || '');
+
+function renderTables() {
+  document.querySelector('#atk thead tr').innerHTML = headRow(COLS_ATK, '<th></th>');
+  document.querySelector('#atk tbody').innerHTML = state.attackers.map((a, i) => '<tr>' +
+    COLS_ATK.map((c, j) => '<td' + (isGroupStart(COLS_ATK, j) ? ' class="gsep"' : '') + '>' +
+      cellInput('attackers.' + i + '.' + c.k, c, a[c.k]) + '</td>').join('') +
+    '<td><button class="x" data-dup="' + i + '" title="' + esc(T().dup) + '">&#10697;</button>' +
+    '<button class="x" data-del="' + i + '" title="' + esc(T().del) + '">&#10005;</button></td>' +
+  '</tr>').join('');
+
+  document.querySelector('#def thead tr').innerHTML = headRow(COLS_DEF);
+  document.querySelector('#def tbody').innerHTML = '<tr>' +
+    COLS_DEF.map((c, j) => '<td' + (isGroupStart(COLS_DEF, j) ? ' class="gsep"' : '') + '>' +
+      cellInput('defender.' + c.k, c, state.defender[c.k]) + '</td>').join('') + '</tr>';
+
+  document.getElementById('runs').value = state.runs;
+  document.getElementById('seed').value = state.seed;
+  document.getElementById('sigma').value = state.sigma;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 좁은 화면 — 요약 카드. 값 하나에 한 줄을 쓰지 않는다.
+// 고치는 것은 카드를 눌러 여는 세로 폼에서 한다 (human 2026-08-18)
+// ─────────────────────────────────────────────────────────────────────────────
+const sign = (n) => (n > 0 ? '+' + n : String(n));
+
+/** 요약에 적는 칸 — 데이터시트 차례대로 (A · BS/WS · S · AP · D) */
+const SUM_ATK = ['attacks', 'hitTarget', 'strength', 'ap', 'damage'];
+const SUM_DEF = ['toughness', 'save', 'wounds'];
+
+/** 값의 꼴은 칸 정의를 따른다 — 「3」 이 아니라 「3+」 로 보여야 한다 */
+function valueText(cols, k, v) {
+  const t = (cols.find((c) => c.k === k) || {}).t;
+  if (t === 'plus') return v + '+';
+  if (t === 'plusz') return v > 0 ? v + '+' : String(v);
+  return String(v);
+}
+
+/**
+ * 요약 한 줄 — 어느 말로 적는지만 다르다.
+ * ko  (공격 2 · 명중 3+ · 위력 4 · 관통 0 · 피해 1) 5개
+ * en  5 × (A 2 · BS/WS 3+ · S 4 · AP 0 · D 1)
+ */
+function summaryLine(lang, cols, keys, obj, count) {
+  const dict = L[lang];
+  const body = '(' + keys.map((k) => dict.f[k] + ' ' + valueText(cols, k, obj[k])).join(' · ') + ')';
+  const unit = dict.unit(count);
+  return dict.countFirst ? unit + ' ' + body : body + ' ' + unit;
+}
+/** 지금 말이 위, 다른 말이 아래 — 칸 이름을 병기하는 것과 같은 차례다 */
+const summaryOf = (cols, keys, obj, count) =>
+  '<span>' + esc(summaryLine(state.lang, cols, keys, obj, count)) + '</span>' +
+  '<span class="alt">' + esc(summaryLine(other(), cols, keys, obj, count)) + '</span>';
+/** 켜져 있는 것만 딱지로 보인다 — 꺼진 것을 늘어놓으면 요약이 아니다 */
+function tagsOf(a) {
+  const f = T().f, r = T().reroll, out = [];
+  if (a.torrent) out.push(f.torrent);
+  if (a.hitMod) out.push(f.hitMod + ' ' + sign(a.hitMod));
+  if (a.hitReroll !== 'none') out.push(f.hitReroll + ' ' + r[a.hitReroll]);
+  if (a.woundReroll !== 'none') out.push(f.woundReroll + ' ' + r[a.woundReroll]);
+  if (a.lethal) out.push(f.lethal);
+  if (a.sustained > 0) out.push(f.sustained + ' ' + a.sustained);
+  if (a.devastating) out.push(f.devastating);
+  if (a.anti > 0) out.push(f.anti + ' ' + a.anti + '+');
+  if (a.blast > 0) out.push(f.blast + ' ' + a.blast);
+  if (a.rapidFire > 0) out.push(f.rapidFire + ' ' + a.rapidFire + (a.halfRange ? ' · ' + f.halfRange : ''));
+  if (a.hazardous) out.push(f.hazardous);
+  return out;
+}
+function defTags(d) {
+  const f = T().f, r = T().reroll, out = [];
+  if (d.inv > 0) out.push(f.inv + ' ' + d.inv + '+');
+  if (d.fnp > 0) out.push(f.fnp + ' ' + d.fnp + '+');
+  if (d.saveReroll !== 'none') out.push(f.saveReroll + ' ' + r[d.saveReroll]);
+  return out;
+}
+
+const pcard = (title, sum, tags, editAttr, dupAttr, delAttr) =>
+  '<div class="pcard">' +
+    '<div class="r1"><span class="pname">' + esc(title) + '</span><span style="display:flex;gap:6px">' +
+      '<button ' + editAttr + '>' + esc(T().edit) + '</button>' +
+      (dupAttr ? '<button ' + dupAttr + '>' + esc(T().dup) + '</button>' : '') +
+      (delAttr ? '<button class="x" ' + delAttr + '>&#10005;</button>' : '') +
+    '</span></div>' +
+    '<div class="sum">' + sum + '</div>' +
+    (tags && tags.length ? '<div class="tags">' + tags.map((x) => '<span class="tag">' + esc(x) + '</span>').join('') + '</div>' : '') +
+  '</div>';
+
+function renderList() {
+  document.getElementById('atklist').innerHTML = state.attackers.map((a, i) =>
+    pcard(a.name, summaryOf(COLS_ATK, SUM_ATK, a, a.weapons), tagsOf(a), 'data-edit="' + i + '"',
+          'data-dup="' + i + '"',
+          state.attackers.length > 1 ? 'data-del="' + i + '"' : '')).join('');
+  const d = state.defender;
+  document.getElementById('deflist').innerHTML =
+    pcard(T().defName, summaryOf(COLS_DEF, SUM_DEF, d, d.models), defTags(d), 'data-edit="def"', '', '');
+}
+
+/** 세로 폼 — 이름과 값이 한 줄에 붙어 있다(key-value). 이름 옆의 ? 는 위에 겹쳐 뜬다 */
+function openEditor(which) {
+  const isDef = which === 'def';
+  const cols = isDef ? COLS_DEF : COLS_ATK;
+  const base = isDef ? 'defender' : 'attackers.' + which;
+  const obj = isDef ? state.defender : state.attackers[which];
+  const fld = (c) => {
+    const wide = c.t === 'text' || c.t === 'reroll';   // 켬/끔 버튼은 좁아도 되니 둘씩 선다
+    return '<label class="fld' + (wide ? ' wide' : '') + '">' +
+      '<span class="k">' + fieldName(c.k, 'em') + q(c.k) + '</span>' +
+      '<span class="v">' + cellInput(base + '.' + c.k, c, obj[c.k]) + '</span></label>';
+  };
+  const section = (g, title) => {
+    const part = cols.filter((c) => c.g === g);
+    return part.length ? '<div class="fsec"><h4>' + esc(title) + '</h4><div class="form">' +
+      part.map(fld).join('') + '</div></div>' : '';
+  };
+  const body = section('base', T().secBase) + section('extra', T().secExtra);
+  openDialog(isDef ? T().defName : obj.name, '', body);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 화면 말 갈아 끼우기 — 글자가 박혀 있지 않으므로 다시 그리기만 하면 된다
+// ─────────────────────────────────────────────────────────────────────────────
+function renderChrome() {
+  const t = T();
+  document.documentElement.lang = t.html;
+  document.title = t.title;
+  const set = (id, v, html) => { const el = document.getElementById(id); if (html) el.innerHTML = v; else el.textContent = v; };
+  set('t-title', t.title); set('t-lead', t.lead, true);
+  set('t-atk', t.atk); set('t-def', t.def); set('t-cfg', t.cfg);
+  set('add', t.add); set('basics', t.basics); set('t-exprhint', t.exprHint);
+  set('t-runs', t.runs); set('t-seed', t.seed); set('t-sigma', t.sigma + t.sigmaSuffix);
+  set('run', t.run); set('t-footnote', t.footnote, true);
+  renderSeq();
+  document.getElementById('seed').placeholder = t.seedPlaceholder;
+  for (const b of document.querySelectorAll('#langsw button'))
+    b.setAttribute('aria-pressed', String(b.dataset.lang === state.lang));
+}
+const renderAll = () => { renderTables(); renderList(); };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 손대는 자리
+// ─────────────────────────────────────────────────────────────────────────────
+document.addEventListener('change', (e) => {
+  const el = e.target.closest('[data-p]');
+  if (!el) return;
+  const field = el.dataset.p.split('.').pop();
+  const lim = LIMITS[field] || [-999, 999];
+  setPath(el.dataset.p, el.type === 'number' ? num(el.value, lim[0], lim[1]) : el.value);
+  save();
+  // ⚠ 열려 있는 세로 폼은 다시 그리지 않는다 — 고치던 칸이 사라진다
+  renderAll();
+});
+document.addEventListener('click', (e) => {
+  const help = e.target.closest('[data-help]');
+  if (help) { openHelp(help.dataset.help); return; }
+
+  const pill = e.target.closest('[data-toggle]');
+  if (pill) {
+    const v = !getPath(pill.dataset.toggle);
+    setPath(pill.dataset.toggle, v);
+    save();
+    pill.setAttribute('aria-pressed', String(v));      // 열려 있는 폼의 버튼은 제자리에서 바뀐다
+    pill.textContent = v ? T().on : T().off;
+    renderAll();
+    return;
+  }
+
+  const edit = e.target.closest('[data-edit]');
+  if (edit) { openEditor(edit.dataset.edit === 'def' ? 'def' : Number(edit.dataset.edit)); return; }
+
+  const dup = e.target.closest('[data-dup]');
+  if (dup) {
+    const src = state.attackers[Number(dup.dataset.dup)];
+    state.attackers.splice(Number(dup.dataset.dup) + 1, 0, JSON.parse(JSON.stringify(src)));
+    save(); renderAll();
+    return;
+  }
+
+  const del = e.target.closest('[data-del]');
+  if (!del) return;
+  if (state.attackers.length <= 1) return;
+  state.attackers.splice(Number(del.dataset.del), 1);
+  save(); renderAll();
+});
+document.getElementById('add').onclick = () => {
+  state.attackers.push(newAttacker(state.attackers.length + 1));
+  save(); renderAll();
+};
+document.getElementById('basics').onclick = () => openHelp('basics');
+document.getElementById('langsw').onclick = (e) => {
+  const b = e.target.closest('[data-lang]');
+  if (!b || b.dataset.lang === state.lang) return;
+  state.lang = b.dataset.lang;
+  save(); renderChrome(); renderAll();
+  if (lastRun) draw(lastRun);              // 이미 나온 결과도 함께 갈아 끼운다 (다시 굴리지 않는다)
+};
+document.getElementById('runs').addEventListener('change', (e) => {
+  state.runs = num(e.target.value, 1, 1000000); save(); renderTables();
+});
+document.getElementById('sigma').addEventListener('change', (e) => {
+  state.sigma = num(e.target.value, 1, 6); save(); renderTables();
+});
+document.getElementById('seed').addEventListener('change', (e) => { state.seed = e.target.value; save(); });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 히스토그램 — 계열이 하나라 범례 없이 제목이 계열을 말한다
+// ─────────────────────────────────────────────────────────────────────────────
+function histogram(counts, runs, mean) {
+  const seen = [...counts.keys()].sort((x, y) => x - y);
+  if (!seen.length) return '<div class="chart"><p class="hint">' + esc(T().chartNone) + '</p></div>';
+
+  const max = seen[seen.length - 1];
+  const bins = [];
+  for (let v = 0; v <= max; v++) bins.push({ v: v, ratio: (counts.get(v) || 0) / runs });
+  const maxRatio = Math.max(...bins.map((b) => b.ratio), 1e-9);
+  // 칸이 촘촘하면 막대 위 숫자가 서로 겹친다 — 그때는 눌러 보는 설명만 남긴다
+  const showPct = bins.length <= 20;
+  const pct = (r) => (r * 100 >= 10 ? (r * 100).toFixed(0) : (r * 100).toFixed(1)) + '%';
+  const every = Math.max(1, Math.ceil(bins.length / 16));
+
+  const cols = bins.map((b) => '<div class="bcol" title="' + b.v + ' — ' + (b.ratio * 100).toFixed(2) + '%">' +
+    '<div class="bbar" style="height:' + (b.ratio / maxRatio * 100).toFixed(1) + '%' +
+      (b.ratio > 0 ? ';min-height:1px' : '') + '">' +
+      (showPct && b.ratio > 0 ? '<span class="bpct">' + pct(b.ratio) + '</span>' : '') +
+    '</div></div>').join('');
+  const xs = bins.map((b, i) => '<span>' + (i % every ? '' : b.v) + '</span>').join('');
+  const meanAt = ((mean + 0.5) / bins.length * 100).toFixed(2);
+
+  return '<div class="chart"><div class="ttl">' + esc(T().chartTitle) + '</div>' +
+    '<div class="plot"><div class="bars">' + cols + '</div>' +
+      '<div class="mline" style="left:' + meanAt + '%"></div>' +
+      '<div class="mlbl" style="left:' + meanAt + '%">' + esc(T().chartMean) + ' ' + mean.toFixed(2) + '</div>' +
+    '</div><div class="bxs">' + xs + '</div></div>';
+}
+
+/** 셈한 개수에서 분위수를 뽑는다 — 1만 시행을 통째로 들고 있을 이유가 없다 */
+function quantile(counts, runs, p) {
+  const target = p * (runs - 1);
+  let seen = 0;
+  for (const v of [...counts.keys()].sort((x, y) => x - y)) {
+    seen += counts.get(v);
+    if (seen > target) return v;
+  }
+  return 0;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 돌리기
+// ─────────────────────────────────────────────────────────────────────────────
+const f2 = (n) => n.toFixed(2);
+const f3 = (n) => n.toFixed(3);
+const STAGE_KEYS = ['attacks', 'hits', 'wounds', 'failed', 'raw'];
+const KEYS = ['attacks', 'hits', 'wounds', 'failed', 'raw', 'applied', 'destroyed', 'hazard'];
+let lastRun = null;   // 말을 바꿔도 결과를 다시 굴리지 않는다
+
+function verdict(exp, obs, se, sigma) {
+  const t = T();
+  if (se === 0) {
+    return Math.abs(obs - exp) < 1e-9
+      ? { cls: 'pass', text: t.vPassFixed, z: 0 }
+      : { cls: 'fail', text: t.vFailFixed, z: Infinity };
+  }
+  const z = (obs - exp) / se;
+  const az = Math.abs(z);
+  if (az <= sigma) return { cls: 'pass', text: t.vPass(sigma), z: z };
+  if (az <= sigma * 1.5) return { cls: 'warn', text: t.vWarn, z: z };
+  return { cls: 'fail', text: t.vFail, z: z };
+}
+
+/** 굴린 결과를 화면에 편다. 말을 바꾸면 이것만 다시 부른다 */
+function draw(run) {
+  const t = T();
+  const blocks = run.results.map((r) => {
+    if (r.bad) {
+      return '<div class="card"><header><span>' + esc(r.name) + '</span></header>' +
+        '<div class="note err">' + esc(t.badExpr(r.attacks, r.damage)) + '</div></div>';
+    }
+    let worst = 'pass';
+    const rows = STAGE_KEYS.map((k) => {
+      const v = verdict(r.exp[k], r.mean[k], r.se[k], run.sigma);
+      if (v.cls === 'fail' || (v.cls === 'warn' && worst === 'pass')) worst = v.cls;
+      // 차이·표준오차·z 는 표에서 뺐다. 그래도 볼 수 있게 실측 칸에 달아 둔다
+      const detail = esc(t.cols.diff) + ' ' + (r.mean[k] - r.exp[k] >= 0 ? '+' : '') + f3(r.mean[k] - r.exp[k]) +
+        ' · ' + esc(t.cols.se) + ' ' + f3(r.se[k]) +
+        ' · z ' + (Number.isFinite(v.z) ? (v.z >= 0 ? '+' : '') + f2(v.z) : '—') + ' · ' + esc(v.text);
+      return '<tr>' +
+        '<td class="stage"><span>' + esc(t.stage[k][0]) + ' <span class="hint">' + esc(t.stage[k][1]) + '</span></span>' +
+          q('s_' + k) + '</td>' +
+        '<td class="num">' + f3(r.exp[k]) + '</td>' +
+        '<td class="num ' + v.cls + '" title="' + detail + '">' + f3(r.mean[k]) + '</td>' +
+      '</tr>';
+    }).join('');
+
+    const head = worst === 'pass' ? '<span class="pass">' + esc(t.allPass) + '</span>'
+      : worst === 'warn' ? '<span class="warn">' + esc(t.someWarn) + '</span>'
+      : '<span class="fail">' + esc(t.someFail) + '</span>';
+
+    const st = r.k.st > 6 ? t.noSave : r.k.st + '+';
+    return '<div class="card">' +
+      '<header><span>' + esc(r.name) + '</span><span class="sub">' +
+        t.wt(r.k.wt) + ' · ' + t.stv(st) + (r.usingInv ? ' ' + t.usingInv : '') + ' · ' + head + '</span></header>' +
+      '<div class="scroll" style="border:0;border-radius:0"><table>' +
+        '<thead><tr><th>' + esc(t.cols.stage) + '</th><th>' + esc(t.cols.exp) +
+        '</th><th><span class="hd">' + esc(t.cols.obs) + q('verdict') + '</span></th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table></div>' +
+      histogram(r.applied, run.runs, r.mean.applied) +
+      '<div class="statrow">' +
+        '<span>' + esc(t.median) + ' <b class="num">' + r.stats.median + '</b></span>' +
+        '<span>' + esc(t.p10) + ' <b class="num">' + r.stats.p10 + '</b></span>' +
+        '<span>' + esc(t.p90) + ' <b class="num">' + r.stats.p90 + '</b></span>' +
+        '<span>' + esc(t.min) + ' <b class="num">' + r.stats.min + '</b></span>' +
+        '<span>' + esc(t.max) + ' <b class="num">' + r.stats.max + '</b></span>' +
+        '<span>' + esc(t.stdev) + ' <b class="num">' + f2(r.stats.stdev) + '</b></span>' +
+      '</div>' +
+      '<div class="note">' + esc(t.refNote) + ' — ' +
+        esc(t.applied) + ' <b class="num">' + f3(r.mean.applied) + '</b> · ' +
+        esc(t.destroyed) + ' <b class="num">' + f3(r.mean.destroyed) + '</b> / ' + r.models + ' · ' +
+        esc(t.wipe) + ' <b class="num">' + f2(r.wipeRate * 100) + '%</b> · ' +
+        esc(t.lost) + ' <b class="num">' + f3(r.mean.raw - r.mean.applied) + '</b>' +
+        (r.hazardous ? ' · ' + esc(t.hazardNote) + ' <b class="num">' + f3(r.mean.hazard) + '</b>' : '') +
+        '</div>' +
+    '</div>';
+  });
+
+  document.getElementById('out').innerHTML = blocks.join('');
+  document.getElementById('status').textContent =
+    t.status(run.runs.toLocaleString(), run.results.length, run.ms, run.seed);
+}
+
+document.getElementById('run').onclick = () => {
+  const runs = state.runs;
+  const seed = state.seed === '' ? (Math.random() * 4294967296) >>> 0 : Number(state.seed) >>> 0;
+  rand = mulberry32(seed);
+  const t0 = performance.now();
+  const results = [];
+
+  for (const a of state.attackers) {
+    const atkTerms = parseExpr(a.attacks);
+    const dmgTerms = parseExpr(a.damage);
+    if (!atkTerms || !dmgTerms) {
+      results.push({ bad: true, name: a.name, attacks: a.attacks, damage: a.damage });
+      continue;
+    }
+    const d = state.defender;
+    const k = derive(a, d);
+    const exp = expected(a, d, k, atkTerms, dmgTerms);
+
+    // 단계마다 합과 제곱합만 든다. 적용 피해만 분포가 필요해 개수를 센다
+    const sum = {}, sq = {};
+    for (const key of KEYS) { sum[key] = 0; sq[key] = 0; }
+    const applied = new Map();
+    let wipes = 0;
+
+    for (let i = 0; i < runs; i++) {
+      const r = simulateOnce(a, d, k, atkTerms, dmgTerms);
+      for (const key of KEYS) { sum[key] += r[key]; sq[key] += r[key] * r[key]; }
+      applied.set(r.applied, (applied.get(r.applied) || 0) + 1);
+      if (r.destroyed >= d.models) wipes++;
+    }
+
+    const mean = {}, se = {};
+    for (const key of KEYS) {
+      mean[key] = sum[key] / runs;
+      se[key] = Math.sqrt(Math.max(0, sq[key] / runs - mean[key] * mean[key]) / runs);
+    }
+    const keys = [...applied.keys()].sort((x, y) => x - y);
+    results.push({
+      name: a.name, k: k, exp: exp, mean: mean, se: se, applied: applied,
+      models: d.models, wipeRate: wipes / runs, usingInv: d.inv > 0 && d.inv < k.armor,
+      hazardous: a.hazardous,
+      stats: {
+        median: quantile(applied, runs, 0.5), p10: quantile(applied, runs, 0.1),
+        p90: quantile(applied, runs, 0.9), min: keys[0], max: keys[keys.length - 1],
+        stdev: se.applied * Math.sqrt(runs),
+      },
+    });
+  }
+
+  lastRun = { results: results, runs: runs, seed: seed, sigma: state.sigma,
+              ms: Math.round(performance.now() - t0) };
+  draw(lastRun);
+  // 어긋난 판을 다시 볼 수 있게 쓴 시드를 남긴다
+  state.seed = String(seed);
+  document.getElementById('seed').value = seed;
+  save();
+};
+
+renderChrome();
+renderAll();
+</script>
+</body>
+</html>
