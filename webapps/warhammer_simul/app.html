@@ -89,6 +89,8 @@
   .note{color:var(--silver2);font-size:11.5px;padding:7px 10px;border-top:1px solid var(--line)}
   .err{color:var(--loud)}
   .stage{color:var(--silver);text-align:left}
+  /* 평균만 적으면 실제로 몇 개가 나왔는지 말하지 못한다 — 그 아래 합계를 붙인다 */
+  .tot{display:block;font-size:10.5px;font-weight:400;color:var(--silver3);white-space:nowrap}
   .hint{color:var(--silver3);font-size:11px}
   b{color:var(--silver)}
 
@@ -259,7 +261,6 @@
   <div class="bar">
     <label><span id="t-runs"></span><input type="number" id="runs" min="1" max="1000000" step="1000" style="width:84px"></label>
     <label><span id="t-seed"></span><input type="number" id="seed" style="width:130px;text-align:left"></label>
-    <label><span id="t-sigma"></span><input type="number" id="sigma" min="1" max="6" step="0.5" style="width:54px"></label>
     <button class="run" id="run"></button>
     <span id="status" class="hint"></span>
   </div>
@@ -308,6 +309,9 @@ function parseExpr(str) {
   }
   return terms;
 }
+
+/** 식에 든 주사위 개수 — "2D6+1" 은 2 개, "3" 은 0 개. 굴리지 않아도 정해진다 */
+const diceOf = (terms) => terms.reduce((n, t) => n + (t.konst != null ? 0 : t.count), 0);
 
 // 합은 0에서 끊는다 — "D3-1" 이 음수 피해를 내지 않는다
 const rollExpr = (terms) => {
@@ -399,17 +403,26 @@ function derive(a, d) {
 function simulateOnce(a, d, k, atkTerms, dmgTerms) {
   // [위험] 24.15 — 모든 공격을 처리한 뒤 무기 수만큼 위험 굴림. 맞는 것은 자기 유닛이다.
   // 공격이 하나도 없어도 굴린다(유닛이 사격에 선택된 것은 사실이므로) — 그래서 먼저 센다
+  const n = Math.max(1, a.weapons);
   let hazard = 0;
-  if (a.hazardous) for (let i = 0; i < Math.max(1, a.weapons); i++) if (d6() <= 2) hazard++;
+  if (a.hazardous) for (let i = 0; i < n; i++) if (d6() <= 2) hazard++;
+
+  // 단계마다 「몇 번 굴렸나(t_)」와 「몇이 나왔나」를 함께 센다.
+  // 합계만 있으면 그 수가 무엇 중의 몇인지 말하지 못한다
+  // ⚠ 공격 횟수 단계에는 시도가 없다. 그 단계는 주사위를 만들어 내는 자리이지
+  //   무엇을 시도해 걸러 내는 자리가 아니다 — 없는 것은 적지 않는다
+  const t = { t_hits: 0, t_wounds: 0, t_failed: 0, t_raw: 0, t_hazard: a.hazardous ? n : 0 };
 
   let attacks = 0;
-  for (let i = 0; i < Math.max(1, a.weapons); i++) attacks += rollExpr(atkTerms) + k.atkBonus;
-  if (attacks <= 0) return { attacks: 0, hits: 0, wounds: 0, failed: 0, raw: 0, applied: 0, destroyed: 0, hazard: hazard };
+  for (let i = 0; i < n; i++) attacks += rollExpr(atkTerms) + k.atkBonus;
+  if (attacks <= 0) return { attacks: 0, hits: 0, wounds: 0, failed: 0, raw: 0,
+                             applied: 0, destroyed: 0, hazard: hazard, ...t };
 
   // 명중 — [방사] 24.37 은 굴리지 않고 자동으로 맞는다.
   // 굴림이 없으니 「보정 전 6」도 없다 → 결정적 명중이 생기지 않고, 거기 기대는
   // [치명적 명중]·[지속 명중]도 발동하지 않는다
   let successes = 0, crits = 0;
+  t.t_hits = a.torrent ? 0 : attacks;        // [방사] 는 굴리지 않는다 — 시도가 0 이다
   if (a.torrent) {
     successes = attacks;
   } else {
@@ -422,7 +435,8 @@ function simulateOnce(a, d, k, atkTerms, dmgTerms) {
   const hits = successes + sustained;
 
   // 상처 — 치명적 명중으로 자동 상처가 된 것은 굴리지 않는다
-  let wr = Array.from({ length: Math.max(0, hits - lethal) }, d6);
+  t.t_wounds = Math.max(0, hits - lethal);
+  let wr = Array.from({ length: t.t_wounds }, d6);
   wr = applyReroll(wr, a.woundReroll, k.wFail);
   let wSucc = 0, wCritN = 0;
   for (const die of wr) { if (!k.wOk(die)) continue; wSucc++; if (k.wCrit(die)) wCritN++; }
@@ -431,6 +445,7 @@ function simulateOnce(a, d, k, atkTerms, dmgTerms) {
 
   // 방호 — 파괴적 상처는 방호를 건너뛴다
   const attempts = Math.max(0, wounds - devast);
+  t.t_failed = attempts;
   let sr = Array.from({ length: attempts }, d6);
   sr = applyReroll(sr, d.saveReroll, k.saveFail);
   let saved = 0;
@@ -438,6 +453,7 @@ function simulateOnce(a, d, k, atkTerms, dmgTerms) {
   const failed = (attempts - saved) + devast;
 
   // 피해 — 원피해는 상한 없이 세고, 적용 피해는 모델 체력에 걸려 소멸하는 몫을 뺀다
+  t.t_raw = failed;                          // 피해는 방호에 실패한 수만큼 굴린다
   let raw = 0, applied = 0, destroyed = 0, remaining = d.wounds;
   for (let i = 0; i < failed; i++) {
     let dmg = rollExpr(dmgTerms);
@@ -454,7 +470,7 @@ function simulateOnce(a, d, k, atkTerms, dmgTerms) {
   }
 
   return { attacks: attacks, hits: hits, wounds: wounds, failed: failed,
-           raw: raw, applied: applied, destroyed: destroyed, hazard: hazard };
+           raw: raw, applied: applied, destroyed: destroyed, hazard: hazard, ...t };
 }
 
 /** 같은 프로필의 기대값 — 굴리지 않고 식으로 낸다 */
@@ -480,7 +496,9 @@ function expected(a, d, k, atkTerms, dmgTerms) {
   const failed = attempts * pOf(ps, k.saveFail) + devast;
 
   return { attacks: attacks, hits: hits, wounds: wounds, failed: failed,
-           raw: failed * meanExpr(dmgTerms) * k.fnpKeep };
+           raw: failed * meanExpr(dmgTerms) * k.fnpKeep,
+           // 위험 굴림은 무기마다 한 번, 1~2 에서 실패한다 → 무기 수 × 2/6
+           hazard: a.hazardous ? Math.max(1, a.weapons) * (2 / 6) : 0 };
 }
 
 // 표 — 사람이 적는 자리
@@ -491,13 +509,13 @@ const L = {
 ko: {
   html: 'ko',
   title: '워해머 전투 계산 시뮬레이터',
-  lead: '프로필을 입력하고 <b>N회 시뮬레이션 실측값</b>과 <b>이론적 기대값</b>을 각 단계별로 비교합니다.',
+  lead: '무기와 목표의 수치를 적으면, 주사위를 <b>여러 번 굴린 실제 결과</b>와 <b>계산으로 미리 구한 예상값</b>을 단계마다 나란히 보여 줍니다.',
   atk: '공격 프로필', def: '방어 프로필', cfg: '계산 설정',
-  add: '＋ 프로필 추가', basics: '? 기초 설명', del: '지운다', dup: '복제', edit: '고친다',
-  secBase: '모형 프로필 Profile', secExtra: '추가 효과 Extra effects', on: '켬 ON', off: '끔 OFF',
+  add: '＋ 프로필 추가', basics: '? 기초 설명', del: '삭제', dup: '복제', edit: '수정',
+  secBase: '기본 수치 Profile', secExtra: '추가 효과 Extra effects', on: '켜짐 ON', off: '꺼짐 OFF',
   countFirst: false, unit: (n) => n + '개',
-  seqTitle: '공격 순서 — 어느 단계가 어느 값을 쓰는가',
-  // 단계 이름은 코어룰의 것이다. 결과표의 측정 이름(명중·상처·방호 실패)과 섞지 않는다
+  seqTitle: '공격 순서 — 어느 단계에서 어떤 수치를 쓰나요',
+  // 단계 이름은 코어룰의 것입니다. 결과표의 측정 이름(명중·상처·방호 실패)과 섞지 않습니다
   phases: [
     ['공격 횟수', 'Number of Attacks', '코어룰 10'],
     ['명중 굴림', 'Hit Roll', '코어룰 05.01'],
@@ -505,45 +523,50 @@ ko: {
     ['방호 굴림', 'Saving Throw', '코어룰 05.03'],
     ['피해 가하기', 'Inflict Damage', '코어룰 05.04'],
   ],
-  skipLethal: '<b>Lethal Hits</b> — ②에서 보정 전 6(결정적 명중)이 나오면 <b>③ 상처 굴림을 건너뛰고</b> 곧장 ④ 방호로 간다.',
-  skipDevast: '<b>Devastating Wounds</b> — ③에서 결정적 상처가 나오면 <b>④ 방호 굴림을 건너뛰고</b> 곧장 ⑤ 피해로 간다.',
+  skipLethal: '<b>[치명적 명중] Lethal Hits</b> — ②에서 보정을 더하기 전 숫자가 6이면(결정적 명중) <b>③ 상처 굴림을 건너뛰고</b> 바로 ④ 방호로 갑니다.',
+  skipDevast: '<b>[파괴적 상처] Devastating Wounds</b> — ③에서 결정적 상처가 나오면 <b>④ 방호 굴림을 건너뛰고</b> 바로 ⑤ 피해로 갑니다.',
   defName: '방어 프로필',
-  exprHint: '공격·피해는 식으로 적는다 — 2 · D6 · 2D3+1 · D6-1',
-  runs: '시행 횟수', seed: '시드', sigma: '판정 기준 ±', sigmaSuffix: 'σ', run: '돌린다',
+  exprHint: '공격·피해 칸에는 주사위 식을 적을 수 있습니다 — 2 · D6 · 2D3+1 · D6-1',
+  runs: '시행 횟수', seed: '시드', run: '계산 시작',
   seedPlaceholder: '비우면 무작위',
-  status: (n, p, ms, s) => n + '회 × ' + p + '프로필 · ' + ms + 'ms · 시드 ' + s,
-  footnote: '기대값 공식은 대상 모델의 남은 체력 상한(초과 피해 소멸)을 반영하지 않으므로 <b>원피해(Raw Damage)</b> 기준으로 오차 범위를 비교합니다. 모델 체력이 반영된 <b>적용 피해, 파괴된 모델 수, 전멸률</b> 등은 시뮬레이션 참고용 통계로 제공합니다.',
+  status: (n, p, ms, s) => n + '회 × 프로필 ' + p + '개 · ' + ms + 'ms · 시드 ' + s,
+  footnote: '예상값 계산은 모델의 남은 체력을 따지지 않습니다. 그래서 체력을 넘겨 버려지는 피해까지 그대로 더한 <b>원피해</b>만 예상값과 비교합니다. 체력을 반영한 <b>적용 피해 · 파괴된 모델 수 · 전멸 확률</b>은 비교하지 않고 참고 수치로만 보여 줍니다.',
   profile: (n) => '프로필 ' + n,
-  reroll: { none: '없음', '1s': '1 나온 것', fails: '실패한 것', all: '전부' },
+  reroll: { none: '없음', '1s': '1이 나온 주사위', fails: '실패한 주사위', all: '전부' },
   f: {
     name: '이름', weapons: '무기 수', attacks: '공격', hitTarget: '명중', hitMod: '명중 보정',
-    hitReroll: '명중 리롤', strength: '위력', woundReroll: '상처 리롤', ap: '관통', damage: '피해',
+    hitReroll: '명중 다시 굴림', strength: '위력', woundReroll: '상처 다시 굴림',
+    ap: '관통력', damage: '피해',
     lethal: '치명적 명중', sustained: '지속 명중', devastating: '파괴적 상처', anti: '특화',
     blast: '폭발', rapidFire: '속사', halfRange: '사거리 절반', hazardous: '위험', torrent: '방사',
     toughness: '내구력', save: '방호', inv: '무적', fnp: '고통 무시', wounds: '체력',
-    models: '모델 수', saveReroll: '방호 리롤',
+    models: '모델 수', saveReroll: '방호 다시 굴림',
   },
-  cols: { stage: '단계', exp: '기대값', obs: '실측', diff: '차이', se: '표준오차', z: 'z', verdict: '판정' },
+  cols: { stage: '단계', exp: '예상값', obs: '실제 결과', diff: '차이', se: '표준오차', z: 'z', verdict: '판정' },
   stage: {
-    attacks: ['공격 횟수', '무기 수 × 공격 식'],
-    hits: ['명중', '성공 + 지속 명중'],
-    wounds: ['상처', '상처 성공 + 치명적 명중의 자동 상처'],
-    failed: ['방호 실패', '방호 실패 + 파괴적 상처(방호 건너뜀)'],
-    raw: ['원피해', '고통 무시 뒤 · 체력 상한 전'],
+    attacks: ['공격 횟수', '무기 수 × 공격 값'],
+    hits: ['명중', '명중 성공 + 지속 명중으로 늘어난 수'],
+    wounds: ['상처', '상처 성공 + 치명적 명중으로 자동 성공한 수'],
+    failed: ['방호 실패', '방호 실패 + 파괴적 상처로 방호를 건너뛴 수'],
+    raw: ['원피해', '고통 무시를 거친 뒤 · 체력 상한을 적용하기 전'],
+    hazard: ['위험 굴림 실패', '내 유닛이 입는 치명상 · 상대가 아니라 내 쪽이 다칩니다'],
   },
   wt: (v) => '상처 목표 <b>' + v + '+</b>',
-  stv: (v) => '방호 목표 <b>' + v + '</b>', noSave: '없음', usingInv: '(무적)',
-  allPass: '모든 단계 통과', someWarn: '애매한 단계가 있다', someFail: '어긋난 단계가 있다',
-  vPassFixed: '통과 (흔들리지 않는 값)', vFailFixed: '어긋남 (흔들리지 않는 값이 다르다)',
-  vPass: (s) => '통과 (' + s + 'σ 안)', vWarn: '애매 — 다시 돌려 본다', vFail: '어긋남',
-  refNote: '참고 (견주지 않는다)',
-  applied: '적용 피해', destroyed: '파괴 모델', wipe: '전멸률', lost: '소멸한 몫',
-  hazardNote: '위험 굴림 실패(자기 유닛 치명상)',
-  afterHazard: '<b>[위험] Hazardous</b> — 모든 공격을 처리한 <b>뒤에</b> 무기 수만큼 위험 굴림을 한다. 맞는 것은 대상이 아니라 <b>자기 유닛</b>이다.',
+  stv: (v) => '방호 목표 <b>' + v + '</b>', noSave: '없음', usingInv: '(무적 방호)',
+  allPass: '모든 단계가 예상과 맞습니다', someWarn: '조금 벗어난 단계가 있습니다',
+  someFail: '예상과 다른 단계가 있습니다',
+  vPassFixed: '맞음 (언제나 같은 값)', vFailFixed: '다름 (언제나 같아야 하는 값인데 다릅니다)',
+  vPass: (s) => '맞음 (오차 범위 ' + s + '배 안)', vWarn: '조금 벗어남 — 다시 굴려 보세요',
+  vFail: '예상과 다름',
+  refNote: '참고 수치 (비교하지 않습니다)',
+  runsLabel: (n) => n + '회 시행', triedLabel: (n) => '시도 ' + n, totalLabel: (n) => '합계 ' + n,
+  diceLabel: (n) => '주사위 ' + n + '개',
+  applied: '적용 피해', destroyed: '파괴된 모델', wipe: '전멸 확률', lost: '버려진 피해',
+  afterHazard: '<b>[위험] Hazardous</b> — 모든 공격을 마친 <b>뒤에</b> 무기 수만큼 위험 굴림을 합니다. 다치는 쪽은 상대가 아니라 <b>내 유닛</b>입니다.',
   median: '중앙값', p10: '하위 10%', p90: '상위 10%', min: '최소', max: '최대', stdev: '표준편차',
-  chartTitle: '적용 피해 분포 — 시행 비율', chartMean: '평균',
-  chartNone: '피해가 한 번도 나지 않았다',
-  badExpr: (atk, dmg) => '식을 읽지 못했다 — 공격 「' + atk + '」 · 피해 「' + dmg + '」. 읽지 못한 식으로는 굴리지 않는다. 짐작해서 1 로 때우면 오타가 흔적 없이 사라진다.',
+  chartTitle: '적용 피해 분포 — 전체 시행 가운데 비율', chartMean: '평균',
+  chartNone: '피해가 한 번도 들어가지 않았습니다',
+  badExpr: (atk, dmg) => '주사위 식을 읽지 못했습니다 — 공격 「' + atk + '」 · 피해 「' + dmg + '」. 읽을 수 없는 식으로는 계산하지 않습니다. 임의로 1로 바꿔 버리면 잘못 적은 것이 그대로 묻히기 때문입니다.',
   close: '닫기', helpAria: '설명 보기', seeAlso: '함께 보기',
 },
 en: {
@@ -566,7 +589,7 @@ en: {
   skipDevast: '<b>Devastating Wounds</b> — a critical wound at ③ <b>skips the save at ④</b> and goes straight to ⑤.',
   defName: 'Defender profile',
   exprHint: 'Attacks and Damage take dice notation — 2 · D6 · 2D3+1 · D6-1',
-  runs: 'Runs', seed: 'Seed', sigma: 'Pass within ±', sigmaSuffix: 'σ', run: 'Roll',
+  runs: 'Runs', seed: 'Seed', run: 'Roll',
   seedPlaceholder: 'blank = random',
   status: (n, p, ms, s) => n + ' runs × ' + p + ' profiles · ' + ms + 'ms · seed ' + s,
   footnote: 'The theoretical expected values do not account for individual model wound caps (overkill wastage). Therefore, statistical comparisons are performed on <b>raw damage</b> only. <b>Applied damage</b>, models destroyed, and wipe rate are provided as simulation statistics for reference.',
@@ -588,6 +611,7 @@ en: {
     wounds: ['Wounds', 'wound successes + auto-wounds from lethal hits'],
     failed: ['Failed saves', 'failed saves + devastating wounds (save skipped)'],
     raw: ['Raw damage', 'after Feel No Pain · before the wound cap'],
+    hazard: ['Hazard rolls failed', 'mortal wounds on your own unit, not the target'],
   },
   wt: (v) => 'wound on <b>' + v + '+</b>',
   stv: (v) => 'save on <b>' + v + '</b>', noSave: 'none', usingInv: '(invuln)',
@@ -595,8 +619,9 @@ en: {
   vPassFixed: 'pass (no variance)', vFailFixed: 'mismatch (a fixed value differs)',
   vPass: (s) => 'pass (within ' + s + 'σ)', vWarn: 'borderline — roll again', vFail: 'mismatch',
   refNote: 'reference (not compared)',
+  runsLabel: (n) => n + ' runs', triedLabel: (n) => 'tried ' + n, totalLabel: (n) => 'total ' + n,
+  diceLabel: (n) => n + ' dice rolled',
   applied: 'applied damage', destroyed: 'models destroyed', wipe: 'wipe rate', lost: 'lost to overkill',
-  hazardNote: 'hazard rolls failed (mortal wounds to your own unit)',
   afterHazard: '<b>Hazardous</b> — <b>after</b> all attacks are resolved, make one hazard roll per weapon. The damage lands on <b>your own unit</b>, not the target.',
   median: 'median', p10: 'bottom 10%', p90: 'top 10%', min: 'min', max: 'max', stdev: 'std. dev',
   chartTitle: 'Applied damage distribution — share of runs', chartMean: 'mean',
@@ -614,148 +639,153 @@ en: {
 const HELP = {
 ko: {
   weapons: { t: '무기 수',
-    what: '이 무기를 든 모델이 몇 기인가. 모델마다 따로 공격 횟수를 굴린다.',
-    list: ['10 → A가 1이면 주사위 10개',
-           '3 → A가 D6이면 D6을 세 번 굴려 합친다 (총 공격 수로는 3D6과 같다)'],
+    what: '이 무기를 든 모델이 몇 개인지 적습니다. 모델마다 공격 횟수를 따로 굴려서 모두 더합니다.',
+    list: ['10 → 공격이 1이면 주사위 10개',
+           '3 → 공격이 D6이면 D6을 세 번 굴려 더합니다 (전체 공격 수로 보면 3D6과 같습니다)'],
     see: ['attacks'] },
-  attacks: { t: 'A 공격',
-    what: '무기 1정당 공격 횟수. 숫자로 고정할 수도, 주사위로 정해질 수도 있다.',
-    list: ['2 → 항상 2개', 'D6 → 1~6개', '2+D3 → 상수와 주사위를 더한다 (3~5개)',
-           '2D6 → 주사위 두 개를 굴려 합친다 (2~12개)', 'D6-1 → 빼기도 된다 (0~5개)'],
-    how: '주사위 표기는 숫자 · nDm · + · − 를 섞어 쓸 수 있다. 합이 음수면 0으로 끊는다. ' +
-         '읽지 못하는 표기는 이 페이지에서는 굴리지 않고 그렇다고 적는다 — 1로 때우지 않는다.',
+  attacks: { t: '공격 A',
+    what: '무기 하나가 몇 번 공격하는지입니다. 고정된 숫자일 수도 있고, 주사위로 정해질 수도 있습니다.',
+    list: ['2 → 언제나 2번', 'D6 → 1~6번', '2+D3 → 숫자와 주사위를 더합니다 (3~5번)',
+           '2D6 → 주사위 두 개를 굴려 더합니다 (2~12번)', 'D6-1 → 빼기도 됩니다 (0~5번)'],
+    how: '숫자와 nDm 을 + 와 − 로 이어 붙일 수 있습니다. 결과가 음수면 0으로 봅니다. ' +
+         '읽을 수 없는 식은 계산하지 않고 그렇다고 알려 줍니다 — 임의로 1로 바꾸지 않습니다.',
     see: ['weapons', 'damage'] },
-  hitTarget: { t: 'BS/WS 명중', ref: '코어룰 05.01',
-    what: '명중 필요값. 보정 전 1은 무조건 실패, 보정 전 6은 무조건 결정적 명중이다.',
-    how: '굴림값 + 보정 ≥ 목표면 명중.',
+  hitTarget: { t: '명중 BS/WS', ref: '코어룰 05.01',
+    what: '명중하려면 주사위에서 이 숫자 이상이 나와야 합니다. 보정을 더하기 전 1이면 무조건 빗나가고, 6이면 무조건 결정적 명중입니다.',
+    how: '나온 숫자 + 보정 값이 목표 이상이면 명중입니다.',
     see: ['hitMod', 'hitReroll', 'lethal', 'sustained'] },
   hitMod: { t: '명중 보정', ref: '코어룰 05.01',
-    what: '명중 굴림에 더하는 값. 룰상 보정의 합은 ±1을 넘지 않는다.',
-    how: '굴림값 + 보정 ≥ 목표면 명중. 보정과 무관하게 보정 전 1은 실패, 6은 결정적 명중이다.',
-    tableHead: ['이런 상황은', '이렇게', '왜'],
+    what: '명중 굴림에 더하거나 빼는 값입니다. 규칙상 모두 합쳐 +1 또는 −1을 넘지 않습니다.',
+    how: '나온 숫자 + 보정 값이 목표 이상이면 명중입니다. 보정과 상관없이, 보정을 더하기 전 1은 빗나가고 6은 결정적 명중입니다.',
+    tableHead: ['이런 상황은', '이렇게 넣으세요', '왜냐하면'],
     table: [
-      ['엄폐 효과 (13.08)', '명중 보정 −1', '사격 요구치를 1만큼 악화시킨다. 방호가 좋아지는 것이 아니다.'],
-      ['스텔스 (24.33)', '명중 보정 −1', '유닛 전원이 보유하면 원거리 공격에 대해 엄폐 효과를 받는다.'],
-      ['엄폐 무시 (24.18)', '명중 보정 0', '대상이 엄폐 중이어도 그 보정을 받지 않는다.'],
-      ['은폐 (13.09)', '표현 불가', '발각 범위(기본 15") 밖에서는 대상 지정 자체가 안 되는 규칙이라, 사거리·시야가 들어와야 다룰 수 있다.'],
-      ['중화기 · 정지 사격 (24.16)', '명중 보정 +1', '이동하지 않은 턴에 받는 보너스.'],
+      ['엄폐 효과 (13.08)', '명중 보정 −1', '맞히기 어려워지는 것이지, 방호가 좋아지는 것이 아닙니다.'],
+      ['스텔스 (24.33)', '명중 보정 −1', '유닛 전원이 가지고 있으면 원거리 공격에 대해 엄폐 효과를 받습니다.'],
+      ['엄폐 무시 (24.18)', '명중 보정 0', '상대가 엄폐 중이어도 그 효과를 받지 않습니다.'],
+      ['은폐 (13.09)', '넣을 수 없음', '일정 거리(기본 15인치) 밖에서는 아예 목표로 삼을 수 없다는 규칙이라, 거리와 시야를 다루어야 계산할 수 있습니다.'],
+      ['중화기 · 제자리 사격 (24.16)', '명중 보정 +1', '그 턴에 움직이지 않았을 때 받는 보너스입니다.'],
     ],
     see: ['hitTarget'] },
-  hitReroll: { t: '명중 리롤',
-    what: '조건에 맞는 주사위를 전부 다시 굴린다. 주사위 하나만 골라 다시 굴리는 것은 시뮬레이터의 개입 기능이다.',
-    how: '"실패한 것"은 Twin-linked(24.38)와 같다. "전부"는 조건 없이 다시 굴리므로 확률은 "없음"과 같다. 다시 굴린 눈은 좋든 나쁘든 그대로 쓴다.',
+  hitReroll: { t: '명중 다시 굴림',
+    what: '조건에 맞는 주사위를 모두 다시 굴립니다.',
+    how: '「실패한 주사위」는 Twin-linked(24.38)와 같은 효과입니다. 「전부」는 조건 없이 다시 굴리는 것이라 확률은 「없음」과 같습니다. 다시 굴려 나온 숫자는 더 나쁘더라도 그대로 씁니다.',
     see: ['woundReroll', 'saveReroll'] },
-  strength: { t: 'S 위력', ref: '코어룰 05.02',
-    what: '무기 위력. 대상 내구력(T)과 비교해 상처 필요값이 정해진다.',
-    tableHead: ['견줌', '목표'],
-    table: [['위력 ≥ 내구력 × 2', '2+'], ['위력 > 내구력', '3+'], ['위력 = 내구력', '4+'],
-            ['위력 < 내구력', '5+'], ['위력 ≤ 내구력 ÷ 2', '6+']],
+  strength: { t: '위력 S', ref: '코어룰 05.02',
+    what: '무기의 위력입니다. 상대의 내구력(T)과 견주어 상처를 입히는 데 필요한 숫자가 정해집니다.',
+    tableHead: ['위력과 내구력을 견주면', '필요한 숫자'],
+    table: [['위력이 내구력의 2배 이상', '2+'], ['위력이 더 큼', '3+'], ['위력과 내구력이 같음', '4+'],
+            ['위력이 더 작음', '5+'], ['위력이 내구력의 절반 이하', '6+']],
     see: ['toughness', 'anti'] },
-  woundReroll: { t: '상처 리롤', ref: '코어룰 05.02',
-    what: '조건에 맞는 상처 주사위를 전부 다시 굴린다.',
-    how: '상처 굴림은 공격 플레이어가 굴리므로(05.02) 이 칸이 공격 쪽에 있다. "실패한 것"은 Twin-linked(24.38)와 같다.',
+  woundReroll: { t: '상처 다시 굴림', ref: '코어룰 05.02',
+    what: '조건에 맞는 상처 주사위를 모두 다시 굴립니다.',
+    how: '상처 굴림은 공격하는 쪽이 굴리기 때문에 이 칸이 공격 프로필에 있습니다. 「실패한 주사위」는 Twin-linked(24.38)와 같은 효과입니다.',
     see: ['hitReroll', 'saveReroll'] },
-  ap: { t: 'AP 관통',
-    what: '방호를 깎는 값. 음수로 넣는다. AP −2면 방호 3+가 5+가 된다.',
-    how: '무적 방호는 AP를 무시하므로, AP가 높을수록 무적 쪽이 유리해진다.',
+  ap: { t: '관통력 AP',
+    what: '상대의 방호를 나쁘게 만드는 값입니다. 음수로 적습니다. 관통력이 −2면 방호 3+가 5+가 됩니다.',
+    how: '무적 방호는 관통력을 무시하기 때문에, 관통력이 셀수록 무적 방호 쪽이 유리해집니다.',
     see: ['save', 'inv'] },
-  damage: { t: 'D 피해',
-    what: '방호에 실패한 공격 하나가 입히는 피해. A와 같은 주사위 표기를 쓴다.',
-    list: ['1 → 항상 1', 'D3 → 1~3', 'D6+1 → 2~7'],
-    how: '모델 체력을 넘는 몫은 소멸한다. 그래서 적용 피해는 원피해보다 작을 수 있다.',
+  damage: { t: '피해 D',
+    what: '방호에 실패한 공격 하나가 입히는 피해입니다. 공격 칸과 같은 방식으로 주사위를 적습니다.',
+    list: ['1 → 언제나 1', 'D3 → 1~3', 'D6+1 → 2~7'],
+    how: '모델 한 개의 체력을 넘는 피해는 버려집니다. 그래서 적용 피해가 원피해보다 작을 수 있습니다.',
     see: ['wounds', 'fnp', 's_raw'] },
-  lethal: { t: 'Lethal Hits · 살상타', ref: '코어룰 24.23',
-    what: '명중 굴림에서 보정 전 6(결정적 명중)이 나오면, 상처 굴림을 건너뛰고 그 공격은 자동으로 상처를 입힌다.',
-    how: '결정적 명중 수만큼 상처 굴림 개수에서 빼고, 성공한 상처에 그대로 더한다. 매개변수 X는 없다.',
+  lethal: { t: '[치명적 명중] Lethal Hits', ref: '코어룰 24.23',
+    what: '명중 굴림에서 보정을 더하기 전 6이 나오면(결정적 명중), 상처 굴림을 건너뛰고 그 공격은 자동으로 상처를 입힙니다.',
+    how: '결정적 명중이 나온 수만큼 상처 굴림에서 빼고, 성공한 상처에 그대로 더합니다. 숫자를 따로 넣지 않습니다.',
     see: ['sustained', 'devastating'] },
-  sustained: { t: 'Sustained Hits X · 연타', ref: '코어룰 24.36',
-    what: '결정적 명중이 날 때마다 추가 명중 X개를 얻는다.',
-    how: '결정적 명중 수 × X 만큼 상처 굴림 개수를 늘린다. 0이면 미적용.',
+  sustained: { t: '[지속 명중] Sustained Hits X', ref: '코어룰 24.36',
+    what: '결정적 명중이 나올 때마다 명중을 X번 더 얻습니다.',
+    how: '결정적 명중 수 × X 만큼 상처 굴림 개수가 늘어납니다. 0이면 쓰지 않습니다.',
     see: ['lethal', 'hitTarget'] },
-  devastating: { t: 'Devastating Wounds · 궤멸적 피해', ref: '코어룰 24.10',
-    what: '상처 굴림이 결정적 상처가 되면 공격 순서가 거기서 끝나고, 무기의 D 수치만큼 모탈 운드를 입힌다.',
-    how: '그 수만큼 방호 굴림에서 빼고 실패분에 더한다. 매개변수 X는 없다 — 피해량은 D 칸을 따른다.',
+  devastating: { t: '[파괴적 상처] Devastating Wounds', ref: '코어룰 24.10',
+    what: '상처 굴림이 결정적 상처가 되면 공격이 거기서 끝나고, 무기의 피해 수치만큼 치명상(모탈 운드)을 입힙니다.',
+    how: '그만큼 방호 굴림에서 빼고 실패한 쪽에 더합니다. 숫자를 따로 넣지 않습니다 — 피해량은 피해 칸을 따릅니다.',
     see: ['anti', 'fnp'] },
-  anti: { t: 'Anti-X Y+ · 특화', ref: '코어룰 24.03',
-    what: '대상이 X 키워드를 가지면, 상처 굴림 Y+ 이상을 결정적 상처로 인정한다.',
-    how: '결정적 상처 기준을 6에서 Y로 낮춘다. 여기서는 키워드 확인 없이 기준값만 넣는다. 0이면 미적용.',
+  anti: { t: '[특화] Anti-X Y+', ref: '코어룰 24.03',
+    what: '상대가 특정 종류(X)이면, 상처 굴림에서 Y 이상이 나올 때 결정적 상처로 봅니다.',
+    how: '결정적 상처가 되는 기준을 6에서 Y로 낮춥니다. 여기서는 상대 종류를 따지지 않고 기준 숫자만 넣습니다. 0이면 쓰지 않습니다.',
     see: ['devastating', 'strength'] },
   torrent: { t: '[방사] Torrent', ref: '코어룰 24.37',
-    what: '[방사] 무기로 공격할 때마다 그 공격은 대상에 자동으로 명중한다.',
-    how: '명중 굴림을 아예 하지 않는다. 그래서 「보정 전 6」도 없고, 결정적 명중이 생기지 않는다 — [치명적 명중]과 [지속 명중]은 결정적 명중에 기대므로 함께 발동하지 않는다. 켜면 명중·명중 보정·명중 리롤 칸은 계산에 쓰이지 않는다.',
+    what: '이 무기로 하는 공격은 굴리지 않고 무조건 명중합니다.',
+    how: '명중 굴림 자체를 하지 않습니다. 그래서 6이 나올 일도 없고, 결정적 명중도 생기지 않습니다 — 결정적 명중이 있어야 하는 [치명적 명중]과 [지속 명중]은 함께 발동하지 않습니다. 켜면 명중 · 명중 보정 · 명중 다시 굴림 칸은 계산에 쓰이지 않습니다.',
     see: ['hitTarget', 'lethal', 'sustained'] },
   blast: { t: '[폭발] Blast', ref: '코어룰 24.05',
-    what: '대상 유닛의 모델 다섯 기마다 공격 주사위를 더 굴린다. [폭발]이면 다섯 기마다 한 개, [폭발 X]면 다섯 기마다 X개다(내림).',
-    how: '방어 프로필의 모델 수를 그대로 쓴다 — X × (모델 수 ÷ 5, 내림) 개를 무기마다 더한다. 0이면 미적용.',
-    list: ['[폭발 2] · 대상 12기 → 무기마다 주사위 4개 추가 (12÷5=2, 2×2)'],
+    what: '상대 유닛의 모델 5개마다 공격 주사위를 더 굴립니다. [폭발]이면 5개마다 하나, [폭발 X]면 5개마다 X개입니다(나머지는 버립니다).',
+    how: '방어 프로필에 적은 모델 수를 그대로 씁니다 — 무기마다 X × (모델 수 ÷ 5) 개가 늘어납니다. 0이면 쓰지 않습니다.',
+    list: ['[폭발 2] 로 12개짜리 유닛을 쏘면 → 무기마다 주사위 4개 추가 (12÷5=2, 2×2)'],
     see: ['models', 'attacks', 'weapons'] },
   rapidFire: { t: '[속사] Rapid Fire X', ref: '코어룰 24.30',
-    what: '대상 지정 단계에서 대상 유닛이 무기 사거리의 절반 안에 있으면 공격 주사위를 X개 더 굴린다.',
-    how: '이 페이지에는 거리가 없다. 그래서 「사거리 절반」을 사람이 켜고 끈다 — 켜면 무기마다 X개를 더한다. 0이면 미적용.',
+    what: '목표를 정할 때 상대가 무기 사거리의 절반 안에 있으면 공격 주사위를 X개 더 굴립니다.',
+    how: '이 페이지에는 거리 개념이 없습니다. 그래서 「사거리 절반」을 직접 켜고 끄시면 됩니다 — 켜면 무기마다 X개가 늘어납니다. 0이면 쓰지 않습니다.',
     see: ['halfRange', 'attacks'] },
   halfRange: { t: '사거리 절반 안', ref: '코어룰 24.30',
-    what: '대상이 무기 사거리의 절반 안에 있는가. 이 페이지는 판을 모르므로 사람이 정한다.',
-    how: '켜면 [속사 X]가 발동한다. [속사]가 0이면 켜도 아무 일도 없다.',
+    what: '상대가 무기 사거리의 절반 안에 있는지 여부입니다. 이 페이지는 전장을 모르기 때문에 직접 정하셔야 합니다.',
+    how: '켜면 [속사]가 발동합니다. [속사]가 0이면 켜도 아무 일도 일어나지 않습니다.',
     see: ['rapidFire'] },
   hazardous: { t: '[위험] Hazardous', ref: '코어룰 24.15 · 06.03',
-    what: '유닛이 모든 공격을 처리한 뒤, 무기 선택 단계에서 고른 [위험] 무기 수만큼 위험 굴림을 한다. 1~2가 나오면 실패이고 그 유닛이 1 치명상을 입는다.',
-    how: '맞는 것은 대상이 아니라 자기 유닛이다. 그래서 피해 계산에 섞지 않고 참고로만 센다 — 견주지도 않는다. 유닛이 전원 괴물/기체면 실패마다 3 치명상인데(06.03), 이 페이지는 공격자가 무엇인지 모르므로 1로 센다.',
+    what: '유닛이 공격을 모두 마친 뒤, 사용한 [위험] 무기 수만큼 위험 굴림을 합니다. 1이나 2가 나오면 실패이고, 그 유닛이 치명상 1점을 입습니다.',
+    how: '다치는 쪽은 상대가 아니라 내 유닛입니다. 그래서 상대에게 준 피해와 더하지 않고 따로 셉니다. 유닛이 전부 괴물이나 기체라면 실패마다 치명상 3점인데(06.03), 이 페이지는 공격하는 쪽이 무엇인지 모르기 때문에 1점으로 셉니다.',
     see: ['weapons'] },
-  toughness: { t: 'T 내구력', ref: '코어룰 05.02',
-    what: '대상의 내구력. 무기 위력(S)과 견줘 상처 필요값이 정해진다.',
+  toughness: { t: '내구력 T', ref: '코어룰 05.02',
+    what: '상대가 얼마나 튼튼한지입니다. 무기 위력(S)과 견주어 상처를 입히는 데 필요한 숫자가 정해집니다.',
     see: ['strength'] },
-  save: { t: 'SV 방호', ref: '코어룰 05.03',
-    what: '대상의 방호. AP를 적용한 값으로 굴린다.',
-    how: '보정 전 1은 무조건 실패다. AP를 적용해 7 이상이 되면 방호를 굴리지 못한다.',
+  save: { t: '방호 SV', ref: '코어룰 05.03',
+    what: '상대의 방어구 수치입니다. 관통력을 적용한 값으로 굴립니다.',
+    how: '보정을 더하기 전 1은 무조건 실패입니다. 관통력을 적용해 7 이상이 되면 방호를 아예 굴리지 못합니다.',
     see: ['ap', 'inv', 'saveReroll'] },
-  inv: { t: 'INV 무적 방호', ref: '코어룰 05.03',
-    what: '관통력(AP)을 무시하는 방호. 0이면 없음.',
-    how: 'AP를 적용한 방호와 견줘 유리한 쪽 하나만 굴린다. AP가 높을수록 이쪽이 유리해진다.',
+  inv: { t: '무적 방호 INV', ref: '코어룰 05.03',
+    what: '관통력을 무시하는 방호입니다. 0이면 없다는 뜻입니다.',
+    how: '관통력을 적용한 방호와 견주어 더 좋은 쪽 하나만 굴립니다. 관통력이 셀수록 이쪽이 유리해집니다.',
     see: ['save', 'ap'] },
-  fnp: { t: 'Feel No Pain · 고통 무시',
-    what: '피해를 입을 때마다 굴려 성공하면 그 피해 1점을 무시한다.',
-    how: '피해 1점마다 D6을 굴린다. 5+면 약 33%, 4+면 50%를 덜어낸다. 모탈 운드에도 적용된다.',
+  fnp: { t: '[고통 무시] Feel No Pain',
+    what: '피해를 입을 때마다 굴려서 성공하면 그 피해 1점을 없던 것으로 합니다.',
+    how: '피해 1점마다 D6을 하나씩 굴립니다. 5+면 약 33%, 4+면 50%를 덜어 냅니다. 치명상에도 적용됩니다.',
     see: ['damage', 'devastating'] },
-  wounds: { t: 'W 체력',
-    what: '모델 한 기의 체력.',
-    how: '초과 피해는 소멸한다 — 체력 2에 피해 6이 들어가도 2만 깎이고 나머지는 사라진다.',
+  wounds: { t: '체력 W',
+    what: '모델 한 개가 버티는 체력입니다.',
+    how: '체력을 넘는 피해는 버려집니다 — 체력 2인 모델에 피해 6이 들어가도 2만 깎이고 나머지 4는 사라집니다.',
     see: ['models', 'damage', 's_raw'] },
   models: { t: '모델 수',
-    what: '분대 인원.',
-    how: '파괴 수는 분대 인원을 넘지 않는다. 전멸한 뒤에 남은 피해는 갈 곳이 없다.',
+    what: '상대 유닛에 모델이 몇 개 있는지입니다.',
+    how: '파괴되는 모델 수는 유닛 인원을 넘지 않습니다. 전멸한 뒤에 남은 피해는 갈 곳이 없어 사라집니다.',
     see: ['wounds'] },
-  saveReroll: { t: '방호 리롤', ref: '코어룰 05.03',
-    what: '조건에 맞는 방호 주사위를 전부 다시 굴린다.',
-    how: '방호 굴림은 상대(방어) 플레이어가 굴리므로 이 칸이 방어 쪽에 있다.',
+  saveReroll: { t: '방호 다시 굴림', ref: '코어룰 05.03',
+    what: '조건에 맞는 방호 주사위를 모두 다시 굴립니다.',
+    how: '방호 굴림은 방어하는 쪽이 굴리기 때문에 이 칸이 방어 프로필에 있습니다.',
     see: ['hitReroll', 'woundReroll'] },
 
-  // 단계 설명 — 결과표에서 누른다
+  // 단계 설명 — 결과표에서 누릅니다
   s_attacks: { t: '공격 횟수', ref: '코어룰 10',
-    what: '첫 주사위가 몇 개인가. 무기를 든 모델마다 공격 식을 따로 굴려 합친다.',
-    how: '공격 식이 고정 숫자면 흔들리지 않으므로 표준오차가 0이고, 그때는 실측이 기대값과 정확히 같아야 한다.',
+    what: '처음에 굴릴 주사위가 몇 개인지입니다. 무기를 든 모델마다 공격 식을 따로 굴려서 더합니다.',
+    how: '공격이 고정된 숫자라면 결과가 흔들리지 않습니다. 그때는 실제 결과가 예상값과 정확히 같아야 합니다.',
     see: ['weapons', 'attacks'] },
   s_hits: { t: '명중', ref: '코어룰 05.01',
-    what: '명중한 공격 수. 지속 명중으로 늘어난 몫을 포함한다.',
-    how: '보정 전 1은 실패, 6은 결정적 명중. 치명적 명중으로 자동 상처가 된 몫도 여기서는 명중으로 센다.',
+    what: '명중한 공격의 수입니다. [지속 명중]으로 늘어난 것도 함께 셉니다.',
+    how: '보정을 더하기 전 1은 빗나가고 6은 결정적 명중입니다. [치명적 명중]으로 자동 상처가 된 것도 여기서는 명중으로 셉니다.',
     see: ['hitTarget', 'sustained', 'lethal'] },
   s_wounds: { t: '상처', ref: '코어룰 05.02',
-    what: '상처를 입힌 수. 치명적 명중으로 상처 굴림 없이 넘어온 몫을 포함한다.',
+    what: '상처를 입힌 수입니다. [치명적 명중]으로 상처 굴림 없이 넘어온 것도 함께 셉니다.',
     see: ['strength', 'toughness', 'anti'] },
   s_failed: { t: '방호 실패', ref: '코어룰 05.03',
-    what: '방호에 실패해 피해로 넘어간 수. 파괴적 상처로 방호를 건너뛴 몫을 포함한다.',
+    what: '방호에 실패해 피해로 넘어간 수입니다. [파괴적 상처]로 방호를 건너뛴 것도 함께 셉니다.',
     see: ['save', 'inv', 'devastating'] },
   s_raw: { t: '원피해',
-    what: '고통 무시를 거친 뒤, 체력 상한에 걸리기 전의 피해 총량.',
-    how: '견주는 것은 이 값뿐이다. 적용 피해는 초과 피해가 소멸해 식보다 작아지므로 견주면 늘 어긋난 것처럼 보인다.',
+    what: '[고통 무시]까지 거친 뒤, 체력 상한을 적용하기 전의 전체 피해입니다.',
+    how: '예상값과 비교하는 것은 이 값 하나뿐입니다. 적용 피해는 체력을 넘긴 몫이 버려져 예상값보다 작아지므로, 비교하면 늘 틀린 것처럼 보입니다.',
     see: ['damage', 'fnp', 'wounds'] },
-  verdict: { t: '판정',
-    what: '실측이 기대값에서 표준오차 몇 배만큼 떨어져 있는가(z).',
-    how: '설정한 배수 안이면 통과, 1.5배까지는 애매, 그 밖은 어긋남이다. 시행을 늘리면 표준오차가 줄어 더 작은 어긋남도 잡힌다 — 1만 회면 표준오차는 표준편차의 1/100이다.' },
-  basics: { t: '기초 — 각 칸이 무엇이고 주사위는 어떻게 적는가',
-    what: '이 페이지는 워해머 데이터를 읽지 않는다. 아래 칸은 전부 사람이 적는 것이고, 적은 값으로만 굴린다. 하나씩 눌러 보면 자세한 설명이 뜬다.',
-    how: '주사위 표기는 숫자 · nDm · + · − 를 섞어 쓸 수 있다. 읽지 못하는 표기로는 굴리지 않는다.',
+  s_hazard: { t: '위험 굴림 실패 — 내 유닛이 입는 치명상', ref: '코어룰 24.15 · 06.03',
+    what: '[위험] 무기 수만큼 굴려서 1이나 2가 나온 횟수입니다. 실패 하나가 내 유닛의 치명상 1점입니다.',
+    how: '상대에게 준 피해와는 다른 쪽이라 위의 단계들과 더하지 않습니다. 그래도 주사위를 굴린 것은 같으므로 예상값과 나란히 놓고 비교합니다 — 예상값은 무기 수 × 2/6 입니다. [위험]을 끄면 굴리지도 않고 이 줄도 나오지 않습니다.',
+    see: ['hazardous', 'weapons'] },
+  verdict: { t: '판정 — 예상값과 얼마나 다른가',
+    what: '실제 결과가 예상값에서 얼마나 떨어져 있는지를 봅니다. 주사위는 굴릴 때마다 흔들리므로 조금 다른 것은 정상이고, 그 「정상적으로 흔들리는 폭」을 표준오차라고 합니다.',
+    how: '표준오차의 2배 안이면 맞음, 3배까지는 조금 벗어남, 그보다 크면 예상과 다름으로 봅니다. 시행 횟수를 늘리면 표준오차가 줄어들어 더 작은 차이도 잡아냅니다 — 1만 번이면 표준오차는 표준편차의 100분의 1입니다.' },
+  basics: { t: '기초 설명 — 각 칸이 무엇이고 주사위를 어떻게 적나요',
+    what: '이 페이지는 어떤 자료도 미리 들고 있지 않습니다. 아래 칸은 모두 직접 적는 것이고, 적은 값으로만 계산합니다. 아래 이름을 눌러 보시면 항목마다 자세한 설명이 나옵니다.',
+    how: '주사위는 숫자와 nDm 을 + 와 − 로 이어 붙여 적습니다. 읽을 수 없게 적으면 계산하지 않고 그렇다고 알려 줍니다.',
     see: ['weapons', 'attacks', 'hitTarget', 'hitMod', 'strength', 'ap', 'damage',
-          'lethal', 'sustained', 'devastating', 'anti',
+          'lethal', 'sustained', 'devastating', 'anti', 'torrent',
+          'blast', 'rapidFire', 'halfRange', 'hazardous',
           'toughness', 'save', 'inv', 'fnp', 'wounds', 'models', 'verdict'] },
 },
 en: {
@@ -892,14 +922,19 @@ en: {
     what: 'Total damage after Feel No Pain and before the wound cap.',
     how: 'This is the only figure compared. Applied damage loses the overkill, so comparing it would always look like a mismatch.',
     see: ['damage', 'fnp', 'wounds'] },
+  s_hazard: { t: 'Hazard rolls failed — mortal wounds on your own unit', ref: 'core rules 24.15 · 06.03',
+    what: 'How many of the hazard rolls (one per Hazardous weapon) came up 1-2. Each failure is 1 mortal wound on your own unit.',
+    how: 'This lands on the other side of the table, so it is never added to the stages above. It is still a roll, so it is compared against its expectation all the same — that is weapons × 2/6. With Hazardous off nothing is rolled and the row is not shown.',
+    see: ['hazardous', 'weapons'] },
   verdict: { t: 'Verdict',
     what: 'How many standard errors the measurement sits from the expectation (z).',
-    how: 'Inside the chosen multiple it passes; up to 1.5× it is borderline; beyond that it is a mismatch. More runs shrink the standard error and catch smaller discrepancies — at 10,000 runs the standard error is a hundredth of the standard deviation.' },
+    how: 'Within two standard errors it passes; up to three it is borderline; beyond that it is a mismatch. More runs shrink the standard error and catch smaller discrepancies — at 10,000 runs the standard error is a hundredth of the standard deviation.' },
   basics: { t: 'Basics — what each field is, and how to write dice',
     what: 'This page reads no Warhammer data. Every field below is typed in by hand, and only those values are rolled. Tap any of them for the details.',
     how: 'Dice notation mixes numbers, nDm, + and −. Nothing is rolled from an expression that cannot be read.',
     see: ['weapons', 'attacks', 'hitTarget', 'hitMod', 'strength', 'ap', 'damage',
-          'lethal', 'sustained', 'devastating', 'anti',
+          'lethal', 'sustained', 'devastating', 'anti', 'torrent',
+          'blast', 'rapidFire', 'halfRange', 'hazardous',
           'toughness', 'save', 'inv', 'fnp', 'wounds', 'models', 'verdict'] },
 },
 };
@@ -954,8 +989,10 @@ let state = {
   lang: (navigator.language || 'ko').toLowerCase().startsWith('ko') ? 'ko' : 'en',
   attackers: [],
   defender: { toughness: 4, save: 3, inv: 0, fnp: 0, wounds: 2, models: 5, saveReroll: 'none' },
-  runs: 10000, seed: '', sigma: 2,
+  runs: 10000, seed: '',
 };
+/** 판정 기준 — 표준오차의 두 배 안이면 통과. 고르게 하지 않는다(사람이 만질 값이 아니다) */
+const SIGMA = 2;
 try {
   const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
   if (saved && Array.isArray(saved.attackers) && saved.attackers.length) state = saved;
@@ -1106,7 +1143,6 @@ function renderTables() {
 
   document.getElementById('runs').value = state.runs;
   document.getElementById('seed').value = state.seed;
-  document.getElementById('sigma').value = state.sigma;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1219,7 +1255,7 @@ function renderChrome() {
   set('t-title', t.title); set('t-lead', t.lead, true);
   set('t-atk', t.atk); set('t-def', t.def); set('t-cfg', t.cfg);
   set('add', t.add); set('basics', t.basics); set('t-exprhint', t.exprHint);
-  set('t-runs', t.runs); set('t-seed', t.seed); set('t-sigma', t.sigma + t.sigmaSuffix);
+  set('t-runs', t.runs); set('t-seed', t.seed);
   set('run', t.run); set('t-footnote', t.footnote, true);
   renderSeq();
   document.getElementById('seed').placeholder = t.seedPlaceholder;
@@ -1288,9 +1324,6 @@ document.getElementById('langsw').onclick = (e) => {
 document.getElementById('runs').addEventListener('change', (e) => {
   state.runs = num(e.target.value, 1, 1000000); save(); renderTables();
 });
-document.getElementById('sigma').addEventListener('change', (e) => {
-  state.sigma = num(e.target.value, 1, 6); save(); renderTables();
-});
 document.getElementById('seed').addEventListener('change', (e) => { state.seed = e.target.value; save(); });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1341,7 +1374,10 @@ function quantile(counts, runs, p) {
 const f2 = (n) => n.toFixed(2);
 const f3 = (n) => n.toFixed(3);
 const STAGE_KEYS = ['attacks', 'hits', 'wounds', 'failed', 'raw'];
-const KEYS = ['attacks', 'hits', 'wounds', 'failed', 'raw', 'applied', 'destroyed', 'hazard'];
+/** [위험] 은 켠 프로필에서만 잰다 — 끈 프로필에 0.000 줄을 세워 봐야 읽을 것이 없다 */
+const stagesOf = (r) => (r.hazardous ? STAGE_KEYS.concat('hazard') : STAGE_KEYS);
+const KEYS = ['attacks', 'hits', 'wounds', 'failed', 'raw', 'applied', 'destroyed', 'hazard',
+              't_hits', 't_wounds', 't_failed', 't_raw', 't_hazard'];
 let lastRun = null;   // 말을 바꿔도 결과를 다시 굴리지 않는다
 
 function verdict(exp, obs, se, sigma) {
@@ -1367,7 +1403,7 @@ function draw(run) {
         '<div class="note err">' + esc(t.badExpr(r.attacks, r.damage)) + '</div></div>';
     }
     let worst = 'pass';
-    const rows = STAGE_KEYS.map((k) => {
+    const rows = stagesOf(r).map((k) => {
       const v = verdict(r.exp[k], r.mean[k], r.se[k], run.sigma);
       if (v.cls === 'fail' || (v.cls === 'warn' && worst === 'pass')) worst = v.cls;
       // 차이·표준오차·z 는 표에서 뺐다. 그래도 볼 수 있게 실측 칸에 달아 둔다
@@ -1378,7 +1414,14 @@ function draw(run) {
         '<td class="stage"><span>' + esc(t.stage[k][0]) + ' <span class="hint">' + esc(t.stage[k][1]) + '</span></span>' +
           q('s_' + k) + '</td>' +
         '<td class="num">' + f3(r.exp[k]) + '</td>' +
-        '<td class="num ' + v.cls + '" title="' + detail + '">' + f3(r.mean[k]) + '</td>' +
+        '<td class="num ' + v.cls + '" title="' + detail + '">' + f3(r.mean[k]) +
+          // 공격 횟수에는 「시도」가 없다. 걸러 내는 단계가 아니라 만들어 내는 단계라
+          // 합계가 시도보다 커진다 — 같은 이름을 쓰면 통과율처럼 읽힌다.
+          // 대신 식이 주사위를 쓸 때만 굴린 주사위 수를 적는다
+          (k === 'attacks'
+            ? (r.atkDice > 0 ? '<span class="tot">' + esc(t.diceLabel(r.atkDice.toLocaleString())) + '</span>' : '')
+            : '<span class="tot">' + esc(t.triedLabel(r.total['t_' + k].toLocaleString())) + '</span>') +
+          '<span class="tot">' + esc(t.totalLabel(r.total[k].toLocaleString())) + '</span></td>' +
       '</tr>';
     }).join('');
 
@@ -1389,6 +1432,7 @@ function draw(run) {
     const st = r.k.st > 6 ? t.noSave : r.k.st + '+';
     return '<div class="card">' +
       '<header><span>' + esc(r.name) + '</span><span class="sub">' +
+        esc(t.runsLabel(run.runs.toLocaleString())) + ' · ' +
         t.wt(r.k.wt) + ' · ' + t.stv(st) + (r.usingInv ? ' ' + t.usingInv : '') + ' · ' + head + '</span></header>' +
       '<div class="scroll" style="border:0;border-radius:0"><table>' +
         '<thead><tr><th>' + esc(t.cols.stage) + '</th><th>' + esc(t.cols.exp) +
@@ -1408,7 +1452,6 @@ function draw(run) {
         esc(t.destroyed) + ' <b class="num">' + f3(r.mean.destroyed) + '</b> / ' + r.models + ' · ' +
         esc(t.wipe) + ' <b class="num">' + f2(r.wipeRate * 100) + '%</b> · ' +
         esc(t.lost) + ' <b class="num">' + f3(r.mean.raw - r.mean.applied) + '</b>' +
-        (r.hazardous ? ' · ' + esc(t.hazardNote) + ' <b class="num">' + f3(r.mean.hazard) + '</b>' : '') +
         '</div>' +
     '</div>';
   });
@@ -1449,15 +1492,18 @@ document.getElementById('run').onclick = () => {
       if (r.destroyed >= d.models) wipes++;
     }
 
-    const mean = {}, se = {};
+    const mean = {}, se = {}, total = {};
     for (const key of KEYS) {
       mean[key] = sum[key] / runs;
+      total[key] = Math.round(sum[key]);
       se[key] = Math.sqrt(Math.max(0, sq[key] / runs - mean[key] * mean[key]) / runs);
     }
     const keys = [...applied.keys()].sort((x, y) => x - y);
     results.push({
-      name: a.name, k: k, exp: exp, mean: mean, se: se, applied: applied,
+      name: a.name, k: k, exp: exp, mean: mean, se: se, total: total, applied: applied,
       models: d.models, wipeRate: wipes / runs, usingInv: d.inv > 0 && d.inv < k.armor,
+      // 공격 식이 주사위를 쓸 때만 뜻이 있다 — 고정 숫자면 굴린 것이 없다
+      atkDice: diceOf(atkTerms) * Math.max(1, a.weapons) * runs,
       hazardous: a.hazardous,
       stats: {
         median: quantile(applied, runs, 0.5), p10: quantile(applied, runs, 0.1),
@@ -1467,7 +1513,7 @@ document.getElementById('run').onclick = () => {
     });
   }
 
-  lastRun = { results: results, runs: runs, seed: seed, sigma: state.sigma,
+  lastRun = { results: results, runs: runs, seed: seed, sigma: SIGMA,
               ms: Math.round(performance.now() - t0) };
   draw(lastRun);
   // 어긋난 판을 다시 볼 수 있게 쓴 시드를 남긴다
