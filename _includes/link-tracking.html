@@ -1,0 +1,51 @@
+<!-- 링크 클릭 추적 (GA4 커스텀 이벤트: link_click) -->
+<script>
+(function () {
+  // 클릭한 요소가 어느 영역에 있는지 구분한다.
+  var AREAS = [
+    ['.site-nav', '상단메뉴'],
+    ['.site-title', '상단로고'],
+    ['.card', '카드'],
+    ['.urlMenuBtn', '경로버튼'],
+    ['.social-media-list', '소셜링크'],
+    ['.site-footer', '푸터'],
+    ['.post-list', '글목록'],
+    ['main', '본문']
+  ];
+
+  function areaOf(el) {
+    for (var i = 0; i < AREAS.length; i++) {
+      if (el.closest(AREAS[i][0])) { return AREAS[i][1]; }
+    }
+    return '기타';
+  }
+
+  function trim(text) {
+    return (text || '').replace(/\s+/g, ' ').trim().slice(0, 100);
+  }
+
+  function onClick(event) {
+    if (typeof gtag !== 'function') { return; }
+
+    var target = event.target;
+    if (!target || typeof target.closest !== 'function') { return; }
+
+    var link = target.closest('a[href]');
+    if (!link) { return; }
+
+    var href = link.href;
+    if (/^(javascript:|mailto:|tel:|#)/i.test(link.getAttribute('href'))) { return; }
+
+    gtag('event', 'link_click', {
+      link_url: href.slice(0, 100),
+      link_text: trim(link.innerText) || trim(link.querySelector('img') && link.querySelector('img').alt),
+      link_area: areaOf(link),
+      link_classes: trim(link.getAttribute('class')) || '(none)',
+      is_outbound: link.hostname !== location.hostname
+    });
+  }
+
+  document.addEventListener('click', onClick, true);
+  document.addEventListener('auxclick', onClick, true); // 휠클릭(새 탭)도 잡는다.
+})();
+</script>
