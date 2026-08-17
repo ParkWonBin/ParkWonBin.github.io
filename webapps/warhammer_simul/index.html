@@ -1239,7 +1239,7 @@ layout: dev_apps
       ko: {
         html: 'ko',
         title: '워해머 전투 계산 시뮬레이터',
-        lead: '프로필을 적고 <b>N 번 굴린 실측</b>과 <b>식으로 낸 기대값</b>을 단계마다 나란히 본다. 어긋나면 그 단계에서 드러난다 — 어느 쪽이 틀렸는지는 사람이 정한다.',
+        lead: '프로필을 입력하고 <b>N회 시뮬레이션 실측값</b>과 <b>이론적 기대값</b>을 각 단계별로 비교합니다.',
         atk: '공격 프로필', def: '방어 프로필', cfg: '계산 설정',
         add: '＋ 프로필 추가', basics: '? 기초 설명', del: '지운다', edit: '고친다',
         secBase: '모형 프로필 Profile', secExtra: '추가 효과 Extra effects', on: '켬 ON', off: '끔 OFF',
@@ -1260,7 +1260,7 @@ layout: dev_apps
         runs: '시행 횟수', seed: '시드', sigma: '판정 기준 ±', sigmaSuffix: 'σ', run: '돌린다',
         seedPlaceholder: '비우면 무작위',
         status: (n, p, ms, s) => n + '회 × ' + p + '프로필 · ' + ms + 'ms · 시드 ' + s,
-        footnote: '<b>기대값은 상한을 모른다.</b> 식은 「피해가 얼마나 나오는가」를 세고, 모델 체력에 걸려 버려지는 몫(초과 피해 소멸)은 세지 않는다. 그래서 <b>원피해</b>끼리 견준다. 체력 상한을 반영한 <b>적용 피해</b>·파괴 수·전멸률은 참고로만 둔다 — 견주지 않는다.',
+        footnote: '기대값 공식은 대상 모델의 남은 체력 상한(초과 피해 소멸)을 반영하지 않으므로 <b>원피해(Raw Damage)</b> 기준으로 오차 범위를 비교합니다. 모델 체력이 반영된 <b>적용 피해, 파괴된 모델 수, 전멸률</b> 등은 시뮬레이션 참고용 통계로 제공합니다.',
         profile: (n) => '프로필 ' + n,
         reroll: { none: '없음', '1s': '1 나온 것', fails: '실패한 것', all: '전부' },
         f: {
@@ -1297,7 +1297,7 @@ layout: dev_apps
       en: {
         html: 'en',
         title: 'Warhammer Combat Simulator',
-        lead: 'Enter a profile, then read <b>what N rolls actually produced</b> next to <b>what the formula expects</b>, stage by stage. A mismatch shows up on its own row — which side is wrong is for you to decide.',
+        lead: 'Enter a profile, then compare the <b>measured results from N simulation runs</b> against the <b>theoretical expected values</b> for each stage.',
         atk: 'Attacker profiles', def: 'Defender profile', cfg: 'Run settings',
         add: '＋ Add profile', basics: '? Basics', del: 'Delete', edit: 'Edit',
         secBase: 'Profile', secExtra: 'Extra effects', on: 'ON', off: 'OFF',
@@ -1317,7 +1317,7 @@ layout: dev_apps
         runs: 'Runs', seed: 'Seed', sigma: 'Pass within ±', sigmaSuffix: 'σ', run: 'Roll',
         seedPlaceholder: 'blank = random',
         status: (n, p, ms, s) => n + ' runs × ' + p + ' profiles · ' + ms + 'ms · seed ' + s,
-        footnote: '<b>The formula knows nothing about caps.</b> It counts how much damage is produced, not how much is thrown away when a model dies with wounds to spare. So the comparison is on <b>raw damage</b> only. <b>Applied damage</b>, models destroyed and wipe rate are shown for reference — they are not compared.',
+        footnote: 'The theoretical expected values do not account for individual model wound caps (overkill wastage). Therefore, statistical comparisons are performed on <b>raw damage</b> only. <b>Applied damage</b>, models destroyed, and wipe rate are provided as simulation statistics for reference.',
         profile: (n) => 'Profile ' + n,
         reroll: { none: 'None', '1s': 'Rolls of 1', fails: 'Failed rolls', all: 'All' },
         f: {
