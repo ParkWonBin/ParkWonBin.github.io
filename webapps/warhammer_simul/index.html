@@ -350,6 +350,81 @@ layout: dev_apps
       white-space: nowrap
     }
 
+    .tot.chain {
+      white-space: normal;
+      line-height: 1.55;
+      margin-top: 3px
+    }
+
+    .tot.chain .led {
+      display: flex;
+      justify-content: flex-end;
+      align-items: baseline;
+      gap: 6px
+    }
+
+    .tot.chain .led i {
+      font-style: normal;
+      color: var(--silver3);
+      width: 11px;
+      text-align: center;
+      flex: 0 0 auto
+    }
+
+    .tot.chain .led b {
+      font-weight: 600;
+      color: var(--mid);
+      min-width: 58px;
+      text-align: right;
+      flex: 0 0 auto
+    }
+
+    .tot.chain .led:last-child {
+      border-top: 1px solid var(--line);
+      margin-top: 2px;
+      padding-top: 2px
+    }
+
+    .tot.chain .led:last-child b {
+      color: inherit;
+      font-size: 12.5px
+    }
+
+    .appliedsum .tot.chain {
+      max-width: 300px;
+      margin-top: 4px
+    }
+
+    .tot.chain.note {
+      color: var(--dim);
+      margin-top: 0;
+      display: flex;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0 6px
+    }
+
+    .tot.chain.note em {
+      font-style: normal
+    }
+
+    .tot.chain.note .led {
+      flex: 0 0 auto
+    }
+
+    .tot.chain.note .led b {
+      color: var(--silver3);
+      font-weight: 400;
+      font-size: 10.5px
+    }
+
+    .tot.chain.note .led:last-child {
+      border-top: 0;
+      margin-top: 0;
+      padding-top: 0
+    }
+
     .hint {
       color: var(--silver3);
       font-size: 11px
@@ -1357,6 +1432,16 @@ layout: dev_apps
 
       const torrent = !melee && !!a.torrent;
 
+      const atkParts = melee
+        ? { cleave: a.cleave > 0 ? a.cleave * Math.floor(models / 5) : 0 }
+        : {
+          blast: a.blast > 0 ? a.blast * Math.floor(models / 5) : 0,
+          rapidFire: a.rapidFire > 0 && a.halfRange ? a.rapidFire : 0
+        };
+
+      const mkHitOk = (m, cr) => (f) => f >= cr || (f !== 1 && f + m >= a.hitTarget);
+      const mkWOk = (m, an) => (f) => f === 6 || (an > 0 && f >= an) || (f !== 1 && f + m >= wt);
+
       return {
         wt: wt, anti: anti, melee: melee, wMod: wMod, models: models,
         hMod: hMod, critHit: critHit, torrent: torrent,
@@ -1368,32 +1453,104 @@ layout: dev_apps
 
         charged: melee && !!pre.charged,
 
-        atkBonus: melee
-          ? (a.cleave > 0 ? a.cleave * Math.floor(models / 5) : 0)
-          : (a.blast > 0 ? a.blast * Math.floor(models / 5) : 0) +
-          (a.rapidFire > 0 && a.halfRange ? a.rapidFire : 0),
+        atkParts: atkParts,
+        atkBonus: Object.keys(atkParts).reduce((s, key) => s + atkParts[key], 0),
 
         dmgBonus: !melee && a.melta > 0 && a.halfRange ? a.melta : 0,
         hitCrit: (f) => f >= critHit,
 
-        hitOk: (f) => f >= critHit || (f !== 1 && f + hMod >= a.hitTarget),
+        hitOk: mkHitOk(hMod, critHit),
+
+        hitOkPlain: mkHitOk(a.hitMod, 6),
+        hitOkCrit: mkHitOk(a.hitMod, critHit),
         hitFail: (f) => f < critHit && (f === 1 || f + hMod < a.hitTarget),
         wCrit: (f) => f === 6 || (anti > 0 && f >= anti),
 
-        wOk: (f) => f === 6 || (anti > 0 && f >= anti) || (f !== 1 && f + wMod >= wt),
+        wOk: mkWOk(wMod, anti),
+
+        wOkPlain: mkWOk(0, 0),
+        wOkAnti: mkWOk(0, anti),
         wFail: (f) => !(f === 6 || (anti > 0 && f >= anti)) && (f === 1 || f + wMod < wt),
       };
     }
+
+    const CONTRIB = [
+      { key: 'by_blast', tag: 'blast' },
+      { key: 'by_rapidFire', tag: 'rapidFire' },
+      { key: 'by_cleave', tag: 'cleave' },
+      { key: 'by_torrent', tag: 'torrent' },
+      { key: 'by_critHit', tag: 'critHit' },
+      { key: 'by_hitReroll', tag: 'hitReroll' },
+      { key: 'by_ignoreHitMod', tag: 'ignoreHitMod' },
+      { key: 'sust', tag: 'sustained' },
+      { key: 'leth', tag: 'lethal' },
+      { key: 'by_anti', tag: 'anti' },
+      { key: 'by_woundReroll', tag: 'woundReroll' },
+      { key: 'by_lance', tag: 'lance' },
+      { key: 'by_saveReroll', tag: 'saveReroll' },
+      { key: 'by_melta', tag: 'melta' },
+      { key: 'by_dmgReduce', tag: 'dmgReduce' },
+      { key: 'by_meltaDev', tag: 'melta' },
+      { key: 'by_dmgReduceDev', tag: 'dmgReduce' },
+      { key: 'by_hazardBig', tag: 'hazardBig' },
+      { key: 'hazard', tag: 'hazardous' },
+    ];
+
+    const CKEYS = CONTRIB.map((x) => x.key).filter((key) => key.indexOf('by_') === 0);
+
+    const CONTRIB_TAG = {};
+    CONTRIB.forEach((x) => { CONTRIB_TAG[x.key] = x.tag; });
+
+    const LEDGER = {
+      attacks: ['ld_atkBase', '+by_blast', '+by_rapidFire', '+by_cleave', '=attacks'],
+      hits: ['ld_hitBase', '+by_critHit', '+by_ignoreHitMod', '+by_hitReroll',
+        '+by_torrent', '+sust', '=hits'],
+      wounds: ['ld_wndBase', '+by_anti', '+by_lance', '+by_woundReroll', '+leth', '=wounds'],
+      failed: ['ld_failBase', '-by_saveReroll', '=failed'],
+
+      dmg: ['ld_dmgBase', '+by_melta', '-by_dmgReduce', '-ld_fnpRaw',
+        '+ld_dmgBaseDev', '+by_meltaDev', '-by_dmgReduceDev', '-ld_fnpDev', '=dmg'],
+      hazard: ['ld_hazFail', '+by_hazardBig', '=hazard'],
+
+      applied: ['dmg', '+mortal', '-ld_lost', '=applied'],
+    };
+
+    const LEDGER_NOTE = {
+      hits: ['crit'],
+      wounds: ['ld_wCrit'],
+    };
+
+    const NOTE_FROM = {
+      crit: ['lethal', 'sustained'],
+      ld_wCrit: ['devastating'],
+    };
+
+    const ledKey = (s) => ('+-=>'.indexOf(s[0]) >= 0 ? s.slice(1) : s);
+
+    const LKEYS = [...new Set([].concat(
+      ...Object.keys(LEDGER).map((k) => LEDGER[k].map(ledKey)),
+      ...Object.keys(LEDGER_NOTE).map((k) => LEDGER_NOTE[k])))]
+      .filter((key) => key.indexOf('ld_') === 0);
+
+    const NO_BONUS = { dmgBonus: 0 };
 
     function simulateOnce(a, gs, k, atkTerms, dmgTerms, srcs, trace) {
       srcs = srcs || [];
 
       const n = Math.max(1, a.weapons);
       const hazardEach = a.hazardBig ? 3 : 1;
-      let hazard = 0;
-      if (a.hazardous) for (let i = 0; i < n; i++) if (d6() <= 2) hazard += hazardEach;
+      let hazard = 0, hazardFail = 0;
+      if (a.hazardous) for (let i = 0; i < n; i++) if (d6() <= 2) { hazardFail++; hazard += hazardEach; }
 
       const t = { t_hits: 0, t_wounds: 0, t_failed: 0, t_raw: 0, t_hazard: a.hazardous ? n : 0 };
+
+      const c = {};
+      for (const key of CKEYS) c[key] = 0;
+      for (const key of LKEYS) c[key] = 0;
+      const by = (key, v) => { c['by_' + key] += v; };
+
+      c.ld_hazFail = hazardFail;
+      by('hazardBig', hazard - hazardFail);
 
       const live = gs.map((g) => ({ left: g.models, hp: g.wounds, killed: 0 }));
       const aliveAt = (i) => live[i].left > 0;
@@ -1451,22 +1608,29 @@ layout: dev_apps
 
       let attacks = 0;
       for (let i = 0; i < n; i++) attacks += rollExpr(atkTerms) + k.atkBonus;
+
+      for (const key in k.atkParts) by(key, n * k.atkParts[key]);
+      c.ld_atkBase = attacks - n * k.atkBonus;
       const killedOf = () => live.reduce((m, x) => m + x.killed, 0);
 
       const spread = () => {
         const o = {};
         mortal.per.forEach((v, i) => { o['m' + i] = v; });
         mortal.rawPer.forEach((v, i) => { o['mr' + i] = v; });
+
+        mortal.rawPer.forEach((v, i) => { o['mf' + i] = v - mortal.per[i]; });
         return o;
       };
       if (attacks <= 0) {
         srcs.forEach((src, si) => { if (src.when === 'after') runSource(src, si); });
+        c.ld_lost = mortal.total - applied;
         return {
           attacks: 0, hits: 0, wounds: 0, failed: 0, raw: 0, rawPre: 0,
           crit: 0, sust: 0, leth: 0,
           applied: applied, destroyed: killedOf(),
           gkilled: live.map((x) => x.killed),
-          mortal: mortal.total, devastM: 0, devastRaw: 0, hazard: hazard, ...spread(), ...t
+          mortal: mortal.total, devastM: 0, devastRaw: 0, dmg: 0, hazard: hazard,
+          ...spread(), ...t, ...c
         };
       }
 
@@ -1474,29 +1638,61 @@ layout: dev_apps
       t.t_hits = k.torrent ? 0 : attacks;
       if (k.torrent) {
         successes = attacks;
+        by('torrent', attacks);
       } else {
-        let hr = Array.from({ length: attacks }, d6);
-        hr = applyReroll(hr, a.hitReroll, k.hitFail);
+        const hr0 = Array.from({ length: attacks }, d6);
+        const hr = applyReroll(hr0, a.hitReroll, k.hitFail);
         for (const die of hr) { if (!k.hitOk(die)) continue; successes++; if (k.hitCrit(die)) crits++; }
+
+        const okPlain = hr0.filter(k.hitOkPlain).length;
+        const okCrit = hr0.filter(k.hitOkCrit).length;
+        const okMod = hr0.filter(k.hitOk).length;
+        c.ld_hitBase = okPlain;
+        by('critHit', okCrit - okPlain);
+        by('ignoreHitMod', okMod - okCrit);
+
+        by('hitReroll', successes - okMod);
       }
       const sustained = a.sustained > 0 ? crits * a.sustained : 0;
       const lethal = a.lethal ? crits : 0;
       const hits = successes + sustained;
 
       t.t_wounds = Math.max(0, hits - lethal);
-      let wr = Array.from({ length: t.t_wounds }, d6);
-      wr = applyReroll(wr, a.woundReroll, k.wFail);
+      const wr0 = Array.from({ length: t.t_wounds }, d6);
+      const wr = applyReroll(wr0, a.woundReroll, k.wFail);
       let wSucc = 0, wCritN = 0;
       for (const die of wr) { if (!k.wOk(die)) continue; wSucc++; if (k.wCrit(die)) wCritN++; }
+
+      const wPlain = wr0.filter(k.wOkPlain).length;
+      const wAnti = wr0.filter(k.wOkAnti).length;
+      const wLance = wr0.filter(k.wOk).length;
+      c.ld_wCrit = wCritN;
+      c.ld_wndBase = wPlain;
+      by('anti', wAnti - wPlain);
+      by('lance', wLance - wAnti);
+      by('woundReroll', wSucc - wLance);
       const devast = a.devastating ? wCritN : 0;
       const wounds = wSucc + lethal;
 
       let lastGk = k.gk[0];
+
+      const damageOf = (base, gk, dev) => {
+
+        const plain = adjustDmg(base, NO_BONUS, null);
+        const withBonus = adjustDmg(base, k, null);
+        const dmg = adjustDmg(base, k, gk);
+
+        const sfx = dev ? 'Dev' : '';
+        c['ld_dmgBase' + sfx] += plain;
+        by('melta' + sfx, withBonus - plain);
+        by('dmgReduce' + sfx, withBonus - dmg);
+        return dmg;
+      };
       const inflict = (gi) => {
         const gk = gi >= 0 ? k.gk[gi] : lastGk;
         if (gi >= 0) lastGk = gk;
         t.t_raw++;
-        let dmg = adjustDmg(rollExpr(dmgTerms), k, gk);
+        let dmg = damageOf(rollExpr(dmgTerms), gk);
         rawPre += dmg;
         if (gk.fnp > 0 && dmg > 0) {
           let ignored = 0;
@@ -1520,6 +1716,8 @@ layout: dev_apps
         const f = gk.reroll === 'none' ? die : applyReroll([die], gk.reroll, gk.saveFail)[0];
         const before = applied;
         const ok = gk.saveOk(f);
+
+        if (f !== die) by('saveReroll', (ok ? 1 : 0) - (gk.saveOk(die) ? 1 : 0));
         if (ok) { saved++; } else { failed++; inflict(gi); }
         if (trace) trace.rows.push({
           die: die, used: f, gi: gi, st: gk.st, saved: ok,
@@ -1530,7 +1728,7 @@ layout: dev_apps
       let devastM = 0, devastRaw = 0;
       for (let i = 0; i < devast; i++) {
         const gi0 = mortalPick();
-        const pts = adjustDmg(rollExpr(dmgTerms), k, k.gk[gi0 >= 0 ? gi0 : 0]);
+        const pts = damageOf(rollExpr(dmgTerms), k.gk[gi0 >= 0 ? gi0 : 0], true);
         devastRaw += pts;
         for (let j = 0; j < pts; j++) {
           const gi = mortalPick();
@@ -1549,6 +1747,12 @@ layout: dev_apps
 
       srcs.forEach((src, si) => { if (src.when === 'after') runSource(src, si); });
 
+      c.ld_failBase = failed + c.by_saveReroll;
+      c.ld_fnpRaw = rawPre - raw;
+      c.ld_fnpDev = devastRaw - devastM;
+
+      c.ld_lost = raw + devastM + mortal.total - applied;
+
       return {
         attacks: attacks, hits: hits, wounds: wounds, failed: failed,
 
@@ -1557,7 +1761,9 @@ layout: dev_apps
 
         gkilled: live.map((x) => x.killed),
         mortal: mortal.total, devastM: devastM, devastRaw: devastRaw,
-        hazard: hazard, ...spread(), ...t
+
+        dmg: raw + devastM,
+        hazard: hazard, ...spread(), ...t, ...c
       };
     }
 
@@ -1604,6 +1810,9 @@ layout: dev_apps
         raw: k.single ? failed * dmgMean * gk.fnpKeep : null,
 
         devastM: !a.devastating ? 0 : k.single ? devast * dmgMean * gk.fnpKeep : null,
+
+        dmg: !k.single ? null
+          : failed * dmgMean * gk.fnpKeep + (a.devastating ? devast * dmgMean * gk.fnpKeep : 0),
 
         mortal: mortalTotal,
 
@@ -1697,7 +1906,7 @@ layout: dev_apps
           hits: ['명중', '명중 성공 + 연타로 늘어난 수'],
           wounds: ['타격', '타격 성공 + 살상타로 자동 성공한 수'],
           failed: ['방호 실패', '방호를 굴려 실패한 수 — 궤멸적 피해는 여기 없습니다'],
-          raw: ['원피해', '불굴을 거친 뒤 · 체력 상한을 적용하기 전'],
+          dmg: ['피해', '불굴을 거친 뒤 · 체력 상한을 적용하기 전 · 궤멸적 피해를 포함합니다'],
           devastM: ['궤멸적 피해', '결정적 타격이 준 치명상 · 방호도 피해도 굴리지 않고, 불굴만 막습니다'],
           mortal: ['치명상 합계', '아래 원천들을 더한 것 · 불굴을 거친 뒤의 점수입니다'],
           hazard: ['위험 굴림 — 내가 입는 치명상', '상대가 아니라 내 쪽이 다칩니다'],
@@ -1711,6 +1920,7 @@ layout: dev_apps
         vPass: (s) => '맞음 (오차 범위 ' + s + '배 안)', vWarn: '조금 벗어남 — 다시 굴려 보세요',
         vFail: '예상과 다름',
         refNote: '참고 수치 (비교하지 않습니다)',
+        appliedTitle: '위 그래프의 수가 어떻게 나왔나 — 세 길이 같은 유닛을 깎습니다',
         traceTitle: '이 계산을 한 판만 그대로 펼쳐 보기 — 주사위를 어떻게 나누고 누구에게 배정했나',
         traceLead: '아래는 지어낸 예시가 아니라 <b>방금 굴린 판 하나</b>입니다. 그래서 위의 평균과는 다릅니다 — 한 판은 원래 흔들립니다.',
         traceGroups: '① 그룹과 배정 순서',
@@ -1731,13 +1941,30 @@ layout: dev_apps
           (dev > 0 ? ' (그 가운데 결정적 타격 ' + dev + ' 은 치명상이 됩니다)' : ''),
         tracePrecision: '[정밀]이 켜져 있어 캐릭터 그룹이 현재 그룹입니다',
         traceNone: '이 판에서는 방호를 굴릴 일이 없었습니다.',
+
+        led: {
+          ld_atkBase: '무기 공격횟수',
+          ld_hitBase: '기본 명중', by_critHit: '결정적 명중 기준을 낮춰 늘어난 명중',
+          crit: '결정적 명중', ld_wCrit: '결정적 타격',
+          ld_wndBase: '기본 타격 성공',
+          ld_failBase: '기본 방호 실패',
+          ld_dmgBase: '기본 피해 점수', ld_fnpRaw: '불굴이 지움',
+          ld_dmgBaseDev: '궤멸적 피해 — 기본 점수', by_meltaDev: '궤멸적 피해 — 멜타',
+          by_dmgReduceDev: '궤멸적 피해 — 피해 감소', ld_fnpDev: '궤멸적 피해 — 불굴이 지움',
+          ld_hazFail: '실패한 위험 굴림', by_hazardBig: '괴수 · 기체 — 실패마다 3점',
+          dmg: '피해', mortal: '치명상', ld_lost: '체력을 넘겨 버려진 몫',
+        },
+
+        ledFinal: {
+          attacks: '최종 공격', hits: '최종 명중', wounds: '최종 타격',
+          failed: '최종 방호 실패', dmg: '최종 피해',
+          hazard: '최종 치명상', mortal: '최종 치명상', applied: '적용 피해',
+        },
+        ledNote: '그중', ledMr: '불굴 전 점수', ledMf: '불굴이 지움',
+        ledWhy: '각 줄의 <b>산식</b>이 그 수가 어떻게 나왔는지를 말합니다 — 한 칸에 한 줄이고, 무엇이 얹혔고(＋) 무엇이 빠졌고(−) 어디서 다음 단계로 넘어갔고(→) 그래서 최종이 얼마인가(＝)를 차례로 적습니다. 값은 전부 <b>1회 평균</b>이라 세로로 훑으며 눈으로 더하고 뺄 수 있습니다. 이 판에서 아무 일도 하지 않은 것은 줄이 서지 않습니다.<br>몫은 <b>겹치지 않게</b> 갈랐습니다. 능력을 한 겹씩 얹으며 재기 때문에 전부 더하면 최종이 됩니다 — 다만 <b>겹치는 능력끼리는 얹는 차례가 몫을 바꿉니다.</b> 차례는 적힌 그대로입니다. 다시 굴림은 늘 맨 끝이라, 성공을 실패로도 바꾸는 「전부 다시 굴림」에서는 음수가 될 수도 있습니다.',
         asideTitle: '따로 세는 것 — 공격 시퀀스 밖에서 온 것',
         asideWhy: '위의 단계와 더하지 않습니다. 들어온 길이 다르기 때문입니다 — 치명상은 명중·타격·방호를 굴리지 않고, 위험 굴림은 아예 내 유닛이 다치는 것입니다. ★ 다만 <b>불굴 Feel No Pain 은 치명상에도 걸립니다</b>(코어룰 24.12) — 위 숫자는 이미 그것을 거친 뒤의 점수입니다. 무적 방호는 막지 못합니다. 그래도 주사위를 굴린 것은 같으므로 예상값과 나란히 놓습니다.',
-        runsLabel: (n) => n + '회 시행', triedLabel: (n) => '시도 ' + n, totalLabel: (n) => '합계 ' + n,
-        critLabel: (n) => '그중 결정적 명중 ' + n, sustLabel: (n) => '연타로 +' + n,
-        fnpPair: (before, after) => '불굴 전 ' + before + ' → 뒤 ' + after,
-        lethLabel: (n) => '그중 살상타로 자동 성공 ' + n,
-        diceLabel: (n) => '주사위 ' + n + '개',
+        runsLabel: (n) => n + '회 시행', totalLabel: (n) => '합계 ' + n,
         applied: '적용 피해', destroyed: '파괴된 모델', wipe: '전멸 확률', lost: '버려진 피해',
         afterHazard: '<b>[위험] Hazardous</b> — 모든 공격을 마친 <b>뒤에</b> 무기 수만큼 위험 굴림을 합니다. 다치는 쪽은 상대가 아니라 <b>내 유닛</b>입니다.',
         median: '중앙값', p10: '하위 10%', p90: '상위 10%', min: '최소', max: '최대', stdev: '표준편차',
@@ -1829,7 +2056,7 @@ layout: dev_apps
           hits: ['Hits', 'successes + sustained hits'],
           wounds: ['Wounds', 'wound successes + auto-wounds from lethal hits'],
           failed: ['Failed saves', 'saves actually rolled and failed — devastating wounds are not here'],
-          raw: ['Raw damage', 'after Feel No Pain · before the wound cap'],
+          dmg: ['Damage', 'after Feel No Pain · before the wound cap · Devastating Wounds included'],
           devastM: ['Devastating Wounds', 'mortal wounds from critical wounds · no save, no damage roll, only Feel No Pain stops them'],
           mortal: ['Mortal wounds total', 'the sources below, added up · counted after Feel No Pain'],
           hazard: ['Hazard — mortal wounds on you', 'they land on your own unit, not the target'],
@@ -1841,6 +2068,7 @@ layout: dev_apps
         vPassFixed: 'pass (no variance)', vFailFixed: 'mismatch (a fixed value differs)',
         vPass: (s) => 'pass (within ' + s + 'σ)', vWarn: 'borderline — roll again', vFail: 'mismatch',
         refNote: 'reference (not compared)',
+        appliedTitle: 'How the figure in the chart above came about — three routes wear down the same unit',
         traceTitle: 'One run, opened up — how the dice were split and who they were allocated to',
         traceLead: 'What follows is not a made-up example but <b>one run that was actually rolled</b> just now, so it differs from the averages above. A single run swings.',
         traceGroups: '① Groups and allocation order',
@@ -1861,13 +2089,28 @@ layout: dev_apps
           (dev > 0 ? ' (' + dev + ' of them critical — they become mortal wounds)' : ''),
         tracePrecision: 'Precision is on, so the CHARACTER group is the current allocation group',
         traceNone: 'No save roll came up in this run.',
+        led: {
+          ld_atkBase: 'base weapon attacks',
+          ld_hitBase: 'base hits', by_critHit: 'hits gained by the lower critical threshold',
+          crit: 'critical hits', ld_wCrit: 'critical wounds',
+          ld_wndBase: 'base wounds',
+          ld_failBase: 'base failed saves',
+          ld_dmgBase: 'base damage points', ld_fnpRaw: 'erased by FNP',
+          ld_dmgBaseDev: 'Devastating — base points', by_meltaDev: 'Devastating — Melta',
+          by_dmgReduceDev: 'Devastating — damage reduction', ld_fnpDev: 'Devastating — erased by FNP',
+          ld_hazFail: 'failed hazard rolls', by_hazardBig: 'Monster/Vehicle — 3 per failure',
+          dmg: 'damage', mortal: 'mortal wounds', ld_lost: 'lost to overkill',
+        },
+        ledFinal: {
+          attacks: 'final attacks', hits: 'final hits', wounds: 'final wounds',
+          failed: 'final failed saves', dmg: 'final damage',
+          hazard: 'final mortal wounds', mortal: 'final mortal wounds', applied: 'applied damage',
+        },
+        ledNote: 'of which', ledMr: 'points before FNP', ledMf: 'erased by FNP',
+        ledWhy: 'Each row carries a <b>formula</b> for how its figure came about — one item per line: what was added (＋), what was taken away (−), where it passed into the next step (→), and what it ended as (＝). Every value is a <b>mean per run</b>, so the column can be added up by eye. Anything that did nothing this run gets no line.<br>The shares are cut so they <b>do not overlap</b>: abilities are measured one layer at a time, so adding them all up gives the final figure — but <b>where abilities overlap, the order they are layered in changes their shares.</b> The order is the one shown. Rerolls always come last, so rerolling everything, which can turn a success into a failure, may come out negative.',
         asideTitle: 'Counted separately — arriving from outside the attack sequence',
         asideWhy: 'These are never added to the stages above, because they arrive by a different route: mortal wounds skip the hit, wound and save rolls entirely, and hazard rolls land on your own unit. ★ <b>Feel No Pain does apply to mortal wounds</b> (24.12) — the figures above are already counted after it. An invulnerable save does not stop them. They are still dice, so they are still placed beside their expectation.',
-        runsLabel: (n) => n + ' runs', triedLabel: (n) => 'tried ' + n, totalLabel: (n) => 'total ' + n,
-        critLabel: (n) => 'of which critical hits ' + n, sustLabel: (n) => 'Sustained +' + n,
-        fnpPair: (before, after) => 'before FNP ' + before + ' → after ' + after,
-        lethLabel: (n) => 'of which auto-wounded by Lethal Hits ' + n,
-        diceLabel: (n) => n + ' dice rolled',
+        runsLabel: (n) => n + ' runs', totalLabel: (n) => 'total ' + n,
         applied: 'applied damage', destroyed: 'models destroyed', wipe: 'wipe rate', lost: 'lost to overkill',
         afterHazard: '<b>Hazardous</b> — <b>after</b> all attacks are resolved, make one hazard roll per weapon. The damage lands on <b>your own unit</b>, not the target.',
         median: 'median', p10: 'bottom 10%', p90: 'top 10%', min: 'min', max: 'max', stdev: 'std. dev',
@@ -1947,7 +2190,7 @@ layout: dev_apps
           what: '방호에 실패한 공격 하나가 입히는 피해입니다. 공격 칸과 같은 방식으로 주사위를 적습니다.',
           list: ['1 → 언제나 1', 'D3 → 1~3', 'D6+1 → 2~7'],
           how: '모델 한 개의 체력을 넘는 피해는 버려집니다. 그래서 적용 피해가 원피해보다 작을 수 있습니다.',
-          see: ['wounds', 'fnp', 's_raw']
+          see: ['wounds', 'fnp', 's_dmg']
         },
         lethal: {
           t: '[살상타] Lethal Hits', ref: '코어룰 24.23',
@@ -2037,7 +2280,7 @@ layout: dev_apps
           t: '체력 W',
           what: '모델 한 개가 버티는 체력입니다.',
           how: '체력을 넘는 피해는 버려집니다 — 체력 2인 모델에 피해 6이 들어가도 2만 깎이고 나머지 4는 사라집니다.',
-          see: ['models', 'damage', 's_raw']
+          see: ['models', 'damage', 's_dmg']
         },
         character: {
           t: '캐릭터 CHARACTER 그룹인가', ref: '코어룰 05.03 · 24.28',
@@ -2066,7 +2309,7 @@ layout: dev_apps
         dmgReduce: {
           t: '피해 감소 Damage reduction — 맞는 쪽이 깎는다', ref: '코어룰 05.04',
           what: '맞는 쪽이 가진 능력으로, 공격 하나의 피해에서 이 값을 뺍니다. 「이 모델에 배정된 공격의 피해에서 1을 뺀다」 같은 능력이 여기 해당합니다.',
-          how: '피해를 굴린 뒤에 뺍니다. 그다음에 불굴이 걸립니다. ★ 코어룰에는 피해의 하한을 정하는 문장이 없습니다. 그래서 이 페이지는 0까지 줄어드는 것으로 셉니다.',
+          how: '피해를 굴린 뒤에 뺍니다. 그다음에 불굴이 걸립니다. ★ 하한은 코어룰 본문이 아니라 규칙 부록 02.02.01 「보정」에 있습니다 — 「피해는 1 미만이 될 수 없다」. 이 페이지는 그 부록을 아직 채택하지 않아 0까지 줄어드는 것으로 셉니다.',
           see: ['damage', 'fnp', 'melta']
         },
 
@@ -2174,9 +2417,9 @@ layout: dev_apps
           how: '★ [궤멸적 피해]는 여기 없습니다. 결정적 타격은 공격을 거기서 끝내므로 방호 단계에 아예 오지 않고, 치명상이 되어 아래 「따로 세는 것」에 섭니다(24.10).',
           see: ['save', 'inv', 'devastating']
         },
-        s_raw: {
-          t: '원피해',
-          what: '불굴까지 거친 뒤, 체력 상한을 적용하기 전의 전체 피해입니다.',
+        s_dmg: {
+          t: '피해 — 궤멸적 피해까지 합친 점수',
+          what: '불굴까지 거친 뒤, 체력 상한을 적용하기 전의 전체 피해입니다. <b>[궤멸적 피해]로 들어간 점수도 여기 들어 있습니다</b> — 규칙상으로는 치명상이지만(24.10) 같은 유닛에 같은 방식으로 들어가므로, 따로 세우면 합쳐 볼 때 수가 맞지 않습니다. 산식에서 그 성분들이 따로 보입니다.',
           how: '예상값과 비교하는 것은 이 값 하나뿐입니다. 적용 피해는 체력을 넘긴 몫이 버려져 예상값보다 작아지므로, 비교하면 늘 틀린 것처럼 보입니다.',
           see: ['damage', 'fnp', 'wounds']
         },
@@ -2203,6 +2446,17 @@ layout: dev_apps
           what: '돌격이 성공해서 준 치명상입니다. 명중도 타격도 방호도 굴리지 않습니다.',
           how: '불굴을 거친 뒤의 점수입니다. 공격 시퀀스와는 다른 길로 들어오므로 위의 단계들과 더하지 않고 따로 세지만, 같은 유닛을 깎기 때문에 적용 피해와 파괴된 모델 수에는 함께 들어갑니다.',
           see: ['chargeMortal', 'charged', 'fnp']
+        },
+        s_ledger: {
+          t: '사슬 — 이 수가 어떻게 나왔나',
+          what: '줄마다 그 아래에 <b>사슬</b>이 붙습니다. 시작이 얼마였고, 다음 단계로 넘어가는 사이에 무엇이 얹혔고(＋), 무엇이 빠졌고(−), 어디서 단계가 바뀌었고(→), 그래서 최종이 얼마인지(＝)를 차례대로 적습니다. 「시도」와 「합계」만 적으면 그 사이가 통째로 비어서, 주사위 30개를 굴렸는데 왜 26이 됐는지를 따라갈 수 없습니다.',
+          how: '값은 전부 <b>1회 평균</b>이라 바로 위 칸의 수와 같은 자입니다. 그래서 눈으로 더해서 맞춰 보실 수 있습니다. 「그중」 줄은 <b>사슬 안에 이미 접혀 있는 것</b>이라 더하지 마십시오 — 다시 굴려서 늘어난 명중은 이미 「명중」 안에 들어 있습니다.',
+          list: ['능력이 <b>더한 것</b>은 그 자리에서 그대로 셉니다 — 얹힌 공격 주사위, 연타로 늘어난 명중, 방호를 건너뛴 타격',
+            '능력이 <b>바꾼 것</b>은 같은 주사위 눈을 「그 능력이 없었을 때의 판정」으로 한 번 더 세어 그 차이를 적습니다 — 다시 굴림 · [랜스] · [사이킥]',
+            '그래서 성공을 실패로도 바꾸는 「전부 다시 굴림」은 음수가 될 수도 있습니다',
+            '「멜타 2」가 언제나 2점을 보태지는 않습니다 — 피해가 밑에서 잘리면 잘린 만큼만 잡힙니다',
+            '이 판에서 아무 일도 하지 않은 것은 적지 않습니다. 시행 전체의 합은 그 수에 마우스를 올리면 나옵니다'],
+          see: ['sustained', 'rapidFire', 'devastating', 'fnp']
         },
 
         c_shootType: {
@@ -2359,7 +2613,7 @@ layout: dev_apps
           what: 'Damage from one attack that got through the save. Same dice notation as A.',
           list: ['1 → always 1', 'D3 → 1 to 3', 'D6+1 → 2 to 7'],
           how: 'Damage beyond a model wounds total is lost, so applied damage can be well below raw damage.',
-          see: ['wounds', 'fnp', 's_raw']
+          see: ['wounds', 'fnp', 's_dmg']
         },
         lethal: {
           t: 'Lethal Hits', ref: 'core rules 24.23',
@@ -2449,7 +2703,7 @@ layout: dev_apps
           t: 'W — Wounds per model',
           what: 'How many wounds a single model has.',
           how: 'Excess damage is lost — 6 damage into a 2-wound model removes 2 and the rest disappears.',
-          see: ['models', 'damage', 's_raw']
+          see: ['models', 'damage', 's_dmg']
         },
         character: {
           t: 'Is this a CHARACTER group?', ref: 'core rules 05.03 · 24.28',
@@ -2478,7 +2732,7 @@ layout: dev_apps
         dmgReduce: {
           t: 'Damage reduction — the defender shaves it off', ref: 'core rules 05.04',
           what: 'A defender ability that subtracts this much from the Damage characteristic of each attack ("subtract 1 from the Damage characteristic of that attack").',
-          how: 'Subtracted after the damage is rolled, before Feel No Pain. ★ The core rules set no floor on damage, so this page lets it fall to 0.',
+          how: 'Subtracted after the damage is rolled, before Feel No Pain. ★ The floor is not in the core rules proper — Rules Appendix 02.02.01 (Modifiers) says Damage cannot be less than 1. This page has not adopted that appendix, so it lets damage fall to 0.',
           see: ['damage', 'fnp', 'melta']
         },
 
@@ -2586,9 +2840,9 @@ layout: dev_apps
           how: '★ Devastating Wounds are not here. A critical wound ends the attack before the save step, and becomes mortal wounds counted separately below (24.10).',
           see: ['save', 'inv', 'devastating']
         },
-        s_raw: {
-          t: 'Raw damage',
-          what: 'Total damage after Feel No Pain and before the wound cap.',
+        s_dmg: {
+          t: 'Damage — Devastating Wounds included',
+          what: 'Total damage after Feel No Pain and before the wound cap. <b>Points inflicted by [DEVASTATING WOUNDS] are counted here too</b> — they are mortal wounds by rule (24.10), but they wear down the same unit in the same way, and keeping them apart makes the totals fail to reconcile. The formula shows those components separately.',
           how: 'This is the only figure compared. Applied damage loses the overkill, so comparing it would always look like a mismatch.',
           see: ['damage', 'fnp', 'wounds']
         },
@@ -2615,6 +2869,17 @@ layout: dev_apps
           what: 'Mortal wounds inflicted because the charge succeeded. No hit, wound or save roll is made.',
           how: 'Counted after Feel No Pain. They arrive by a different route than the attack sequence, so they are never added to the stages above — but they wear down the same unit, so they do count towards applied damage and models destroyed.',
           see: ['chargeMortal', 'charged', 'fnp']
+        },
+        s_ledger: {
+          t: 'The chain — how this figure came about',
+          what: 'Every row carries a <b>chain</b> beneath it: what it started as, what was added on the way to the next step (＋), what was taken away (−), where the step changed (→), and what it ended as (＝). "Tried" and "total" alone leave everything in between blank, so there is no way to follow why 30 dice became 26.',
+          how: 'Every value is a <b>mean per run</b>, the same measure as the figure right above it, so the chain can be added up by eye. The "of which" line is <b>already folded into the chain</b> and must not be added — hits gained by rerolling are already inside "hit".',
+          list: ['What an ability <b>adds</b> is counted where it happens — extra attack dice, hits added by Sustained Hits, wounds that skipped the save',
+            'What an ability <b>changes</b> is measured by judging the same dice once more as they would have been without it — rerolls, [LANCE], [PSYCHIC]',
+            'So rerolling everything, which can turn a success into a failure, may come out negative',
+            '"Melta 2" does not always add 2 — when the damage is clipped at the floor, only what survived is counted',
+            'Anything that did nothing this run is left out. The total across all runs sits on the tooltip of the figure'],
+          see: ['sustained', 'rapidFire', 'devastating', 'fnp']
         },
 
         c_shootType: {
@@ -2954,14 +3219,14 @@ layout: dev_apps
       { key: 's_hits', fields: ['hitTarget', 'hitMod', 'ignoreHitMod', 'critHit', 'hitReroll', 'torrent'] },
       { key: 's_wounds', fields: ['strength', 'toughness', 'woundReroll', 'anti', 'lance'] },
       { key: 's_failed', fields: ['save', 'ap', 'inv', 'saveReroll'] },
-      { key: 's_raw', fields: ['damage', 'melta', 'fnp', 'dmgReduce', 'wounds', 'models'] },
+      { key: 's_dmg', fields: ['damage', 'melta', 'fnp', 'dmgReduce', 'wounds', 'models'] },
     ];
 
     const SKIPS = [
       { after: 's_pre', help: 'mode', text: 'skipMode' },
       { after: 's_hits', help: 'lethal', text: 'skipLethal' },
       { after: 's_wounds', help: 'devastating', text: 'skipDevast' },
-      { after: 's_raw', help: 'hazardous', text: 'afterHazard' },
+      { after: 's_dmg', help: 'hazardous', text: 'afterHazard' },
     ];
 
     const FIELD_SIDE = {};
@@ -3458,13 +3723,13 @@ layout: dev_apps
 
     const f2 = (n) => n.toFixed(2);
     const f3 = (n) => n.toFixed(3);
-    const STAGE_KEYS = ['attacks', 'hits', 'wounds', 'failed', 'raw'];
+    const STAGE_KEYS = ['attacks', 'hits', 'wounds', 'failed', 'dmg'];
 
     const stagesOf = () => STAGE_KEYS;
 
     const asideOf = (r) => r.aside.map((x) => x.key).concat(r.hazardous ? ['hazard'] : []);
 
-    const KEYS = ['attacks', 'hits', 'wounds', 'failed', 'raw', 'rawPre', 'mortal', 'devastM', 'devastRaw',
+    const KEYS = ['attacks', 'hits', 'wounds', 'failed', 'raw', 'rawPre', 'dmg', 'mortal', 'devastM', 'devastRaw',
       'crit', 'sust', 'leth',
       'applied', 'destroyed', 'hazard',
       't_hits', 't_wounds', 't_failed', 't_raw', 't_hazard'];
@@ -3575,6 +3840,40 @@ layout: dev_apps
         '</div></details>';
     }
 
+    const ledName = (key, rowKey, t) =>
+      key === rowKey
+        ? (t.ledFinal[rowKey] || t.ledFinal.mortal)
+
+        : t.led[key] ? t.led[key] +
+          (NOTE_FROM[key] || []).map((x) => ' [' + t.f[x] + ']').join('')
+          : CONTRIB_TAG[key] ? t.f[CONTRIB_TAG[key]]
+
+            : /^mr\d+$/.test(key) ? t.ledMr
+              : /^mf\d+$/.test(key) ? t.ledMf
+                : t.led[key];
+    const LED_OP = { '+': '＋', '-': '−', '>': '→', '=': '＝' };
+
+    function ledgerRow(r, k, t) {
+
+      const led = LEDGER[k] || (/^m\d+$/.test(k)
+        ? ['mr' + k.slice(1), '-mf' + k.slice(1), '=' + k] : null);
+      if (!led) return '';
+      const chip = (s, rowKey) => {
+        const op = LED_OP[s[0]] || '';
+        const key = ledKey(s);
+        const v = r.mean[key];
+
+        if (!v && key !== rowKey) return '';
+
+        return '<span class="led"><i>' + op + '</i>' +
+          '<span>' + esc(ledName(key, rowKey, t)) + '</span><b>' + f3(v) + '</b></span>';
+      };
+
+      const note = (LEDGER_NOTE[k] || []).map((key) => chip(key, null)).join('');
+      return '<span class="tot chain">' + led.map((s) => chip(s, k)).join('') + '</span>' +
+        (note ? '<span class="tot chain note"><em>' + esc(t.ledNote) + '</em>' + note + '</span>' : '');
+    }
+
     function draw(run) {
       const t = T();
       const blocks = run.results.map((r) => {
@@ -3600,30 +3899,19 @@ layout: dev_apps
           else if (v.cls === 'fail' || (v.cls === 'warn' && worst === 'pass')) worst = v.cls;
           const expText = r.exp[k] == null ? esc(t.noFormula) : f3(r.exp[k]);
 
-          const detail = r.exp[k] == null ? esc(v.text)
+          const detail = (r.exp[k] == null ? esc(v.text)
             : esc(t.cols.diff) + ' ' + (r.mean[k] - r.exp[k] >= 0 ? '+' : '') + f3(r.mean[k] - r.exp[k]) +
             ' · ' + esc(t.cols.se) + ' ' + f3(r.se[k]) +
-            ' · z ' + (Number.isFinite(v.z) ? (v.z >= 0 ? '+' : '') + f2(v.z) : '—') + ' · ' + esc(v.text);
+            ' · z ' + (Number.isFinite(v.z) ? (v.z >= 0 ? '+' : '') + f2(v.z) : '—') + ' · ' + esc(v.text)) +
+
+            ' · ' + esc(t.totalLabel(r.total[k].toLocaleString()));
           return '<tr>' +
             '<td class="stage"><span>' + rowName(k) + ' <span class="hint">' + esc(labelOf(k)[1]) + '</span></span>' +
             q(helpOf(k)) + '</td>' +
             '<td class="num' + (r.exp[k] == null ? ' pass' : '') + '">' + expText + '</td>' +
-            '<td class="num ' + v.cls + '" title="' + detail + '">' + f3(r.mean[k]) +
 
-            (r.dice[k] != null
-              ? (r.dice[k] > 0 ? '<span class="tot">' + esc(t.diceLabel(r.dice[k].toLocaleString())) + '</span>' : '')
-              : '<span class="tot">' + esc(t.triedLabel(r.total['t_' + k].toLocaleString())) + '</span>') +
-            '<span class="tot">' + esc(t.totalLabel(r.total[k].toLocaleString())) + '</span>' +
-
-            (k === 'hits' && r.total.crit > 0
-              ? '<span class="tot">' + esc(t.critLabel(r.total.crit.toLocaleString()) +
-                (r.total.sust > 0 ? ' · ' + t.sustLabel(r.total.sust.toLocaleString()) : '')) + '</span>' : '') +
-            (k === 'wounds' && r.total.leth > 0
-              ? '<span class="tot">' + esc(t.lethLabel(r.total.leth.toLocaleString())) + '</span>' : '') +
-
-            ((r.rawOf && r.rawOf[k] && r.total[r.rawOf[k]] > r.total[k])
-              ? '<span class="tot">' + esc(t.fnpPair(r.total[r.rawOf[k]].toLocaleString(),
-                r.total[k].toLocaleString())) + '</span>' : '') +
+            '<td class="num ' + v.cls + '" title="' + detail + '">' +
+            (ledgerRow(r, k, t) || f3(r.mean[k])) +
             '</td>' +
             '</tr>';
         }).join('');
@@ -3644,7 +3932,7 @@ layout: dev_apps
           esc(t.runsLabel(run.runs.toLocaleString())) + ' · ' +
           t.wt(r.k.wt) + ' · ' + saves + ' · ' + head + '</span></header>' +
           '<div class="scroll" style="border:0;border-radius:0"><table>' +
-          '<thead><tr><th>' + esc(t.cols.stage) + '</th><th>' + esc(t.cols.exp) +
+          '<thead><tr><th><span class="hd">' + esc(t.cols.stage) + q('s_ledger') + '</span></th><th>' + esc(t.cols.exp) +
           '</th><th><span class="hd">' + esc(t.cols.obs) + q('verdict') + '</span></th></tr></thead>' +
           '<tbody>' + rows + '</tbody></table></div>' +
           histogram(r.applied, run.runs, r.mean.applied) +
@@ -3658,11 +3946,12 @@ layout: dev_apps
           '<span>' + esc(t.max) + ' <b class="num">' + r.stats.max + '</b></span>' +
           '<span>' + esc(t.stdev) + ' <b class="num">' + f2(r.stats.stdev) + '</b></span>' +
           '</div>' +
+
+          '<div class="note appliedsum">' + esc(t.appliedTitle) +
+          ledgerRow(r, 'applied', t) + '</div>' +
           '<div class="note">' + esc(t.refNote) + ' — ' +
-          esc(t.applied) + ' <b class="num">' + f3(r.mean.applied) + '</b> · ' +
           esc(t.destroyed) + ' <b class="num">' + f3(r.mean.destroyed) + '</b> / ' + r.models + ' · ' +
-          esc(t.wipe) + ' <b class="num">' + f2(r.wipeRate * 100) + '%</b> · ' +
-          esc(t.lost) + ' <b class="num">' + f3(r.mean.raw + r.mean.mortal - r.mean.applied) + '</b>' +
+          esc(t.wipe) + ' <b class="num">' + f2(r.wipeRate * 100) + '%</b>' +
 
           (r.groups.length > 1 ? '<br>' + esc(t.perGroup) + ' — ' + r.groups.map((g) =>
             esc(g.name) + ' <b class="num">' + f3(g.killed) + '</b> / ' + g.models).join(' · ') : '') +
@@ -3670,7 +3959,7 @@ layout: dev_apps
 
           (aside ? '<div class="aside"><h4>' + esc(t.asideTitle) + '</h4>' +
             '<div class="scroll" style="border:0;border-radius:0"><table>' +
-            '<thead><tr><th>' + esc(t.cols.stage) + '</th><th>' + esc(t.cols.exp) +
+            '<thead><tr><th><span class="hd">' + esc(t.cols.stage) + q('s_ledger') + '</span></th><th>' + esc(t.cols.exp) +
             '</th><th><span class="hd">' + esc(t.cols.obs) + q('verdict') + '</span></th></tr></thead>' +
             '<tbody>' + aside + '</tbody></table></div>' +
 
@@ -3710,7 +3999,8 @@ layout: dev_apps
       }
       const mkeys = srcs.map((x, i) => 'm' + i);
       const rawkeys = srcs.map((x, i) => 'mr' + i);
-      const allKeys = KEYS.concat(mkeys, rawkeys);
+      const fnpkeys = srcs.map((x, i) => 'mf' + i);
+      const allKeys = KEYS.concat(mkeys, rawkeys, fnpkeys, CKEYS, LKEYS);
 
       for (const a of state.attackers) {
         const atkTerms = parseExpr(a.attacks);
@@ -3761,16 +4051,9 @@ layout: dev_apps
           })),
           precision: k.precision,
           single: k.single,
-
-          dice: Object.assign({ attacks: diceOf(atkTerms) * Math.max(1, a.weapons) * runs, devastM: 0 },
-            ...mkeys.map((key) => ({ [key]: 0 }))),
-
-          rawOf: Object.assign({ raw: 'rawPre', devastM: 'devastRaw' },
-            ...mkeys.map((key, i) => ({ [key]: 'mr' + i }))),
           mortals: srcs.map((src, i) => ({ name: src.name, key: 'm' + i, dist: mdist[i] })),
 
-          aside: (a.devastating ? [{ key: 'devastM', name: T().f.devastating, dist: ddist }] : [])
-            .concat(srcs.map((src, i) => ({ name: src.name, key: 'm' + i, dist: mdist[i] }))),
+          aside: srcs.map((src, i) => ({ name: src.name, key: 'm' + i, dist: mdist[i] })),
           hazardous: a.hazardous, trace: trace,
           stats: {
             median: quantile(applied, runs, 0.5), p10: quantile(applied, runs, 0.1),
