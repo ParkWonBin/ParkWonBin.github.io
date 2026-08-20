@@ -1,4 +1,14 @@
 # Demo
+- title : 워해머 판 · 턴과 이동
+  url : /webapps/warhammer_move
+  url_app : /webapps/warhammer_move/app.html
+  repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/warhammer_move/index.html
+  thumbnail :
+  type : demo
+  desc : <strong> 워해머 판 · 턴과 이동 </strong>
+    <br> 3D 보드 위에서 유닛 배치와
+    <br> 턴별 이동을 다루는 도구입니다.
+
 - title : 워해머 전투 계산 시뮬레이터
   url : /webapps/warhammer_simul
   url_app : /webapps/warhammer_simul/app.html
