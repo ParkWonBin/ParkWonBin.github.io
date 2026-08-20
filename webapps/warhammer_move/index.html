@@ -3,1852 +3,2521 @@ layout: dev_apps
 ---
 <!doctype html>
 <html lang="ko">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>워해머 판 · 턴과 이동 (흰 판)</title>
 
-<script type="importmap">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>워해머 판 · 턴과 이동 (흰 판)</title>
+
+  <script type="importmap">
 { "imports": { "three": "https://unpkg.com/three@0.185.1/build/three.module.js" } }
 </script>
-<style>
+  <style>
+    :root {
+      --ink: #fdfdfd;
+      --ink2: #ffffff;
+      --ink3: #f2f4f3;
+      --line: #e6e8e7;
+      --silver: #111111;
+      --silver2: #424242;
+      --silver3: #828282;
 
-  :root{
-    --ink:#fdfdfd; --ink2:#ffffff; --ink3:#f2f4f3; --line:#e6e8e7;
-    --silver:#111111; --silver2:#424242; --silver3:#828282;
+      --accent: #1c7545;
+      --accent2: #146138;
+      --good: #1c7545;
 
-    --accent:#1c7545; --accent2:#146138; --good:#1c7545;
+      --warn: #9c7f54;
+      --danger: #b83b2b;
+      --sideb: #aac6e9;
 
-    --warn:#9c7f54;
-    --danger:#b83b2b;
-    --sideb:#aac6e9;
+      --pick: #936a12;
 
-    --pick:#936a12;
+      --sight: #1c1c1c;
+      --mate: #7c4ec1;
 
-    --sight:#1c1c1c;
-    --mate:#7c4ec1;
+      --pane: #ffffffee;
+      --pane-soft: #ffffffe8;
+      --veil: #fdfdfdee;
+      --veil-soft: #fdfdfde0;
+      --hud-a: #fdfdfdf8;
+      --hud-b: #fdfdfde0;
+      --hud-c: #fdfdfd00;
+      --on-accent: #ffffff;
 
-    --pane:#ffffffee;
-    --pane-soft:#ffffffe8;
-    --veil:#fdfdfdee;
-    --veil-soft:#fdfdfde0;
-    --hud-a:#fdfdfdf8;  --hud-b:#fdfdfde0;  --hud-c:#fdfdfd00;
-    --on-accent:#ffffff;
+      --chip-on: #e2f4eb;
+      --chip-warm: #f5efe6;
+      --ok-line: #84caa5;
+      --ok-fill: #e2f4eb;
+      --no-line: #dcb2ad;
+      --no-fill: #f8eeec;
+      --mate-line: #c5b4df;
 
-    --chip-on:#e2f4eb;
-    --chip-warm:#f5efe6;
-    --ok-line:#84caa5;  --ok-fill:#e2f4eb;
-    --no-line:#dcb2ad;  --no-fill:#f8eeec;
-    --mate-line:#c5b4df;
+      --sidea: #eab8b1;
+      --sidea-line: #dcb2ad;
+      --sideb-line: #a7bed9;
+      --shadow: #0000001a;
+      --dot-line: #00000033;
+    }
 
-    --sidea:#eab8b1;  --sidea-line:#dcb2ad;
-    --sideb-line:#a7bed9;
-    --shadow:#0000001a;
-    --dot-line:#00000033;
-  }
+    * {
+      box-sizing: border-box
+    }
 
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{margin:0;background:var(--ink);color:var(--silver2);overflow:hidden;
-       font:400 13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-  canvas{display:block;touch-action:none}
+    html,
+    body {
+      height: 100%
+    }
 
-  #hud{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;flex-direction:column;gap:6px;
-       padding:8px 14px 12px;pointer-events:none;
-       background:linear-gradient(var(--hud-a) 0%,var(--hud-b) 62%,var(--hud-c) 100%)}
+    body {
+      margin: 0;
+      background: var(--ink);
+      color: var(--silver2);
+      overflow: hidden;
+      overscroll-behavior: none;
+      -webkit-tap-highlight-color: transparent;
+      font: 400 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif
+    }
 
-  body:not(.panel-off) #hud{padding-right:312px}
-  #hud .hrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-  #hud b{color:var(--accent);font-weight:700}
-  #hud .side{padding:2px 9px;border:1px solid var(--line);border-radius:99px;font-size:12px}
-  #hud .side.a{color:var(--sidea);border-color:var(--sidea-line)}
-  #hud .side.b{color:var(--sideb);border-color:var(--sideb-line)}
-  #hud .ref{color:var(--silver3);font-size:11px;font-family:ui-monospace,Menlo,Consolas,monospace}
-  #hud .skip{color:var(--warn);font-size:11px;border:1px dashed var(--warn);
-             border-radius:99px;padding:1px 8px}
-  #hud button{pointer-events:auto}
+    #hud,
+    #bits,
+    #labels,
+    #mhud {
+      user-select: none;
+      -webkit-user-select: none
+    }
 
-  button{font:inherit;background:var(--ink3);color:var(--silver2);border:1px solid var(--line);
-         border-radius:6px;padding:5px 11px;cursor:pointer}
-  button:hover:not(:disabled){border-color:var(--accent2);color:var(--silver)}
-  button:disabled{opacity:.4;cursor:not-allowed}
-  button.acc{background:var(--accent2);border-color:var(--accent2);color:var(--on-accent);font-weight:700}
-  button.acc:hover:not(:disabled){background:var(--accent);color:var(--on-accent)}
-  button.acc:disabled{background:var(--ink3);color:var(--silver3);border-color:var(--line);font-weight:400}
-  button[aria-pressed="true"]{border-color:var(--accent2);color:var(--accent);background:var(--chip-warm)}
+    canvas {
+      display: block;
+      touch-action: none
+    }
 
-  #panel{position:fixed;top:0;right:0;bottom:0;width:300px;z-index:4;overflow-y:auto;
-         background:var(--pane);border-left:1px solid var(--line);
-         padding:calc(var(--hud-h, 44px) + 10px) 12px 16px;
-         transition:transform .18s ease}
+    #hud {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 8px 14px 12px;
+      pointer-events: none;
+      background: linear-gradient(var(--hud-a) 0%, var(--hud-b) 62%, var(--hud-c) 100%)
+    }
 
-  body.panel-off #panel{transform:translateX(100%)}
-  #panel h2{font-size:11px;margin:16px 0 7px;color:var(--silver3);text-transform:uppercase;letter-spacing:.09em}
-  #panel h2:first-of-type{margin-top:0}
-  .row{display:flex;align-items:center;gap:6px;margin:4px 0}
-  .row label{flex:1;font-size:12px}
-  input[type=number],select{background:var(--ink);color:var(--silver);
-    border:1px solid var(--line);border-radius:5px;padding:3px 6px;font:inherit;width:74px}
-  input:focus,select:focus{outline:1px solid var(--accent2)}
-  select{width:100%}
-  .card{border:1px solid var(--line);border-radius:7px;padding:8px;margin:6px 0;background:var(--ink2)}
-  .card.on{border-color:var(--accent2)}
-  .card.done{opacity:.55}
-  .card .nm{color:var(--silver);font-weight:600;display:flex;align-items:center;gap:6px}
-  .dot{width:9px;height:9px;border-radius:99px;flex:0 0 auto;
-       box-shadow:inset 0 0 0 1px var(--dot-line)}
-  .sub{border:1px solid var(--line);border-radius:6px;padding:5px 7px;margin:4px 0;cursor:pointer;
-       background:var(--ink3);font-size:12px}
+    body:not(.panel-off) #hud {
+      padding-right: 312px
+    }
 
-  .sub.on{border-color:var(--pick);color:var(--pick);background:var(--chip-on);
-          box-shadow:inset 3px 0 0 var(--pick);font-weight:600}
-  .sub.on::before{content:'▸ ';color:var(--pick)}
-  .muted{color:var(--silver3);font-size:11.5px}
-  .warn{color:var(--warn);font-size:11.5px}
-  .ok{color:var(--good);font-size:11.5px}
-  .bad{color:var(--danger);font-size:11.5px}
-  .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
-  .hint{color:var(--silver3);font-size:11.5px;margin:6px 0 0;line-height:1.5}
-  .hint b{color:var(--silver2);font-weight:600}
-  .hint em{font-style:normal;color:var(--silver2)}
+    #hud .hrow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px
+    }
 
-  #tagbox{position:fixed;inset:0;z-index:21;display:none;place-items:center;padding:20px;
-          background:var(--veil-soft);backdrop-filter:blur(3px)}
-  #tagbox.on{display:grid}
-  #tagbox .box{width:min(620px,100%);max-height:86vh;overflow-y:auto;
-               border:1px solid var(--line);border-radius:12px;background:var(--ink2);padding:18px}
-  #tagbox .head{margin-bottom:10px}
-  #tagbox .head b{color:var(--accent);font-size:16px;margin-right:8px}
-  #tagbox .tag{border-top:1px solid var(--line);padding:10px 0}
-  #tagbox .tag:first-of-type{border-top:0}
-  #tagbox .tag .nm{color:var(--silver);font-weight:700;display:flex;align-items:baseline;gap:6px}
-  #tagbox .tag .nm .ref{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--accent)}
+    #hud b {
+      color: var(--accent);
+      font-weight: 700
+    }
 
-  #tagbox .tag .nm .en{font-size:11.5px;font-weight:400;color:var(--silver3);letter-spacing:.01em}
-  #tagbox .tag p{margin:4px 0 0;font-size:12.5px;line-height:1.6;color:var(--silver2)}
-  #tagbox .tag p .k{color:var(--silver3);margin-right:6px}
-  #tagbox .bar{display:flex;justify-content:flex-end;margin-top:14px;position:sticky;bottom:0}
-  #gate{position:fixed;inset:0;z-index:20;display:none;place-items:center;
-        background:var(--veil);backdrop-filter:blur(3px)}
-  #gate.on{display:grid}
-  #gate .box{width:min(460px,88vw);border:1px solid var(--line);border-radius:12px;
-             background:var(--ink2);padding:26px 26px 20px;text-align:center}
-  #gate .who{font-size:12px;letter-spacing:.1em}
-  #gate .who.a{color:var(--accent)}
-  #gate .who.b{color:var(--sideb)}
-  #gate .ph{font-size:30px;color:var(--accent);margin:8px 0 2px;font-weight:700;letter-spacing:-.01em}
-  #gate .ref{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--silver3);font-size:12px}
-  #gate .say{color:var(--silver2);font-size:12.5px;margin:14px 0 18px;line-height:1.6;text-align:left}
-  #gate .say em{font-style:normal;color:var(--accent)}
-  #gate .bar{display:flex;gap:8px;justify-content:center}
+    #hud .side {
+      padding: 2px 9px;
+      border: 1px solid var(--line);
+      border-radius: 99px;
+      font-size: 12px
+    }
 
-  #bits{display:none;flex-wrap:wrap;gap:4px;align-items:center;pointer-events:auto}
-  #bits.on{display:flex}
-  #bits .bit{font-size:11px;padding:2px 8px;border-radius:99px;line-height:1.5;
-             background:transparent;color:var(--silver3);border:1px solid var(--line)}
-  #bits .bit[aria-pressed="true"]{color:var(--accent);border-color:var(--accent2);background:var(--chip-on)}
-  #bits .bit .ref{opacity:.6;margin-left:3px;font-family:ui-monospace,Menlo,Consolas,monospace}
-  #bits .all{font-size:11px;padding:2px 8px;border-radius:99px;line-height:1.5;margin-left:4px}
+    #hud .side.a {
+      color: var(--sidea);
+      border-color: var(--sidea-line)
+    }
 
-  @media (max-width: 640px){
-    #panel{width:min(300px,88vw)}
-    body:not(.panel-off) #hud{padding-right:14px}
-  }
-  #mhud{position:fixed;z-index:4;display:none;flex-direction:column;align-items:center;gap:4px;
-        transform:translate(-50%,0)}
-  #mhud.on{display:flex}
-  #mhud .mrow{display:flex;gap:4px}
-  #mhud button{font-size:12px;padding:4px 10px;box-shadow:0 2px 10px var(--shadow)}
-  #mhud .mwhy{max-width:250px;text-align:center;font-size:11px;line-height:1.4;
-              padding:3px 8px;border-radius:6px;border:1px solid var(--danger);
-              background:var(--pane-soft);color:var(--danger)}
-  #mhud .mok{font-size:11px;padding:2px 8px;border-radius:6px;background:var(--pane-soft);color:var(--good)}
+    #hud .side.b {
+      color: var(--sideb);
+      border-color: var(--sideb-line)
+    }
 
-  #mhud button.ok{border-color:var(--ok-line);color:var(--good)}
-  #mhud button.ok:hover:not(:disabled){border-color:var(--good);background:var(--ok-fill);color:var(--good)}
-  #mhud button.no{border-color:var(--no-line);color:var(--danger)}
-  #mhud button.no:hover:not(:disabled){border-color:var(--danger);background:var(--no-fill);color:var(--danger)}
-  #labels{position:fixed;inset:0;z-index:3;pointer-events:none}
-  .lab{position:absolute;transform:translate(-50%,-100%);white-space:nowrap;
-       font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.4;
-       padding:3px 7px;border-radius:5px;border:1px solid var(--line);background:var(--pane)}
-  .lab.see{color:var(--sight);border-color:var(--sight)}
-  .lab.blind{color:var(--silver2);border-style:dashed}
-  .lab.mate{color:var(--mate);border-color:var(--mate-line)}
-  .lab.mate.off{color:var(--danger);border-color:var(--danger)}
-  .lab.cover{color:var(--warn);border-color:var(--warn)}
-  .lab .d{font-size:14px;font-weight:700}
+    #hud .ref {
+      color: var(--silver3);
+      font-size: 11px;
+      font-family: ui-monospace, Menlo, Consolas, monospace
+    }
 
-  .lab .w{display:block;font-size:11.5px;opacity:1}
-  .lab .w i{font-style:normal;font-size:11px;opacity:.72;margin-left:5px}
-  .lab .w em{display:block;font-style:normal;font-size:11px;opacity:.88;margin-left:1px}
-</style>
+    #hud .skip {
+      color: var(--warn);
+      font-size: 11px;
+      border: 1px dashed var(--warn);
+      border-radius: 99px;
+      padding: 1px 8px
+    }
+
+    #hud button {
+      pointer-events: auto
+    }
+
+    button {
+      font: inherit;
+      background: var(--ink3);
+      color: var(--silver2);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 5px 11px;
+      cursor: pointer
+    }
+
+    button:hover:not(:disabled) {
+      border-color: var(--accent2);
+      color: var(--silver)
+    }
+
+    button:disabled {
+      opacity: .4;
+      cursor: not-allowed
+    }
+
+    button.acc {
+      background: var(--accent2);
+      border-color: var(--accent2);
+      color: var(--on-accent);
+      font-weight: 700
+    }
+
+    button.acc:hover:not(:disabled) {
+      background: var(--accent);
+      color: var(--on-accent)
+    }
+
+    button.acc:disabled {
+      background: var(--ink3);
+      color: var(--silver3);
+      border-color: var(--line);
+      font-weight: 400
+    }
+
+    button[aria-pressed="true"] {
+      border-color: var(--accent2);
+      color: var(--accent);
+      background: var(--chip-warm)
+    }
+
+    #panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 300px;
+      z-index: 4;
+      overflow-y: auto;
+      background: var(--pane);
+      border-left: 1px solid var(--line);
+      padding: calc(var(--hud-h, 44px) + 10px) 12px 16px;
+      overscroll-behavior: contain;
+      transition: transform .18s ease
+    }
+
+    body.panel-off #panel {
+      transform: translateX(100%)
+    }
+
+    #panel h2 {
+      font-size: 11px;
+      margin: 16px 0 7px;
+      color: var(--silver3);
+      text-transform: uppercase;
+      letter-spacing: .09em
+    }
+
+    #panel h2:first-of-type {
+      margin-top: 0
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 4px 0
+    }
+
+    .row label {
+      flex: 1;
+      font-size: 12px
+    }
+
+    input[type=number],
+    select {
+      background: var(--ink);
+      color: var(--silver);
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      padding: 3px 6px;
+      font: inherit;
+      width: 74px
+    }
+
+    input:focus,
+    select:focus {
+      outline: 1px solid var(--accent2)
+    }
+
+    select {
+      width: 100%
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 8px;
+      margin: 6px 0;
+      background: var(--ink2)
+    }
+
+    .card.on {
+      border-color: var(--accent2)
+    }
+
+    .card.done {
+      opacity: .55
+    }
+
+    .card .nm {
+      color: var(--silver);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 99px;
+      flex: 0 0 auto;
+      box-shadow: inset 0 0 0 1px var(--dot-line)
+    }
+
+    .sub {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 5px 7px;
+      margin: 4px 0;
+      cursor: pointer;
+      background: var(--ink3);
+      font-size: 12px
+    }
+
+    .sub.on {
+      border-color: var(--pick);
+      color: var(--pick);
+      background: var(--chip-on);
+      box-shadow: inset 3px 0 0 var(--pick);
+      font-weight: 600
+    }
+
+    .sub.on::before {
+      content: '▸ ';
+      color: var(--pick)
+    }
+
+    .muted {
+      color: var(--silver3);
+      font-size: 11.5px
+    }
+
+    .warn {
+      color: var(--warn);
+      font-size: 11.5px
+    }
+
+    .ok {
+      color: var(--good);
+      font-size: 11.5px
+    }
+
+    .bad {
+      color: var(--danger);
+      font-size: 11.5px
+    }
+
+    .mono {
+      font-family: ui-monospace, Menlo, Consolas, monospace
+    }
+
+    .hint {
+      color: var(--silver3);
+      font-size: 11.5px;
+      margin: 6px 0 0;
+      line-height: 1.5
+    }
+
+    .hint b {
+      color: var(--silver2);
+      font-weight: 600
+    }
+
+    .hint em {
+      font-style: normal;
+      color: var(--silver2)
+    }
+
+    #tagbox {
+      position: fixed;
+      inset: 0;
+      z-index: 21;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: var(--veil-soft);
+      backdrop-filter: blur(3px)
+    }
+
+    #tagbox.on {
+      display: grid
+    }
+
+    #tagbox .box {
+      width: min(620px, 100%);
+      max-height: 86vh;
+      overflow-y: auto;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--ink2);
+      padding: 18px
+    }
+
+    #tagbox .head {
+      margin-bottom: 10px
+    }
+
+    #tagbox .head b {
+      color: var(--accent);
+      font-size: 16px;
+      margin-right: 8px
+    }
+
+    #tagbox .tag {
+      border-top: 1px solid var(--line);
+      padding: 10px 0
+    }
+
+    #tagbox .tag:first-of-type {
+      border-top: 0
+    }
+
+    #tagbox .tag .nm {
+      color: var(--silver);
+      font-weight: 700;
+      display: flex;
+      align-items: baseline;
+      gap: 6px
+    }
+
+    #tagbox .tag .nm .ref {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 11px;
+      color: var(--accent)
+    }
+
+    #tagbox .tag .nm .en {
+      font-size: 11.5px;
+      font-weight: 400;
+      color: var(--silver3);
+      letter-spacing: .01em
+    }
+
+    #tagbox .tag p {
+      margin: 4px 0 0;
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: var(--silver2)
+    }
+
+    #tagbox .tag p .k {
+      color: var(--silver3);
+      margin-right: 6px
+    }
+
+    #tagbox .bar {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 14px;
+      position: sticky;
+      bottom: 0
+    }
+
+    #gate {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      place-items: center;
+      background: var(--veil);
+      backdrop-filter: blur(3px)
+    }
+
+    #gate.on {
+      display: grid
+    }
+
+    #gate .box {
+      width: min(460px, 88vw);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--ink2);
+      padding: 26px 26px 20px;
+      text-align: center
+    }
+
+    #gate .who {
+      font-size: 12px;
+      letter-spacing: .1em
+    }
+
+    #gate .who.a {
+      color: var(--accent)
+    }
+
+    #gate .who.b {
+      color: var(--sideb)
+    }
+
+    #gate .ph {
+      font-size: 30px;
+      color: var(--accent);
+      margin: 8px 0 2px;
+      font-weight: 700;
+      letter-spacing: -.01em
+    }
+
+    #gate .ref {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      color: var(--silver3);
+      font-size: 12px
+    }
+
+    #gate .say {
+      color: var(--silver2);
+      font-size: 12.5px;
+      margin: 14px 0 18px;
+      line-height: 1.6;
+      text-align: left
+    }
+
+    #gate .say em {
+      font-style: normal;
+      color: var(--accent)
+    }
+
+    #gate .bar {
+      display: flex;
+      gap: 8px;
+      justify-content: center
+    }
+
+    #bits {
+      display: none;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+      pointer-events: auto
+    }
+
+    #bits.on {
+      display: flex
+    }
+
+    #bits .bit {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 99px;
+      line-height: 1.5;
+      background: transparent;
+      color: var(--silver3);
+      border: 1px solid var(--line)
+    }
+
+    #bits .bit[aria-pressed="true"] {
+      color: var(--accent);
+      border-color: var(--accent2);
+      background: var(--chip-on)
+    }
+
+    #bits .bit .ref {
+      opacity: .6;
+      margin-left: 3px;
+      font-family: ui-monospace, Menlo, Consolas, monospace
+    }
+
+    #bits .all {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 99px;
+      line-height: 1.5;
+      margin-left: 4px
+    }
+
+    .wide {
+      display: inline
+    }
+
+    @media (max-width: 640px) {
+      #panel {
+        width: min(300px, 88vw)
+      }
+
+      body:not(.panel-off) #hud {
+        padding-right: 14px
+      }
+
+      .wide {
+        display: none
+      }
+
+      #hud {
+        padding: 6px 10px 10px;
+        gap: 5px
+      }
+
+      #hud .hrow {
+        gap: 5px
+      }
+
+      button {
+        font-size: 12px;
+        padding: 4px 8px
+      }
+
+      #hud .side {
+        font-size: 11px;
+        padding: 2px 7px
+      }
+
+      #bits .bit,
+      #bits .all {
+        font-size: 10.5px;
+        padding: 2px 6px
+      }
+
+      #bits .bit .ref {
+        display: none
+      }
+
+      #mhud button {
+        font-size: 12px;
+        padding: 6px 11px
+      }
+
+      .lab {
+        font-size: 11.5px;
+        padding: 2px 6px
+      }
+
+      .lab .d {
+        font-size: 13px
+      }
+
+      .lab .w {
+        font-size: 11px
+      }
+
+      .lab .w i,
+      .lab .w em {
+        font-size: 10.5px
+      }
+    }
+
+    #mhud {
+      position: fixed;
+      z-index: 4;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transform: translate(-50%, 0)
+    }
+
+    #mhud.on {
+      display: flex
+    }
+
+    #mhud .mrow {
+      display: flex;
+      gap: 4px
+    }
+
+    #mhud button {
+      font-size: 12px;
+      padding: 4px 10px;
+      box-shadow: 0 2px 10px var(--shadow)
+    }
+
+    #mhud .mwhy {
+      max-width: 250px;
+      text-align: center;
+      font-size: 11px;
+      line-height: 1.4;
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--danger);
+      background: var(--pane-soft);
+      color: var(--danger)
+    }
+
+    #mhud .mok {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: var(--pane-soft);
+      color: var(--good)
+    }
+
+    #mhud button.ok {
+      border-color: var(--ok-line);
+      color: var(--good)
+    }
+
+    #mhud button.ok:hover:not(:disabled) {
+      border-color: var(--good);
+      background: var(--ok-fill);
+      color: var(--good)
+    }
+
+    #mhud button.no {
+      border-color: var(--no-line);
+      color: var(--danger)
+    }
+
+    #mhud button.no:hover:not(:disabled) {
+      border-color: var(--danger);
+      background: var(--no-fill);
+      color: var(--danger)
+    }
+
+    #labels {
+      position: fixed;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none
+    }
+
+    .lab {
+      position: absolute;
+      transform: translate(-50%, -100%);
+      white-space: nowrap;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.4;
+      padding: 3px 7px;
+      border-radius: 5px;
+      border: 1px solid var(--line);
+      background: var(--pane)
+    }
+
+    .lab.see {
+      color: var(--sight);
+      border-color: var(--sight)
+    }
+
+    .lab.blind {
+      color: var(--silver2);
+      border-style: dashed
+    }
+
+    .lab.mate {
+      color: var(--mate);
+      border-color: var(--mate-line)
+    }
+
+    .lab.mate.off {
+      color: var(--danger);
+      border-color: var(--danger)
+    }
+
+    .lab.cover {
+      color: var(--warn);
+      border-color: var(--warn)
+    }
+
+    .lab .d {
+      font-size: 14px;
+      font-weight: 700
+    }
+
+    .lab .w {
+      display: block;
+      font-size: 11.5px;
+      opacity: 1
+    }
+
+    .lab .w i {
+      font-style: normal;
+      font-size: 11px;
+      opacity: .72;
+      margin-left: 5px
+    }
+
+    .lab .w em {
+      display: block;
+      font-style: normal;
+      font-size: 11px;
+      opacity: .88;
+      margin-left: 1px
+    }
+  </style>
 </head>
+
 <body>
 
-<div id="hud">
-  <div class="hrow">
-    <span class="side" id="hudSide">—</span>
-    <span>라운드 <b id="hudRound">1</b></span>
-    <span><b id="hudPart">—</b> <span class="ref" id="hudRef"></span></span>
+  <div id="hud">
+    <div class="hrow">
+      <span class="side" id="hudSide">—</span>
+      <span>라운드 <b id="hudRound">1</b></span>
+      <span><b id="hudPart">—</b> <span class="ref" id="hudRef"></span></span>
 
-    <span class="skip" id="hudSkip">나머지 페이즈 건너뜀</span>
+      <span class="skip" id="hudSkip"><span class="wide">나머지 페이즈 </span>건너뜀</span>
 
-    <button id="btnNext" class="acc">다음 →</button>
-  </div>
-  <div class="hrow">
-    <button id="btnView" title="전장시점은 판 가운데를 본다 · 자유시점은 오른쪽 끌기로 옮겨 다닌다">전장시점</button>
-    <button id="btnCam">시점</button>
-    <button id="btnBits">보기 설정</button>
-    <button id="btnTags" title="태그마다 무슨 조건이고 무슨 효과인가">태그 설명</button>
-    <button id="btnPanel" title="오른쪽 판 여닫기">판 ▸</button>
-  </div>
-
-  <div id="bits"></div>
-</div>
-
-<div id="labels"></div>
-
-<div id="mhud"></div>
-
-<div id="panel">
-  <h2>선택된 유닛</h2>
-  <div id="selBox"></div>
-
-  <h2>선택된 지형</h2>
-  <div id="trnSel"></div>
-
-  <h2>이 모델이 보는 것</h2>
-  <div id="sightBox"></div>
-  <p class="hint">
-    고른 모델에서 남의 유닛 하나하나를 본다. <b>보인다/안 보인다</b>와 그 <b>까닭</b>,
-    그리고 사격이라면 <b>엄폐 효과</b>(13.08)가 걸리는지까지 적는다.
-    ⚠ 구역 안인지는 <b>베이스 중심</b>으로, 완전히 보이는지는 <b>베이스 테두리 표본</b>으로
-    어림한다 — 경계에 걸친 모델에서 실제 판과 갈릴 수 있다.
-  </p>
-
-  <h2>턴 진행</h2>
-  <div class="row">
-    <label>지나는 페이즈</label>
-    <button id="btnFlow" aria-pressed="true">이동만</button>
-  </div>
-  <p class="hint">
-    ⚠ <b>「이동만」은 규칙이 아니라 개발용 모드다.</b> 규칙은 한 턴에 다섯 페이즈를 차례로 다
-    지난다(07.02) — 지휘 · 이동 · 사격 · 돌격 · 백병전. 이동만 주고받으려고 나머지를
-    건너뛰는 것이라, 위 띠가 <em>건너뛰는 중</em>이라고 늘 말한다.
-    <b>전체 턴</b>으로 두면 일곱 부분을 그대로 지난다.
-  </p>
-
-  <h2>시야를 막는 것</h2>
-  <div class="row">
-    <label>막는 높이 <span class="muted">13.11</span></label>
-    <input type="number" id="cutH" step="0.5" min="0" value="3"><span class="muted">인치</span>
-  </div>
-  <div class="row">
-    <label>시야 부채꼴</label>
-    <button id="btnFan" aria-pressed="true">켬</button>
-  </div>
-  <p class="hint">
-    밀집 지형은 <b>막힘</b> 규칙을 갖는다 — 지면에서 이 높이 이하의 틈으로는 시선을 그을 수 없다
-    (13.11). 규칙이 <em>3인치는 많은 지형의 1층 높이이고 임무에 따라 조정될 수 있다</em>고
-    적으므로, 3을 기본으로 주고 바꿀 수 있게 둔다.
-  </p>
-  <p class="hint">
-    ⚠ <b>이 판이 긋는 시선은 중심에서 중심으로 하나뿐이다.</b> 규칙은 모델의
-    <em>어느 부분에서든 어느 부분으로든</em> 그을 수 있으면 보인다고 하므로(06.01),
-    여기서 「안 보인다」고 한 것이 <b>실제로는 보일 수 있다</b> — 덜 보이는 쪽으로 틀린다.
-    그래서 라벨에 <b>중심선</b>이라고 적어 둔다. 판정이 아니라 <b>짚어 보는 자</b>다.
-  </p>
-  <p class="hint">
-    빈 자리를 끌면 <b>시점이 돌고</b>, 휠을 굴리면 <b>당겨진다</b>. 한 각도에서는 지형 뒤가
-    그냥 안 보이므로 돌려 보는 것이 이 페이지를 쓰는 법이다.
-  </p>
-
-  <h2>유닛</h2>
-  <div id="unitList"></div>
-
-  <h2>지형</h2>
-  <div id="trnList"></div>
-  <p class="hint">
-    <b>노출</b>·<b>경량</b>·<b>밀집</b>은 규칙이 가르는 지형 유형이다(13.02). 어느 조각이
-    무엇인지는 <b>판을 꾸미는 사람이 정한다</b> — 원지가 조각마다 말해 주지 않는다.
-    시선을 막는 것은 <b>밀집</b>뿐이고, 경량은 막지 않고 <b>차폐</b>로만 걸린다(13.10).
-  </p>
-</div>
-
-<div id="tagbox">
-  <div class="box">
-    <div class="head">
-      <b>태그 설명</b>
-      <span class="muted">보기 설정의 태그가 각각 무슨 조건이고 무슨 효과인가</span>
+      <button id="btnNext" class="acc">다음 →</button>
     </div>
-    <div id="tagList"></div>
-    <div class="bar"><button class="acc" id="tagClose">닫기</button></div>
+    <div class="hrow">
+      <button id="btnView" title="전장시점은 판 가운데를 본다 · 자유시점은 오른쪽 끌기로 옮겨 다닌다">전장시점</button>
+      <button id="btnCam">시점</button>
+      <button id="btnBits">보기 설정</button>
+      <button id="btnTags" title="태그마다 무슨 조건이고 무슨 효과인가">태그 설명</button>
+      <button id="btnPanel" title="오른쪽 판 여닫기">판 ▸</button>
+    </div>
+
+    <div id="bits"></div>
   </div>
-</div>
 
-<div id="gate">
-  <div class="box">
-    <div class="who" id="gWho">—</div>
-    <div class="ph" id="gPh">—</div>
-    <div class="ref" id="gRef"></div>
-    <div class="say" id="gSay"></div>
-    <div class="bar"><button class="acc" id="gNext">다음 →</button></div>
+  <div id="labels"></div>
+
+  <div id="mhud"></div>
+
+  <div id="panel">
+    <h2>선택된 유닛</h2>
+    <div id="selBox"></div>
+
+    <h2>선택된 지형</h2>
+    <div id="trnSel"></div>
+
+    <h2>이 모델이 보는 것</h2>
+    <div id="sightBox"></div>
+    <p class="hint">
+      고른 모델에서 남의 유닛 하나하나를 본다. <b>보인다/안 보인다</b>와 그 <b>까닭</b>,
+      그리고 사격이라면 <b>엄폐 효과</b>(13.08)가 걸리는지까지 적는다.
+      ⚠ 구역 안인지는 <b>베이스 중심</b>으로, 완전히 보이는지는 <b>베이스 테두리 표본</b>으로
+      어림한다 — 경계에 걸친 모델에서 실제 판과 갈릴 수 있다.
+    </p>
+
+    <h2>턴 진행</h2>
+    <div class="row">
+      <label>지나는 페이즈</label>
+      <button id="btnFlow" aria-pressed="true">이동만</button>
+    </div>
+    <p class="hint">
+      ⚠ <b>「이동만」은 규칙이 아니라 개발용 모드다.</b> 규칙은 한 턴에 다섯 페이즈를 차례로 다
+      지난다(07.02) — 지휘 · 이동 · 사격 · 돌격 · 백병전. 이동만 주고받으려고 나머지를
+      건너뛰는 것이라, 위 띠가 <em>건너뛰는 중</em>이라고 늘 말한다.
+      <b>전체 턴</b>으로 두면 일곱 부분을 그대로 지난다.
+    </p>
+
+    <h2>시야를 막는 것</h2>
+    <div class="row">
+      <label>막는 높이 <span class="muted">13.11</span></label>
+      <input type="number" id="cutH" step="0.5" min="0" value="3"><span class="muted">인치</span>
+    </div>
+    <div class="row">
+      <label>시야 부채꼴</label>
+      <button id="btnFan" aria-pressed="true">켬</button>
+    </div>
+    <p class="hint">
+      밀집 지형은 <b>막힘</b> 규칙을 갖는다 — 지면에서 이 높이 이하의 틈으로는 시선을 그을 수 없다
+      (13.11). 규칙이 <em>3인치는 많은 지형의 1층 높이이고 임무에 따라 조정될 수 있다</em>고
+      적으므로, 3을 기본으로 주고 바꿀 수 있게 둔다.
+    </p>
+    <p class="hint">
+      ⚠ <b>이 판이 긋는 시선은 중심에서 중심으로 하나뿐이다.</b> 규칙은 모델의
+      <em>어느 부분에서든 어느 부분으로든</em> 그을 수 있으면 보인다고 하므로(06.01),
+      여기서 「안 보인다」고 한 것이 <b>실제로는 보일 수 있다</b> — 덜 보이는 쪽으로 틀린다.
+      그래서 라벨에 <b>중심선</b>이라고 적어 둔다. 판정이 아니라 <b>짚어 보는 자</b>다.
+    </p>
+    <p class="hint">
+      빈 자리를 끌면 <b>시점이 돌고</b>, 휠을 굴리면 <b>당겨진다</b>. 한 각도에서는 지형 뒤가
+      그냥 안 보이므로 돌려 보는 것이 이 페이지를 쓰는 법이다.
+    </p>
+
+    <h2>유닛</h2>
+    <div id="unitList"></div>
+
+    <h2>지형</h2>
+    <div id="trnList"></div>
+    <p class="hint">
+      <b>노출</b>·<b>경량</b>·<b>밀집</b>은 규칙이 가르는 지형 유형이다(13.02). 어느 조각이
+      무엇인지는 <b>판을 꾸미는 사람이 정한다</b> — 원지가 조각마다 말해 주지 않는다.
+      시선을 막는 것은 <b>밀집</b>뿐이고, 경량은 막지 않고 <b>차폐</b>로만 걸린다(13.10).
+    </p>
   </div>
-</div>
 
-<script type="module">
-import * as THREE from 'three';
+  <div id="tagbox">
+    <div class="box">
+      <div class="head">
+        <b>태그 설명</b>
+        <span class="muted">보기 설정의 태그가 각각 무슨 조건이고 무슨 효과인가</span>
+      </div>
+      <div id="tagList"></div>
+      <div class="bar"><button class="acc" id="tagClose">닫기</button></div>
+    </div>
+  </div>
 
-const THEME = {
-  sky: 0xfdfdfd,
-  floor: 0xe8e8e8,
-  grid1: 0xb4b4b4, grid2: 0xd6d6d6,
-  edge: 0x424242,
-  sun: 0xffffff, ambient: 0xffffff, ambientLow: 0xdadada,
+  <div id="gate">
+    <div class="box">
+      <div class="who" id="gWho">—</div>
+      <div class="ph" id="gPh">—</div>
+      <div class="ref" id="gRef"></div>
+      <div class="say" id="gSay"></div>
+      <div class="bar"><button class="acc" id="gNext">다음 →</button></div>
+    </div>
+  </div>
 
-  base: 0xfafbfc,
-  rim: 0x555b61,
-  mark: 0xffffff,
-  cubeEdge: 0x111111,
+  <script type="module">
+    import * as THREE from 'three';
 
-  sideA: 0xeab8b1,
-  sideB: 0xaac6e9,
-  danger: 0xb83b2b,
-  sel: 0x936a12,
-  mate: 0x7c4ec1,
-  from: 0x828282,
+    const THEME = {
+      sky: 0xfdfdfd,
+      floor: 0xe8e8e8,
+      grid1: 0xb4b4b4, grid2: 0xd6d6d6,
+      edge: 0x424242,
+      sun: 0xffffff, ambient: 0xffffff, ambientLow: 0xdadada,
 
-  sight: 0xffffff,
-  sightEdge: 0x1c1c1c,
-  sightFill: 0.62,
-  sightBand: 0.32,
-  bandIn: 1.4,
+      base: 0xfafbfc,
+      rim: 0x555b61,
+      mark: 0xffffff,
+      cubeEdge: 0x111111,
 
-  catExposed: 0xc9cdd1, catLight: 0x848b92, catDense: 0x5f656b,
+      sideA: 0xeab8b1,
+      sideB: 0xaac6e9,
+      danger: 0xb83b2b,
+      sel: 0x936a12,
+      mate: 0x7c4ec1,
+      from: 0x828282,
 
-  catAlphaExposed: 0.4, catAlphaLight: 0.85,
-  edgeSolid: 0x2b3138,
-  edgeSoft: 0x6f767d,
-};
+      sight: 0xffffff,
+      sightEdge: 0x1c1c1c,
+      sightFill: 0.62,
+      sightBand: 0.32,
+      bandIn: 1.4,
 
-const RULES = {
+      catExposed: 0xc9cdd1, catLight: 0x848b92, catDense: 0x5f656b,
 
-  board: { w: 44, d: 60, ref: '13.01' },
+      catAlphaExposed: 0.4, catAlphaLight: 0.85,
+      edgeSolid: 0x2b3138,
+      edgeSoft: 0x6f767d,
+    };
 
-  turnParts: [
-    { id: 'start',   ko: '턴 시작',      ref: '07.02', say: '턴이 시작될 때 걸리는 규칙을 먼저 처리한다.' },
-    { id: 'command', ko: '지휘 페이즈',  ref: '08',    say: '지휘 포인트를 얻고, 이 페이즈에 걸리는 규칙을 처리한다.' },
-    { id: 'move',    ko: '이동 페이즈',  ref: '09',    say: '<em>유닛을 하나씩</em> 골라 움직인다(09.02). 유닛을 고르고 [이동]·[회전]으로 손을 연 뒤, <em>[확정]</em>을 눌러야 굳는다.', act: true },
-    { id: 'shoot',   ko: '사격 페이즈',  ref: '10',    say: '이 판은 굴리지 않는다 — <em>자리</em>를 보는 페이지다.' },
-    { id: 'charge',  ko: '돌격 페이즈',  ref: '11',    say: '이 판은 굴리지 않는다.' },
-    { id: 'fight',   ko: '백병전 페이즈', ref: '12',   say: '이 판은 굴리지 않는다.' },
-    { id: 'end',     ko: '턴 종료',      ref: '07.02', say: '턴이 끝날 때 걸리는 규칙을 처리하고, 상대에게 턴을 넘긴다.' },
-  ],
+    const RULES = {
 
-  move: { ref: '03.01' },
+      board: { w: 44, d: 60, ref: '13.01' },
 
-  coherency: { nearIn: 2, farIn: 9, vertIn: 5, ref: '03.03' },
+      turnParts: [
+        { id: 'start', ko: '턴 시작', ref: '07.02', say: '턴이 시작될 때 걸리는 규칙을 먼저 처리한다.' },
+        { id: 'command', ko: '지휘 페이즈', ref: '08', say: '지휘 포인트를 얻고, 이 페이즈에 걸리는 규칙을 처리한다.' },
+        { id: 'move', ko: '이동 페이즈', ref: '09', say: '<em>유닛을 하나씩</em> 골라 움직인다(09.02). 유닛을 고르고 [이동]·[회전]으로 손을 연 뒤, <em>[확정]</em>을 눌러야 굳는다.', act: true },
+        { id: 'shoot', ko: '사격 페이즈', ref: '10', say: '이 판은 굴리지 않는다 — <em>자리</em>를 보는 페이지다.' },
+        { id: 'charge', ko: '돌격 페이즈', ref: '11', say: '이 판은 굴리지 않는다.' },
+        { id: 'fight', ko: '백병전 페이즈', ref: '12', say: '이 판은 굴리지 않는다.' },
+        { id: 'end', ko: '턴 종료', ref: '07.02', say: '턴이 끝날 때 걸리는 규칙을 처리하고, 상대에게 턴을 넘긴다.' },
+      ],
 
-  sight: { ref: '06.01', solid: '13.11', obscuring: '13.10', cover: '13.08' },
+      move: { ref: '03.01' },
 
-  coverKeywords: ['INFANTRY', 'BEASTS', 'SWARM'],
+      coherency: { nearIn: 2, farIn: 9, vertIn: 5, ref: '03.03' },
 
-  hidden: { ref: '13.09', detectionIn: 15 },
+      sight: { ref: '06.01', solid: '13.11', obscuring: '13.10', cover: '13.08' },
 
-  loneOperative: { ref: '24.24', defaultIn: 12 },
+      coverKeywords: ['INFANTRY', 'BEASTS', 'SWARM'],
 
-  ingress: { ref: '20.04', setUpIn: 6, fromEnemyIn: 8, deepStrikeRef: '24.09' },
+      hidden: { ref: '13.09', detectionIn: 15 },
 
-  labelBits: [
-    { id: 'dist', ko: '거리', en: 'Distance',
-      when: '언제나 — 규칙이 걸리는 자리가 아니라 그저 재는 값이다.',
-      what: '두 모델의 <b>바닥끼리</b> 가장 가까운 거리를 인치로 적는다. 중심끼리가 아니다 — '
-        + '큰 베이스에서 중심으로 재면 조용히 틀린다.' },
+      loneOperative: { ref: '24.24', defaultIn: 12 },
 
-    { id: 'ally', ko: '아군 정보', en: 'Friendly Info',
-      when: '같은 진영의 모델.',
-      what: '<b>규칙이 아니라 보기 설정이다.</b> 끄면 아군 위에는 거리조차 안 적는다 — '
-        + '판에서 남만 보고 싶을 때 쓴다.' },
-    { id: 'see', ko: '보임', en: 'Visibility', ref: '06.01',
-      when: '관측하는 모델의 어느 부분에서 관측되는 모델의 어느 부분으로 1mm 폭의 곧은 선을 '
-        + '그을 수 있다.',
-      what: '그 유닛을 <b>사격 대상</b>(target)으로 지정할 수 있다(04.02). '
-        + '⚠ 이 판은 <b>중심에서 중심으로 한 선만</b> 긋는다 — 실제로는 더 보인다.' },
-    { id: 'cover', ko: '엄폐', en: 'Benefit of Cover', ref: '13.08',
-      when: '사격이 노리는 유닛의 <b>모든</b> 모델이 둘 중 하나를 만족한다 — '
-        + 'ⓐ {{COVERKW}} 이면서 <b>지형 구역</b>(terrain area) 안이다, '
-        + 'ⓑ 사이에 낀 지형 탓에 공격하는 모델에게 완전히 보이지는 않는다.',
-      what: '그 공격의 <b>BS 가 1 나빠진다.</b> ⚠ 한 모델이라도 빠지면 안 걸린다 — '
-        + '기체는 ⓐ 를 못 쓴다.' },
-    { id: 'block', ko: '막힘', en: 'Solid', ref: '13.11',
-      when: '<b>밀집</b>(Dense) 지형은 막힘 규칙을 갖는다. 지면에서 정해진 높이(기본 3인치) '
-        + '이하의 막힌 틈으로는 시선을 그을 수 없다.',
-      what: '시선이 아예 안 그어진다 → <b>서로 안 보인다.</b> '
-        + '그 높이는 임무가 조정할 수 있어 화면에서 바꿀 수 있다.' },
-    { id: 'obsc', ko: '차폐', en: 'Obscuring', ref: '13.10',
-      when: '<b>경량</b>(Light)이나 <b>밀집</b>(Dense) 조각을 품은 지형 구역이 차폐 구역이다. '
-        + '두 모델 사이에 그을 수 있는 '
-        + '<b>모든</b> 선이 그런 구역을 가로지른다 — 둘 중 하나가 그 안에 있는 구역은 뺀다.',
-      what: '<b>서로 안 보인다.</b> ⚠ 막힘과 다르다 — 선은 지나가되 안 보이게 만든다.' },
-    { id: 'hidden', ko: '은폐', en: 'Hidden', ref: '13.09',
-      when: '{{COVERKW}} 이 <b>밀집(Dense) 조각을 품은 지형 구역 안</b>에 있고, 그 유닛이 '
-        + '이번 턴과 지난 턴에 사격하지 않았다.',
-      what: '<b>탐지 거리(기본 15인치) 안</b>의 적 모델에게만 보인다. '
-        + '⚠ 이 판은 굴리지 않아 「사격했는가」를 못 센다 — 사람이 켜는 스위치다.' },
-    { id: 'lone', ko: '단독 요원', en: 'Lone Operative', ref: '24.24',
-      when: '<b>합류 유닛</b>(attached unit)의 일부가 아니다.',
-      what: '<b>정해진 거리(기본 12인치) 안</b>의 적 모델에게만 보이고, '
-        + '[간접 사격]([INDIRECT FIRE]) 무기도 그 거리 안에서만 노릴 수 있다. '
-        + '⚠ 이 판에는 합류 유닛이 없어 「합류하면 안 걸린다」를 못 보인다.' },
-    { id: 'coh', ko: '결속', en: 'Coherency', ref: '03.03',
-      when: '모델이 둘 이상인 유닛. 놓을 때도, 어떤 이동을 마칠 때도.',
-      what: '모든 모델이 <b>다른 모델 하나와 수평 2인치</b>, 그리고 '
-        + '<b>다른 모든 모델과 수평 9인치</b> 안이어야 한다(수직은 둘 다 5인치). '
-        + '안 맞으면 그 이동을 할 수 없고 시작 자리로 되돌아간다(03.01).' },
-  ],
+      ingress: { ref: '20.04', setUpIn: 6, fromEnemyIn: 8, deepStrikeRef: '24.09' },
 
-  terrainCats: {
-    exposed: { ko: '노출', blocks: false, color: THEME.catExposed,
-      what: '시선을 막지도 가리지도 않는다. 모든 모델이 수평으로도 수직으로도 지나갈 수 있다(13.06).' },
-    light: { ko: '경량', blocks: false, color: THEME.catLight,
-      what: '시선을 <b>막지는 않지만</b> 그 구역이 <b>차폐 구역</b>이 된다(13.10) — '
-        + '모든 선이 그런 구역을 가로지르면 서로 안 보인다. 모든 모델이 지나갈 수 있다(13.06).' },
-    dense: { ko: '밀집', blocks: true, color: THEME.catDense,
-      what: '<b>막힘</b>(13.11)을 갖는다 — 지면에서 정해진 높이 이하의 막힌 틈으로는 시선을 '
-        + '못 긋는다. 그 구역은 <b>차폐 구역</b>이기도 하고(13.10), '
-        + '<b>은폐</b>(13.09)가 성립하는 <b>유일한</b> 유형이다.' },
-  },
-};
+      labelBits: [
+        {
+          id: 'dist', ko: '거리', en: 'Distance',
+          when: '언제나 — 규칙이 걸리는 자리가 아니라 그저 재는 값이다.',
+          what: '두 모델의 <b>바닥끼리</b> 가장 가까운 거리를 인치로 적는다. 중심끼리가 아니다 — '
+            + '큰 베이스에서 중심으로 재면 조용히 틀린다.'
+        },
 
-const SEED = {
-  terrain: [
-    { id: 't1', x: -11, z: -18, w: 6,  d: 4,    rot: 0,  cat: 'dense' },
-    { id: 't2', x:  11, z: -18, w: 6,  d: 4,    rot: 0,  cat: 'dense' },
-    { id: 't3', x:   0, z: -10, w: 10, d: 2.5,  rot: 0,  cat: 'light' },
-    { id: 't4', x: -13, z:   0, w: 7,  d: 11.5, rot: 0,  cat: 'dense' },
-    { id: 't5', x:  13, z:   0, w: 7,  d: 11.5, rot: 0,  cat: 'dense' },
-    { id: 't6', x:   0, z:   0, w: 6,  d: 2,    rot: 90, cat: 'exposed' },
-    { id: 't7', x:   0, z:  10, w: 10, d: 2.5,  rot: 0,  cat: 'light' },
-    { id: 't8', x: -11, z:  18, w: 6,  d: 4,    rot: 0,  cat: 'dense' },
-    { id: 't9', x:  11, z:  18, w: 6,  d: 4,    rot: 0,  cat: 'dense' },
-  ],
+        {
+          id: 'ally', ko: '아군 정보', en: 'Friendly Info',
+          when: '같은 진영의 모델.',
+          what: '<b>규칙이 아니라 보기 설정이다.</b> 끄면 아군 위에는 거리조차 안 적는다 — '
+            + '판에서 남만 보고 싶을 때 쓴다.'
+        },
+        {
+          id: 'see', ko: '보임', en: 'Visibility', ref: '06.01',
+          when: '관측하는 모델의 어느 부분에서 관측되는 모델의 어느 부분으로 1mm 폭의 곧은 선을 '
+            + '그을 수 있다.',
+          what: '그 유닛을 <b>사격 대상</b>(target)으로 지정할 수 있다(04.02). '
+            + '⚠ 이 판은 <b>중심에서 중심으로 한 선만</b> 긋는다 — 실제로는 더 보인다.'
+        },
+        {
+          id: 'cover', ko: '엄폐', en: 'Benefit of Cover', ref: '13.08',
+          when: '사격이 노리는 유닛의 <b>모든</b> 모델이 둘 중 하나를 만족한다 — '
+            + 'ⓐ {{COVERKW}} 이면서 <b>지형 구역</b>(terrain area) 안이다, '
+            + 'ⓑ 사이에 낀 지형 탓에 공격하는 모델에게 완전히 보이지는 않는다.',
+          what: '그 공격의 <b>BS 가 1 나빠진다.</b> ⚠ 한 모델이라도 빠지면 안 걸린다 — '
+            + '기체는 ⓐ 를 못 쓴다.'
+        },
+        {
+          id: 'block', ko: '막힘', en: 'Solid', ref: '13.11',
+          when: '<b>밀집</b>(Dense) 지형은 막힘 규칙을 갖는다. 지면에서 정해진 높이(기본 3인치) '
+            + '이하의 막힌 틈으로는 시선을 그을 수 없다.',
+          what: '시선이 아예 안 그어진다 → <b>서로 안 보인다.</b> '
+            + '그 높이는 임무가 조정할 수 있어 화면에서 바꿀 수 있다.'
+        },
+        {
+          id: 'obsc', ko: '차폐', en: 'Obscuring', ref: '13.10',
+          when: '<b>경량</b>(Light)이나 <b>밀집</b>(Dense) 조각을 품은 지형 구역이 차폐 구역이다. '
+            + '두 모델 사이에 그을 수 있는 '
+            + '<b>모든</b> 선이 그런 구역을 가로지른다 — 둘 중 하나가 그 안에 있는 구역은 뺀다.',
+          what: '<b>서로 안 보인다.</b> ⚠ 막힘과 다르다 — 선은 지나가되 안 보이게 만든다.'
+        },
+        {
+          id: 'hidden', ko: '은폐', en: 'Hidden', ref: '13.09',
+          when: '{{COVERKW}} 이 <b>밀집(Dense) 조각을 품은 지형 구역 안</b>에 있고, 그 유닛이 '
+            + '이번 턴과 지난 턴에 사격하지 않았다.',
+          what: '<b>탐지 거리(기본 15인치) 안</b>의 적 모델에게만 보인다. '
+            + '⚠ 이 판은 굴리지 않아 「사격했는가」를 못 센다 — 사람이 켜는 스위치다.'
+        },
+        {
+          id: 'lone', ko: '단독 요원', en: 'Lone Operative', ref: '24.24',
+          when: '<b>합류 유닛</b>(attached unit)의 일부가 아니다.',
+          what: '<b>정해진 거리(기본 12인치) 안</b>의 적 모델에게만 보이고, '
+            + '[간접 사격]([INDIRECT FIRE]) 무기도 그 거리 안에서만 노릴 수 있다. '
+            + '⚠ 이 판에는 합류 유닛이 없어 「합류하면 안 걸린다」를 못 보인다.'
+        },
+        {
+          id: 'coh', ko: '결속', en: 'Coherency', ref: '03.03',
+          when: '모델이 둘 이상인 유닛. 놓을 때도, 어떤 이동을 마칠 때도.',
+          what: '모든 모델이 <b>다른 모델 하나와 수평 2인치</b>, 그리고 '
+            + '<b>다른 모든 모델과 수평 9인치</b> 안이어야 한다(수직은 둘 다 5인치). '
+            + '안 맞으면 그 이동을 할 수 없고 시작 자리로 되돌아간다(03.01).'
+        },
+      ],
 
-  units: [
-    { id: 'ua1', side: 'A', name: 'A · 보병 분대', move: 6, keywords: ['INFANTRY'], models: [
-      { id: 'a1', x: -10, z: -24, base: 1.26, facing: 0 },
-      { id: 'a2', x:  -8, z: -24, base: 1.26, facing: 0 },
-      { id: 'a3', x:  -6, z: -24, base: 1.26, facing: 0 },
-    ] },
-    { id: 'ua2', side: 'A', name: 'A · 기체', move: 10, keywords: ['VEHICLE'], models: [
-      { id: 'a4', x: 9, z: -24, base: 3.94, facing: 0 },
-    ] },
+      terrainCats: {
+        exposed: {
+          ko: '노출', blocks: false, color: THEME.catExposed,
+          what: '시선을 막지도 가리지도 않는다. 모든 모델이 수평으로도 수직으로도 지나갈 수 있다(13.06).'
+        },
+        light: {
+          ko: '경량', blocks: false, color: THEME.catLight,
+          what: '시선을 <b>막지는 않지만</b> 그 구역이 <b>차폐 구역</b>이 된다(13.10) — '
+            + '모든 선이 그런 구역을 가로지르면 서로 안 보인다. 모든 모델이 지나갈 수 있다(13.06).'
+        },
+        dense: {
+          ko: '밀집', blocks: true, color: THEME.catDense,
+          what: '<b>막힘</b>(13.11)을 갖는다 — 지면에서 정해진 높이 이하의 막힌 틈으로는 시선을 '
+            + '못 긋는다. 그 구역은 <b>차폐 구역</b>이기도 하고(13.10), '
+            + '<b>은폐</b>(13.09)가 성립하는 <b>유일한</b> 유형이다.'
+        },
+      },
+    };
 
-    { id: 'ua3', side: 'A', name: 'A · 단독 요원', move: 6,
-      keywords: ['INFANTRY', 'CHARACTER'], loneOperativeIn: 12, models: [
-      { id: 'a5', x: -2, z: -20, base: 1.26, facing: 0 },
-    ] },
+    const SEED = {
+      terrain: [
+        { id: 't1', x: -11, z: -18, w: 6, d: 4, rot: 0, cat: 'dense' },
+        { id: 't2', x: 11, z: -18, w: 6, d: 4, rot: 0, cat: 'dense' },
+        { id: 't3', x: 0, z: -10, w: 10, d: 2.5, rot: 0, cat: 'light' },
+        { id: 't4', x: -13, z: 0, w: 7, d: 11.5, rot: 0, cat: 'dense' },
+        { id: 't5', x: 13, z: 0, w: 7, d: 11.5, rot: 0, cat: 'dense' },
+        { id: 't6', x: 0, z: 0, w: 6, d: 2, rot: 90, cat: 'exposed' },
+        { id: 't7', x: 0, z: 10, w: 10, d: 2.5, rot: 0, cat: 'light' },
+        { id: 't8', x: -11, z: 18, w: 6, d: 4, rot: 0, cat: 'dense' },
+        { id: 't9', x: 11, z: 18, w: 6, d: 4, rot: 0, cat: 'dense' },
+      ],
 
-    { id: 'ua4', side: 'A', name: 'A · 강습 분대', move: 6,
-      keywords: ['INFANTRY'], deepStrike: true, inReserve: true, models: [
-      { id: 'a6', x: -2, z: -35, base: 1.26, facing: 0 },
-      { id: 'a7', x:  0, z: -35, base: 1.26, facing: 0 },
-      { id: 'a8', x:  2, z: -35, base: 1.26, facing: 0 },
-    ] },
+      units: [
+        {
+          id: 'ua1', side: 'A', name: 'A · 보병 분대', move: 6, keywords: ['INFANTRY'], models: [
+            { id: 'a1', x: -10, z: -24, base: 1.26, facing: 0 },
+            { id: 'a2', x: -8, z: -24, base: 1.26, facing: 0 },
+            { id: 'a3', x: -6, z: -24, base: 1.26, facing: 0 },
+          ]
+        },
+        {
+          id: 'ua2', side: 'A', name: 'A · 기체', move: 10, keywords: ['VEHICLE'], models: [
+            { id: 'a4', x: 9, z: -24, base: 3.94, facing: 0 },
+          ]
+        },
 
-    { id: 'ub1', side: 'B', name: 'B · 보병 분대', move: 6, keywords: ['INFANTRY'], models: [
-      { id: 'b1', x: -10, z: 24, base: 1.26, facing: Math.PI },
-      { id: 'b2', x:  -8, z: 24, base: 1.26, facing: Math.PI },
-      { id: 'b3', x:  -6, z: 24, base: 1.26, facing: Math.PI },
-    ] },
-    { id: 'ub2', side: 'B', name: 'B · 기체', move: 10, keywords: ['VEHICLE'], models: [
+        {
+          id: 'ua3', side: 'A', name: 'A · 단독 요원', move: 6,
+          keywords: ['INFANTRY', 'CHARACTER'], loneOperativeIn: 12, models: [
+            { id: 'a5', x: -2, z: -20, base: 1.26, facing: 0 },
+          ]
+        },
 
-      { id: 'b4', x: 13, z: 3, base: 3.94, facing: Math.PI },
-    ] },
+        {
+          id: 'ua4', side: 'A', name: 'A · 강습 분대', move: 6,
+          keywords: ['INFANTRY'], deepStrike: true, inReserve: true, models: [
+            { id: 'a6', x: -2, z: -35, base: 1.26, facing: 0 },
+            { id: 'a7', x: 0, z: -35, base: 1.26, facing: 0 },
+            { id: 'a8', x: 2, z: -35, base: 1.26, facing: 0 },
+          ]
+        },
 
-    { id: 'ub3', side: 'B', name: 'B · 은폐 분대', move: 6,
-      keywords: ['INFANTRY'], shotRecently: false, models: [
-      { id: 'b5', x: -14.5, z: -2, base: 1.26, facing: Math.PI },
-      { id: 'b6', x: -13,   z:  0, base: 1.26, facing: Math.PI },
-      { id: 'b7', x: -11.5, z:  2, base: 1.26, facing: Math.PI },
-    ] },
+        {
+          id: 'ub1', side: 'B', name: 'B · 보병 분대', move: 6, keywords: ['INFANTRY'], models: [
+            { id: 'b1', x: -10, z: 24, base: 1.26, facing: Math.PI },
+            { id: 'b2', x: -8, z: 24, base: 1.26, facing: Math.PI },
+            { id: 'b3', x: -6, z: 24, base: 1.26, facing: Math.PI },
+          ]
+        },
+        {
+          id: 'ub2', side: 'B', name: 'B · 기체', move: 10, keywords: ['VEHICLE'], models: [
 
-    { id: 'ub5', side: 'B', name: 'B · 단독 요원', move: 6,
-      keywords: ['INFANTRY', 'CHARACTER'], loneOperativeIn: 12, models: [
-      { id: 'b11', x: 4, z: 8, base: 1.26, facing: Math.PI },
-    ] },
+            { id: 'b4', x: 13, z: 3, base: 3.94, facing: Math.PI },
+          ]
+        },
 
-    { id: 'ub4', side: 'B', name: 'B · 예비 분대', move: 6,
-      keywords: ['INFANTRY'], inReserve: true, models: [
-      { id: 'b8', x: -2, z: 35, base: 1.26, facing: Math.PI },
-      { id: 'b9', x:  0, z: 35, base: 1.26, facing: Math.PI },
-      { id: 'b10', x: 2, z: 35, base: 1.26, facing: Math.PI },
-    ] },
-  ],
-};
+        {
+          id: 'ub3', side: 'B', name: 'B · 은폐 분대', move: 6,
+          keywords: ['INFANTRY'], shotRecently: false, models: [
+            { id: 'b5', x: -14.5, z: -2, base: 1.26, facing: Math.PI },
+            { id: 'b6', x: -13, z: 0, base: 1.26, facing: Math.PI },
+            { id: 'b7', x: -11.5, z: 2, base: 1.26, facing: Math.PI },
+          ]
+        },
 
-{
-  const kw = RULES.coverKeywords.join(' / ');
-  const ko = { INFANTRY: '보병', BEASTS: '야수', SWARM: '군집' };
-  const kwKo = RULES.coverKeywords.map((k) => ko[k] ?? k).join('·');
-  const filled = '<b>' + kwKo + '</b>(' + kw + ')';
-  for (const b of RULES.labelBits) {
-    b.when = b.when.replaceAll('{{COVERKW}}', filled);
-    b.what = b.what.replaceAll('{{COVERKW}}', filled);
-  }
-}
+        {
+          id: 'ub5', side: 'B', name: 'B · 단독 요원', move: 6,
+          keywords: ['INFANTRY', 'CHARACTER'], loneOperativeIn: 12, models: [
+            { id: 'b11', x: 4, z: 8, base: 1.26, facing: Math.PI },
+          ]
+        },
 
-const BIT = Object.fromEntries(RULES.labelBits.map((b) => [b.id, b]));
+        {
+          id: 'ub4', side: 'B', name: 'B · 예비 분대', move: 6,
+          keywords: ['INFANTRY'], inReserve: true, models: [
+            { id: 'b8', x: -2, z: 35, base: 1.26, facing: Math.PI },
+            { id: 'b9', x: 0, z: 35, base: 1.26, facing: Math.PI },
+            { id: 'b10', x: 2, z: 35, base: 1.26, facing: Math.PI },
+          ]
+        },
+      ],
+    };
 
-const SIDES = {
-  A: { ko: 'A 진영', color: THEME.sideA, css: 'a' },
-  B: { ko: 'B 진영', color: THEME.sideB, css: 'b' },
-};
-
-const cloneUnits = () => SEED.units.map((u) => ({
-  ...u, locked: false,
-  models: u.models.map((m) => ({ ...m })),
-}));
-
-const sayWhy = (w) => w.ko + (w.note ? ' · ' + w.note : '') + (w.ref ? ' ' + w.ref : '');
-
-const state = {
-  round: 1,
-  side: 'A',
-  partIndex: 0,
-  cutHeight: 3,
-
-  moveOnly: true,
-
-  freeCam: false,
-
-  showBits: false,
-
-  labelBits: new Set(RULES.labelBits.map((b) => b.id)),
-  showFan: true,
-  units: cloneUnits(),
-  terrain: SEED.terrain.map((t) => ({ ...t })),
-  selUnit: null,
-  selModel: null,
-
-  selTerrain: null,
-
-  hudHidden: false,
-
-  mode: null,
-  pending: null,
-};
-
-const isTurning = () => state.mode === 'turn' || state.mode === 'deployTurn';
-const isDeploying = () => state.mode === 'deploy' || state.mode === 'deployTurn';
-
-const parts = () => (state.moveOnly ? RULES.turnParts.filter((p) => p.act) : RULES.turnParts);
-const part = () => parts()[state.partIndex] ?? parts()[0];
-const isMovePhase = () => !!part().act;
-const unit = (id) => state.units.find((u) => u.id === id);
-const selU = () => (state.selUnit ? unit(state.selUnit) : null);
-const selM = () => {
-  const u = selU();
-  return u && state.selModel ? u.models.find((m) => m.id === state.selModel) : null;
-};
-const allModels = () => state.units.flatMap((u) => u.models.map((m) => ({ m, u })));
-const unitOfModel = (id) => state.units.find((u) => u.models.some((m) => m.id === id));
-const hex = (n) => '#' + n.toString(16).padStart(6, '0');
-const deg = (rad) => ((Math.round(rad * 180 / Math.PI) % 360) + 360) % 360;
-
-function corners(t) {
-  const a = (t.rot || 0) * Math.PI / 180;
-  const c = Math.cos(a), s = Math.sin(a);
-  const hw = t.w / 2, hd = t.d / 2;
-  return [[-hw, -hd], [hw, -hd], [hw, hd], [-hw, hd]]
-    .map(([px, pz]) => [t.x + px * c - pz * s, t.z + px * s + pz * c]);
-}
-
-function blockers() {
-  const segs = [];
-  const hw = RULES.board.w / 2, hd = RULES.board.d / 2;
-  segs.push([[-hw, -hd], [hw, -hd]], [[hw, -hd], [hw, hd]], [[hw, hd], [-hw, hd]], [[-hw, hd], [-hw, -hd]]);
-  if (state.cutHeight > 0) {
-    for (const t of state.terrain) {
-      if (!RULES.terrainCats[t.cat].blocks) continue;
-      const c = corners(t);
-      for (let i = 0; i < 4; i++) segs.push([c[i], c[(i + 1) % 4]]);
+    {
+      const kw = RULES.coverKeywords.join(' / ');
+      const ko = { INFANTRY: '보병', BEASTS: '야수', SWARM: '군집' };
+      const kwKo = RULES.coverKeywords.map((k) => ko[k] ?? k).join('·');
+      const filled = '<b>' + kwKo + '</b>(' + kw + ')';
+      for (const b of RULES.labelBits) {
+        b.when = b.when.replaceAll('{{COVERKW}}', filled);
+        b.what = b.what.replaceAll('{{COVERKW}}', filled);
+      }
     }
-  }
-  return segs;
-}
 
-const EDGE_EPS = 1e-9;
+    const BIT = Object.fromEntries(RULES.labelBits.map((b) => [b.id, b]));
 
-function rayHitSegs(ox, oz, dx, dz, segs, far) {
-  let best = far;
-  for (const seg of segs) {
-    const [x1, z1] = seg[0], [x2, z2] = seg[1];
-    const sx = x2 - x1, sz = z2 - z1;
-    const den = dx * sz - dz * sx;
-    if (Math.abs(den) < 1e-12) continue;
-    const t = ((x1 - ox) * sz - (z1 - oz) * sx) / den;
-    const u = ((x1 - ox) * dz - (z1 - oz) * dx) / den;
-    if (t > 1e-6 && u >= -EDGE_EPS && u <= 1 + EDGE_EPS && t < best) best = t;
-  }
-  return best;
-}
+    const SIDES = {
+      A: { ko: 'A 진영', color: THEME.sideA, css: 'a' },
+      B: { ko: 'B 진영', color: THEME.sideB, css: 'b' },
+    };
 
-function visibilityPolygon(ox, oz, segs, far) {
-  const angs = [];
-  for (const seg of segs) {
-    for (const p of seg) {
-      const a = Math.atan2(p[1] - oz, p[0] - ox);
-      angs.push(a - 1e-4, a, a + 1e-4);
-    }
-  }
-  angs.sort((a, b) => a - b);
-  const pts = [];
-  for (const a of angs) {
-    const dx = Math.cos(a), dz = Math.sin(a);
-    const t = rayHitSegs(ox, oz, dx, dz, segs, far);
-    pts.push([ox + dx * t, oz + dz * t]);
-  }
-  return pts;
-}
-
-function blocked(ax, az, bx, bz, segs) {
-  const dx = bx - ax, dz = bz - az;
-  const len = Math.hypot(dx, dz);
-  if (len < 1e-9) return false;
-  return rayHitSegs(ax, az, dx / len, dz / len, segs, len) < len - 1e-6;
-}
-
-function edgeGap(m, n) {
-  return Math.max(0, Math.hypot(m.x - n.x, m.z - n.z) - m.base / 2 - n.base / 2);
-}
-
-function overlapping(m, n) {
-  return Math.hypot(m.x - n.x, m.z - n.z) < (m.base + n.base) / 2 - 1e-6;
-}
-
-function coherency(u) {
-  const { nearIn, farIn } = RULES.coherency;
-  const ms = u.models;
-  if (ms.length < 2) return { near: true, far: true, ok: true, nearBad: [], farBad: [] };
-  const nearBad = [], farBad = [];
-  for (const m of ms) {
-    const others = ms.filter((n) => n !== m);
-    if (!others.some((n) => edgeGap(m, n) <= nearIn)) nearBad.push(m.id);
-    if (others.some((n) => edgeGap(m, n) > farIn)) farBad.push(m.id);
-  }
-  return { near: !nearBad.length, far: !farBad.length, ok: !nearBad.length && !farBad.length, nearBad, farBad };
-}
-
-function overlaps(u) {
-  const mine = u.models;
-  const rest = allModels()
-    .filter(({ m, u: o }) => !mine.includes(m) && !o.inReserve)
-    .map(({ m }) => m);
-  const bad = [];
-  for (let i = 0; i < mine.length; i++) {
-    for (let j = i + 1; j < mine.length; j++) if (overlapping(mine[i], mine[j])) bad.push(mine[i].id);
-    if (rest.some((n) => overlapping(mine[i], n))) bad.push(mine[i].id);
-  }
-  return [...new Set(bad)];
-}
-
-function areasAt(x, z) {
-  return state.terrain.filter((t) => {
-    const a = -(t.rot || 0) * Math.PI / 180;
-    const c = Math.cos(a), s2 = Math.sin(a);
-    const dx = x - t.x, dz = z - t.z;
-    const lx = dx * c - dz * s2, lz = dx * s2 + dz * c;
-    return Math.abs(lx) <= t.w / 2 && Math.abs(lz) <= t.d / 2;
-  });
-}
-
-const hasCoverKeyword = (u) => (u.keywords || []).some((k) => RULES.coverKeywords.includes(k));
-
-function isHidden(m, u) {
-  if (!hasCoverKeyword(u)) return false;
-  if (u.shotRecently) return false;
-  return areasAt(m.x, m.z).some((t) => RULES.terrainCats[t.cat].blocks);
-}
-
-const isObscuring = (t) => t.cat === 'light' || t.cat === 'dense';
-
-function crossesObscuring(a, b) {
-  const inA = areasAt(a.x, a.z), inB = areasAt(b.x, b.z);
-  for (const t of state.terrain) {
-    if (!isObscuring(t)) continue;
-    if (inA.includes(t) || inB.includes(t)) continue;
-    const c = corners(t);
-    const segs = [];
-    for (let i = 0; i < 4; i++) segs.push([c[i], c[(i + 1) % 4]]);
-    const dx = b.x - a.x, dz = b.z - a.z;
-    const len = Math.hypot(dx, dz);
-    if (len > 1e-9 && rayHitSegs(a.x, a.z, dx / len, dz / len, segs, len) < len - 1e-6) return t;
-  }
-  return null;
-}
-
-function sightTo(obs, tgt, tgtUnit, segs) {
-  const why = [];
-  const gap = edgeGap(obs, tgt);
-  if (blocked(obs.x, obs.z, tgt.x, tgt.z, segs)) why.push({ ...BIT.block });
-  if (crossesObscuring(obs, tgt)) why.push({ ...BIT.obsc });
-  if (isHidden(tgt, tgtUnit) && gap > RULES.hidden.detectionIn) {
-    why.push({ ...BIT.hidden, note: '탐지 ' + RULES.hidden.detectionIn + '인치 밖' });
-  }
-  const lo = tgtUnit.loneOperativeIn;
-  if (lo != null && gap > lo) why.push({ ...BIT.lone, note: lo + '인치 밖' });
-  return { visible: !why.length, why, gap };
-}
-
-function fullyVisible(obs, tgt, segs) {
-  const n = 12, r = tgt.base / 2;
-  for (let i = 0; i < n; i++) {
-    const a = i / n * Math.PI * 2;
-    const px = tgt.x + Math.cos(a) * r, pz = tgt.z + Math.sin(a) * r;
-    if (blocked(obs.x, obs.z, px, pz, segs)) return false;
-    if (crossesObscuring(obs, { x: px, z: pz })) return false;
-  }
-  return true;
-}
-
-function coverFor(tgtUnit, obs, segs) {
-  const per = tgtUnit.models.map((m) => {
-    const inArea = hasCoverKeyword(tgtUnit) && areasAt(m.x, m.z).length > 0;
-    const notFull = !fullyVisible(obs, m, segs);
-    return { id: m.id, inArea, notFull, ok: inArea || notFull };
-  });
-  return { ok: per.every((x) => x.ok), per };
-}
-
-function ingressOk(u) {
-  const why = [];
-  const { setUpIn, fromEnemyIn } = RULES.ingress;
-  const hw = RULES.board.w / 2, hd = RULES.board.d / 2;
-
-  const outside = u.models.filter((m) => Math.abs(m.x) + m.base / 2 > hw || Math.abs(m.z) + m.base / 2 > hd);
-  if (outside.length) why.push('아직 전장 밖에 있다 — 판 위에 온전히 놓아야 한다 (03.02)');
-
-  const foes = allModels().filter(({ u: o }) => o.side !== u.side && !o.inReserve).map(({ m }) => m);
-  const tooClose = u.models.filter((m) => foes.some((f) => edgeGap(m, f) <= fromEnemyIn));
-  if (tooClose.length) {
-    why.push('적 유닛에서 ' + fromEnemyIn + '인치 **초과**여야 한다 (' + (u.deepStrike ? '24.09' : '20.04') + ')');
-  }
-  if (!u.deepStrike) {
-
-    const off = u.models.filter((m) => {
-      const r = m.base / 2;
-      const near = Math.min(hw - Math.abs(m.x), hd - Math.abs(m.z));
-      return near + r > setUpIn;
-    });
-    if (off.length) why.push('전장 가장자리 ' + setUpIn + '인치 안에 **온전히** 놓아야 한다 (20.04)');
-  }
-  return { ok: !why.length, why, tooClose: tooClose.map((m) => m.id) };
-}
-
-function canCommit(u) {
-  const why = [];
-  const coh = coherency(u);
-  const over = overlaps(u);
-
-  if (!coh.near) why.push('결속 — 어떤 모델이 같은 유닛의 다른 모델과 ' + RULES.coherency.nearIn + '인치 안에 있지 않다 (03.03)');
-  if (!coh.far) why.push('결속 — 어떤 모델이 같은 유닛의 모델과 ' + RULES.coherency.farIn + '인치보다 멀다 (03.03)');
-  if (over.length) why.push('모델이 다른 모델 위에 있다 (03.01)');
-  const ing = isDeploying() ? ingressOk(u) : { ok: true, why: [], tooClose: [] };
-  why.push(...ing.why);
-  return { ok: !why.length, why, coh, over, ing };
-}
-
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-document.body.appendChild(renderer.domElement);
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(THEME.sky);
-
-const camera = new THREE.PerspectiveCamera(42, 1, 0.5, 500);
-
-const cam = { az: 0, el: 0.78, dist: 88, tx: 0, tz: 0 };
-const CAMS = [
-  { ko: '비스듬히', az: 0, el: 0.78, dist: 88 },
-  { ko: '위에서',   az: 0, el: 1.5,  dist: 96 },
-  { ko: '낮게',     az: 0, el: 0.34, dist: 80 },
-];
-let camIndex = 0;
-
-const CAM_LIMIT = { elMin: 0.05, elMax: 1.52, distMin: 8, distMax: 260, eyeMin: 2, panPad: 24 };
-
-scene.add(new THREE.HemisphereLight(THEME.ambient, THEME.ambientLow, 1.15));
-const sun = new THREE.DirectionalLight(THEME.sun, 0.55);
-sun.position.set(24, 48, 18);
-scene.add(sun);
-
-const BW = RULES.board.w, BD = RULES.board.d;
-
-const boardMesh = new THREE.Mesh(
-  new THREE.PlaneGeometry(BW, BD),
-  new THREE.MeshStandardMaterial({ color: THEME.floor, roughness: 0.95 }),
-);
-boardMesh.rotation.x = -Math.PI / 2;
-scene.add(boardMesh);
-
-const grid = new THREE.GridHelper(Math.max(BW, BD), Math.max(BW, BD) / 6, THEME.grid1, THEME.grid2);
-grid.position.y = 0.02;
-scene.add(grid);
-
-{
-  const hw = BW / 2, hd = BD / 2;
-  const g = new THREE.BufferGeometry().setFromPoints(
-    [[-hw, -hd], [hw, -hd], [hw, hd], [-hw, hd], [-hw, -hd]]
-      .map(([x, z]) => new THREE.Vector3(x, 0.05, z)));
-  scene.add(new THREE.Line(g, new THREE.LineBasicMaterial({ color: THEME.edge })));
-}
-
-const terrainGroup = new THREE.Group();
-scene.add(terrainGroup);
-
-function buildTerrain() {
-  terrainGroup.clear();
-  for (const t of state.terrain) {
-    const cat = RULES.terrainCats[t.cat];
-
-    const h = cat.blocks ? Math.max(state.cutHeight, 0.05) : 0.5;
-    const geo = new THREE.BoxGeometry(t.w, h, t.d);
-    const alpha = cat.blocks ? 1
-      : t.cat === 'light' ? THEME.catAlphaLight : THEME.catAlphaExposed;
-    const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
-      color: cat.color, roughness: 0.9, transparent: alpha < 1, opacity: alpha,
+    const cloneUnits = () => SEED.units.map((u) => ({
+      ...u, locked: false,
+      models: u.models.map((m) => ({ ...m })),
     }));
-    m.position.set(t.x, h / 2, t.z);
-    m.rotation.y = -(t.rot || 0) * Math.PI / 180;
-    m.userData.tid = t.id;
-    terrainGroup.add(m);
 
-    const held = state.selTerrain === t.id;
-    const e = new THREE.LineSegments(
-      new THREE.EdgesGeometry(geo),
-      new THREE.LineBasicMaterial({ color: held ? THEME.sel : cat.blocks ? THEME.edgeSolid : THEME.edgeSoft }));
-    e.position.copy(m.position);
-    e.rotation.copy(m.rotation);
-    terrainGroup.add(e);
+    const sayWhy = (w) => w.ko + (w.note ? ' · ' + w.note : '') + (w.ref ? ' ' + w.ref : '');
 
-    if (held) {
-      const foot = new THREE.Mesh(
-        new THREE.PlaneGeometry(t.w, t.d),
-        new THREE.MeshBasicMaterial({ color: THEME.sel, transparent: true, opacity: 0.22, depthWrite: false }),
-      );
-      foot.rotation.x = -Math.PI / 2;
-      foot.rotation.z = (t.rot || 0) * Math.PI / 180;
-      foot.position.set(t.x, 0.045, t.z);
-      terrainGroup.add(foot);
+    const state = {
+      round: 1,
+      side: 'A',
+      partIndex: 0,
+      cutHeight: 3,
+
+      moveOnly: true,
+
+      freeCam: false,
+
+      showBits: false,
+
+      panelOff: false,
+
+      labelBits: new Set(RULES.labelBits.map((b) => b.id)),
+      showFan: true,
+      units: cloneUnits(),
+      terrain: SEED.terrain.map((t) => ({ ...t })),
+      selUnit: null,
+      selModel: null,
+
+      selTerrain: null,
+
+      hudHidden: false,
+
+      mode: null,
+      pending: null,
+    };
+
+    const isTurning = () => state.mode === 'turn' || state.mode === 'deployTurn';
+    const isDeploying = () => state.mode === 'deploy' || state.mode === 'deployTurn';
+
+    const parts = () => (state.moveOnly ? RULES.turnParts.filter((p) => p.act) : RULES.turnParts);
+    const part = () => parts()[state.partIndex] ?? parts()[0];
+    const isMovePhase = () => !!part().act;
+    const unit = (id) => state.units.find((u) => u.id === id);
+    const selU = () => (state.selUnit ? unit(state.selUnit) : null);
+    const selM = () => {
+      const u = selU();
+      return u && state.selModel ? u.models.find((m) => m.id === state.selModel) : null;
+    };
+    const allModels = () => state.units.flatMap((u) => u.models.map((m) => ({ m, u })));
+    const unitOfModel = (id) => state.units.find((u) => u.models.some((m) => m.id === id));
+    const hex = (n) => '#' + n.toString(16).padStart(6, '0');
+    const deg = (rad) => ((Math.round(rad * 180 / Math.PI) % 360) + 360) % 360;
+
+    function corners(t) {
+      const a = (t.rot || 0) * Math.PI / 180;
+      const c = Math.cos(a), s = Math.sin(a);
+      const hw = t.w / 2, hd = t.d / 2;
+      return [[-hw, -hd], [hw, -hd], [hw, hd], [-hw, hd]]
+        .map(([px, pz]) => [t.x + px * c - pz * s, t.z + px * s + pz * c]);
     }
-  }
-}
 
-const modelGroup = new THREE.Group();
-scene.add(modelGroup);
-const meshOf = new Map();
+    function blockers() {
+      const segs = [];
+      const hw = RULES.board.w / 2, hd = RULES.board.d / 2;
+      segs.push([[-hw, -hd], [hw, -hd]], [[hw, -hd], [hw, hd]], [[hw, hd], [-hw, hd]], [[-hw, hd], [-hw, -hd]]);
+      if (state.cutHeight > 0) {
+        for (const t of state.terrain) {
+          if (!RULES.terrainCats[t.cat].blocks) continue;
+          const c = corners(t);
+          for (let i = 0; i < 4; i++) segs.push([c[i], c[(i + 1) % 4]]);
+        }
+      }
+      return segs;
+    }
 
-const PICK_MIN_R = 0.9;
+    const EDGE_EPS = 1e-9;
 
-const BASE_H = 0.12;
+    function rayHitSegs(ox, oz, dx, dz, segs, far) {
+      let best = far;
+      for (const seg of segs) {
+        const [x1, z1] = seg[0], [x2, z2] = seg[1];
+        const sx = x2 - x1, sz = z2 - z1;
+        const den = dx * sz - dz * sx;
+        if (Math.abs(den) < 1e-12) continue;
+        const t = ((x1 - ox) * sz - (z1 - oz) * sx) / den;
+        const u = ((x1 - ox) * dz - (z1 - oz) * dx) / den;
+        if (t > 1e-6 && u >= -EDGE_EPS && u <= 1 + EDGE_EPS && t < best) best = t;
+      }
+      return best;
+    }
 
-const CUBE_OF_BASE = 0.62;
+    function visibilityPolygon(ox, oz, segs, far) {
+      const angs = [];
+      for (const seg of segs) {
+        for (const p of seg) {
+          const a = Math.atan2(p[1] - oz, p[0] - ox);
+          angs.push(a - 1e-4, a, a + 1e-4);
+        }
+      }
+      angs.sort((a, b) => a - b);
+      const pts = [];
+      for (const a of angs) {
+        const dx = Math.cos(a), dz = Math.sin(a);
+        const t = rayHitSegs(ox, oz, dx, dz, segs, far);
+        pts.push([ox + dx * t, oz + dz * t]);
+      }
+      return pts;
+    }
 
-const topOf = (m) => BASE_H + m.base * CUBE_OF_BASE;
+    function blocked(ax, az, bx, bz, segs) {
+      const dx = bx - ax, dz = bz - az;
+      const len = Math.hypot(dx, dz);
+      if (len < 1e-9) return false;
+      return rayHitSegs(ax, az, dx / len, dz / len, segs, len) < len - 1e-6;
+    }
 
-function buildModels() {
-  modelGroup.clear();
-  meshOf.clear();
-  for (const { m, u } of allModels()) {
-    const g = new THREE.Group();
-    const tint = SIDES[u.side].color;
+    function edgeGap(m, n) {
+      return Math.max(0, Math.hypot(m.x - n.x, m.z - n.z) - m.base / 2 - n.base / 2);
+    }
 
-    const faded = u.locked || u.inReserve;
-    const stepBack = !!state.selUnit && u.id !== state.selUnit;
-    const opacity = faded ? 0.42 : stepBack ? 0.6 : 1;
-    const dim = { transparent: opacity < 1, opacity };
+    function overlapping(m, n) {
+      return Math.hypot(m.x - n.x, m.z - n.z) < (m.base + n.base) / 2 - 1e-6;
+    }
 
-    const disc = new THREE.Mesh(
-      new THREE.CylinderGeometry(m.base / 2, m.base / 2, BASE_H, 32),
-      new THREE.MeshStandardMaterial({ color: THEME.base, roughness: 0.7, metalness: 0.1, ...dim }),
+    function coherency(u) {
+      const { nearIn, farIn } = RULES.coherency;
+      const ms = u.models;
+      if (ms.length < 2) return { near: true, far: true, ok: true, nearBad: [], farBad: [] };
+      const nearBad = [], farBad = [];
+      for (const m of ms) {
+        const others = ms.filter((n) => n !== m);
+        if (!others.some((n) => edgeGap(m, n) <= nearIn)) nearBad.push(m.id);
+        if (others.some((n) => edgeGap(m, n) > farIn)) farBad.push(m.id);
+      }
+      return { near: !nearBad.length, far: !farBad.length, ok: !nearBad.length && !farBad.length, nearBad, farBad };
+    }
+
+    function overlaps(u) {
+      const mine = u.models;
+      const rest = allModels()
+        .filter(({ m, u: o }) => !mine.includes(m) && !o.inReserve)
+        .map(({ m }) => m);
+      const bad = [];
+      for (let i = 0; i < mine.length; i++) {
+        for (let j = i + 1; j < mine.length; j++) if (overlapping(mine[i], mine[j])) bad.push(mine[i].id);
+        if (rest.some((n) => overlapping(mine[i], n))) bad.push(mine[i].id);
+      }
+      return [...new Set(bad)];
+    }
+
+    function areasAt(x, z) {
+      return state.terrain.filter((t) => {
+        const a = -(t.rot || 0) * Math.PI / 180;
+        const c = Math.cos(a), s2 = Math.sin(a);
+        const dx = x - t.x, dz = z - t.z;
+        const lx = dx * c - dz * s2, lz = dx * s2 + dz * c;
+        return Math.abs(lx) <= t.w / 2 && Math.abs(lz) <= t.d / 2;
+      });
+    }
+
+    const hasCoverKeyword = (u) => (u.keywords || []).some((k) => RULES.coverKeywords.includes(k));
+
+    function isHidden(m, u) {
+      if (!hasCoverKeyword(u)) return false;
+      if (u.shotRecently) return false;
+      return areasAt(m.x, m.z).some((t) => RULES.terrainCats[t.cat].blocks);
+    }
+
+    const isObscuring = (t) => t.cat === 'light' || t.cat === 'dense';
+
+    function crossesObscuring(a, b) {
+      const inA = areasAt(a.x, a.z), inB = areasAt(b.x, b.z);
+      for (const t of state.terrain) {
+        if (!isObscuring(t)) continue;
+        if (inA.includes(t) || inB.includes(t)) continue;
+        const c = corners(t);
+        const segs = [];
+        for (let i = 0; i < 4; i++) segs.push([c[i], c[(i + 1) % 4]]);
+        const dx = b.x - a.x, dz = b.z - a.z;
+        const len = Math.hypot(dx, dz);
+        if (len > 1e-9 && rayHitSegs(a.x, a.z, dx / len, dz / len, segs, len) < len - 1e-6) return t;
+      }
+      return null;
+    }
+
+    function sightTo(obs, tgt, tgtUnit, segs) {
+      const why = [];
+      const gap = edgeGap(obs, tgt);
+      if (blocked(obs.x, obs.z, tgt.x, tgt.z, segs)) why.push({ ...BIT.block });
+      if (crossesObscuring(obs, tgt)) why.push({ ...BIT.obsc });
+      if (isHidden(tgt, tgtUnit) && gap > RULES.hidden.detectionIn) {
+        why.push({ ...BIT.hidden, note: '탐지 ' + RULES.hidden.detectionIn + '인치 밖' });
+      }
+      const lo = tgtUnit.loneOperativeIn;
+      if (lo != null && gap > lo) why.push({ ...BIT.lone, note: lo + '인치 밖' });
+      return { visible: !why.length, why, gap };
+    }
+
+    function fullyVisible(obs, tgt, segs) {
+      const n = 12, r = tgt.base / 2;
+      for (let i = 0; i < n; i++) {
+        const a = i / n * Math.PI * 2;
+        const px = tgt.x + Math.cos(a) * r, pz = tgt.z + Math.sin(a) * r;
+        if (blocked(obs.x, obs.z, px, pz, segs)) return false;
+        if (crossesObscuring(obs, { x: px, z: pz })) return false;
+      }
+      return true;
+    }
+
+    function coverFor(tgtUnit, obs, segs) {
+      const per = tgtUnit.models.map((m) => {
+        const inArea = hasCoverKeyword(tgtUnit) && areasAt(m.x, m.z).length > 0;
+        const notFull = !fullyVisible(obs, m, segs);
+        return { id: m.id, inArea, notFull, ok: inArea || notFull };
+      });
+      return { ok: per.every((x) => x.ok), per };
+    }
+
+    function ingressOk(u) {
+      const why = [];
+      const { setUpIn, fromEnemyIn } = RULES.ingress;
+      const hw = RULES.board.w / 2, hd = RULES.board.d / 2;
+
+      const outside = u.models.filter((m) => Math.abs(m.x) + m.base / 2 > hw || Math.abs(m.z) + m.base / 2 > hd);
+      if (outside.length) why.push('아직 전장 밖에 있다 — 판 위에 온전히 놓아야 한다 (03.02)');
+
+      const foes = allModels().filter(({ u: o }) => o.side !== u.side && !o.inReserve).map(({ m }) => m);
+      const tooClose = u.models.filter((m) => foes.some((f) => edgeGap(m, f) <= fromEnemyIn));
+      if (tooClose.length) {
+        why.push('적 유닛에서 ' + fromEnemyIn + '인치 **초과**여야 한다 (' + (u.deepStrike ? '24.09' : '20.04') + ')');
+      }
+      if (!u.deepStrike) {
+
+        const off = u.models.filter((m) => {
+          const r = m.base / 2;
+          const near = Math.min(hw - Math.abs(m.x), hd - Math.abs(m.z));
+          return near + r > setUpIn;
+        });
+        if (off.length) why.push('전장 가장자리 ' + setUpIn + '인치 안에 **온전히** 놓아야 한다 (20.04)');
+      }
+      return { ok: !why.length, why, tooClose: tooClose.map((m) => m.id) };
+    }
+
+    function canCommit(u) {
+      const why = [];
+      const coh = coherency(u);
+      const over = overlaps(u);
+
+      if (!coh.near) why.push('결속 — 어떤 모델이 같은 유닛의 다른 모델과 ' + RULES.coherency.nearIn + '인치 안에 있지 않다 (03.03)');
+      if (!coh.far) why.push('결속 — 어떤 모델이 같은 유닛의 모델과 ' + RULES.coherency.farIn + '인치보다 멀다 (03.03)');
+      if (over.length) why.push('모델이 다른 모델 위에 있다 (03.01)');
+      const ing = isDeploying() ? ingressOk(u) : { ok: true, why: [], tooClose: [] };
+      why.push(...ing.why);
+      return { ok: !why.length, why, coh, over, ing };
+    }
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    document.body.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(THEME.sky);
+
+    const camera = new THREE.PerspectiveCamera(42, 1, 0.5, 500);
+
+    const cam = { az: 0, el: 0.78, dist: 88, tx: 0, tz: 0 };
+    const CAMS = [
+      { ko: '비스듬히', az: 0, el: 0.78, dist: 88 },
+      { ko: '위에서', az: 0, el: 1.5, dist: 96 },
+      { ko: '낮게', az: 0, el: 0.34, dist: 80 },
+    ];
+    let camIndex = 0;
+
+    const CAM_LIMIT = { elMin: 0.05, elMax: 1.52, distMin: 8, distMax: 260, eyeMin: 2, panPad: 24 };
+
+    scene.add(new THREE.HemisphereLight(THEME.ambient, THEME.ambientLow, 1.15));
+    const sun = new THREE.DirectionalLight(THEME.sun, 0.55);
+    sun.position.set(24, 48, 18);
+    scene.add(sun);
+
+    const BW = RULES.board.w, BD = RULES.board.d;
+
+    const boardMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(BW, BD),
+      new THREE.MeshStandardMaterial({ color: THEME.floor, roughness: 0.95 }),
     );
-    disc.position.y = BASE_H / 2;
-    g.add(disc);
+    boardMesh.rotation.x = -Math.PI / 2;
+    scene.add(boardMesh);
 
-    const side = m.base * CUBE_OF_BASE;
-    const cube = new THREE.Mesh(
-      new THREE.BoxGeometry(side, side, side),
-      new THREE.MeshStandardMaterial({ color: tint, roughness: 0.45, metalness: 0.35, ...dim }),
+    const grid = new THREE.GridHelper(Math.max(BW, BD), Math.max(BW, BD) / 6, THEME.grid1, THEME.grid2);
+    grid.position.y = 0.02;
+    scene.add(grid);
+
+    {
+      const hw = BW / 2, hd = BD / 2;
+      const g = new THREE.BufferGeometry().setFromPoints(
+        [[-hw, -hd], [hw, -hd], [hw, hd], [-hw, hd], [-hw, -hd]]
+          .map(([x, z]) => new THREE.Vector3(x, 0.05, z)));
+      scene.add(new THREE.Line(g, new THREE.LineBasicMaterial({ color: THEME.edge })));
+    }
+
+    const terrainGroup = new THREE.Group();
+    scene.add(terrainGroup);
+
+    function buildTerrain() {
+      terrainGroup.clear();
+      for (const t of state.terrain) {
+        const cat = RULES.terrainCats[t.cat];
+
+        const h = cat.blocks ? Math.max(state.cutHeight, 0.05) : 0.5;
+        const geo = new THREE.BoxGeometry(t.w, h, t.d);
+        const alpha = cat.blocks ? 1
+          : t.cat === 'light' ? THEME.catAlphaLight : THEME.catAlphaExposed;
+        const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+          color: cat.color, roughness: 0.9, transparent: alpha < 1, opacity: alpha,
+        }));
+        m.position.set(t.x, h / 2, t.z);
+        m.rotation.y = -(t.rot || 0) * Math.PI / 180;
+        m.userData.tid = t.id;
+        terrainGroup.add(m);
+
+        const held = state.selTerrain === t.id;
+        const e = new THREE.LineSegments(
+          new THREE.EdgesGeometry(geo),
+          new THREE.LineBasicMaterial({ color: held ? THEME.sel : cat.blocks ? THEME.edgeSolid : THEME.edgeSoft }));
+        e.position.copy(m.position);
+        e.rotation.copy(m.rotation);
+        terrainGroup.add(e);
+
+        if (held) {
+          const foot = new THREE.Mesh(
+            new THREE.PlaneGeometry(t.w, t.d),
+            new THREE.MeshBasicMaterial({ color: THEME.sel, transparent: true, opacity: 0.22, depthWrite: false }),
+          );
+          foot.rotation.x = -Math.PI / 2;
+          foot.rotation.z = (t.rot || 0) * Math.PI / 180;
+          foot.position.set(t.x, 0.045, t.z);
+          terrainGroup.add(foot);
+        }
+      }
+    }
+
+    const modelGroup = new THREE.Group();
+    scene.add(modelGroup);
+    const meshOf = new Map();
+
+    const PICK_MIN_R = 0.9;
+
+    const BASE_H = 0.12;
+
+    const CUBE_OF_BASE = 0.62;
+
+    const topOf = (m) => BASE_H + m.base * CUBE_OF_BASE;
+
+    function buildModels() {
+      modelGroup.clear();
+      meshOf.clear();
+      for (const { m, u } of allModels()) {
+        const g = new THREE.Group();
+        const tint = SIDES[u.side].color;
+
+        const faded = u.locked || u.inReserve;
+        const stepBack = !!state.selUnit && u.id !== state.selUnit;
+        const opacity = faded ? 0.42 : stepBack ? 0.6 : 1;
+        const dim = { transparent: opacity < 1, opacity };
+
+        const disc = new THREE.Mesh(
+          new THREE.CylinderGeometry(m.base / 2, m.base / 2, BASE_H, 32),
+          new THREE.MeshStandardMaterial({ color: THEME.base, roughness: 0.7, metalness: 0.1, ...dim }),
+        );
+        disc.position.y = BASE_H / 2;
+        g.add(disc);
+
+        const side = m.base * CUBE_OF_BASE;
+        const cube = new THREE.Mesh(
+          new THREE.BoxGeometry(side, side, side),
+          new THREE.MeshStandardMaterial({ color: tint, roughness: 0.45, metalness: 0.35, ...dim }),
+        );
+        cube.position.y = BASE_H + side / 2;
+        g.add(cube);
+
+        const edges = new THREE.LineSegments(
+          new THREE.EdgesGeometry(cube.geometry),
+          new THREE.LineBasicMaterial({ color: THEME.cubeEdge, transparent: true, opacity: 0.55 }),
+        );
+        edges.position.copy(cube.position);
+        g.add(edges);
+
+        const ring = new THREE.Mesh(
+          new THREE.RingGeometry(m.base / 2 * 0.88, m.base / 2, 40),
+          new THREE.MeshBasicMaterial({
+            color: m.id === state.selModel ? THEME.sel : THEME.rim, side: THREE.DoubleSide,
+          }),
+        );
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.y = BASE_H + 0.01;
+        g.add(ring);
+
+        if (state.selUnit === u.id) {
+          const held = m.id === state.selModel;
+          const halo = new THREE.Mesh(
+            new THREE.CircleGeometry(m.base / 2 + (held ? 0.7 : 0.4), 44),
+            new THREE.MeshBasicMaterial({
+              color: THEME.sel, transparent: true, opacity: held ? 0.5 : 0.18, depthWrite: false,
+            }),
+          );
+          halo.rotation.x = -Math.PI / 2;
+          halo.position.y = 0.025;
+          g.add(halo);
+
+          if (held) {
+            const edge = new THREE.Mesh(
+              new THREE.RingGeometry(m.base / 2 + 0.62, m.base / 2 + 0.7, 48),
+              new THREE.MeshBasicMaterial({ color: THEME.sel, transparent: true, opacity: 0.95, side: THREE.DoubleSide, depthWrite: false }),
+            );
+            edge.rotation.x = -Math.PI / 2;
+            edge.position.y = 0.035;
+            g.add(edge);
+          }
+        }
+
+        const arrow = new THREE.Mesh(
+          new THREE.ConeGeometry(m.base * 0.18, m.base * 0.34, 3),
+          new THREE.MeshBasicMaterial({ color: THEME.mark }),
+        );
+        arrow.rotation.set(Math.PI / 2, 0, 0);
+
+        arrow.position.set(0, BASE_H + 0.02, m.base * 0.5);
+        g.add(arrow);
+
+        const visor = new THREE.Mesh(
+          new THREE.BoxGeometry(side * 0.66, side * 0.18, side * 0.08),
+          new THREE.MeshBasicMaterial({ color: THEME.mark, ...dim }),
+        );
+        visor.position.set(0, BASE_H + side * 0.68, side * 0.5);
+        g.add(visor);
+
+        const pick = new THREE.Mesh(
+          new THREE.CylinderGeometry(Math.max(m.base / 2, PICK_MIN_R), Math.max(m.base / 2, PICK_MIN_R), topOf(m), 12),
+          new THREE.MeshBasicMaterial({ visible: false }),
+        );
+        pick.position.y = topOf(m) / 2;
+        g.add(pick);
+
+        g.position.set(m.x, 0, m.z);
+        g.rotation.y = m.facing || 0;
+        g.userData.id = m.id;
+        modelGroup.add(g);
+        meshOf.set(m.id, g);
+      }
+    }
+
+    function makeRing(color, opacity) {
+      const mesh = new THREE.Mesh(
+        new THREE.RingGeometry(0.97, 1, 96),
+        new THREE.MeshBasicMaterial({ color, transparent: true, opacity, side: THREE.DoubleSide, depthWrite: false }),
+      );
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.visible = false;
+      scene.add(mesh);
+      return mesh;
+    }
+    const rangeRing = makeRing(THEME.sel, 0.95);
+    const originRing = makeRing(THEME.from, 0.7);
+    const nearRing = makeRing(THEME.mate, 0.8);
+    const originDisc = new THREE.Mesh(
+      new THREE.CircleGeometry(1, 96),
+      new THREE.MeshBasicMaterial({ color: THEME.sel, transparent: true, opacity: 0.06, depthWrite: false }),
     );
-    cube.position.y = BASE_H + side / 2;
-    g.add(cube);
+    originDisc.rotation.x = -Math.PI / 2;
+    originDisc.visible = false;
+    scene.add(originDisc);
 
-    const edges = new THREE.LineSegments(
-      new THREE.EdgesGeometry(cube.geometry),
-      new THREE.LineBasicMaterial({ color: THEME.cubeEdge, transparent: true, opacity: 0.55 }),
-    );
-    edges.position.copy(cube.position);
-    g.add(edges);
+    const keepOut = new THREE.Group();
+    keepOut.visible = false;
+    scene.add(keepOut);
 
-    const ring = new THREE.Mesh(
-      new THREE.RingGeometry(m.base / 2 * 0.88, m.base / 2, 40),
+    function updateKeepOut() {
+      keepOut.clear();
+      const u = selU();
+      if (!u || !isDeploying()) { keepOut.visible = false; return; }
+      for (const { m, u: o } of allModels()) {
+        if (o.side === u.side || o.inReserve) continue;
+        const r = RULES.ingress.fromEnemyIn + m.base / 2;
+        const ring = new THREE.Mesh(
+          new THREE.RingGeometry(r * 0.985, r, 72),
+          new THREE.MeshBasicMaterial({ color: THEME.danger, transparent: true, opacity: 0.75, side: THREE.DoubleSide, depthWrite: false }),
+        );
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.set(m.x, 0.08, m.z);
+        keepOut.add(ring);
+        const disc = new THREE.Mesh(
+          new THREE.CircleGeometry(r, 72),
+          new THREE.MeshBasicMaterial({ color: THEME.danger, transparent: true, opacity: 0.07, depthWrite: false }),
+        );
+        disc.rotation.x = -Math.PI / 2;
+        disc.position.set(m.x, 0.04, m.z);
+        keepOut.add(disc);
+      }
+      keepOut.visible = true;
+    }
+
+    const fanMesh = new THREE.Mesh(
+      new THREE.BufferGeometry(),
       new THREE.MeshBasicMaterial({
-        color: m.id === state.selModel ? THEME.sel : THEME.rim, side: THREE.DoubleSide,
+        color: THEME.sight, transparent: true, opacity: THEME.sightFill,
+        side: THREE.DoubleSide, depthWrite: false,
       }),
     );
-    ring.rotation.x = -Math.PI / 2;
-    ring.position.y = BASE_H + 0.01;
-    g.add(ring);
+    fanMesh.visible = false;
+    scene.add(fanMesh);
 
-    if (state.selUnit === u.id) {
-      const held = m.id === state.selModel;
-      const halo = new THREE.Mesh(
-        new THREE.CircleGeometry(m.base / 2 + (held ? 0.7 : 0.4), 44),
-        new THREE.MeshBasicMaterial({
-          color: THEME.sel, transparent: true, opacity: held ? 0.5 : 0.18, depthWrite: false,
-        }),
-      );
-      halo.rotation.x = -Math.PI / 2;
-      halo.position.y = 0.025;
-      g.add(halo);
+    const fanBand = new THREE.Mesh(
+      new THREE.BufferGeometry(),
+      new THREE.MeshBasicMaterial({
+        vertexColors: true, transparent: true, side: THREE.DoubleSide, depthWrite: false,
+      }),
+    );
+    fanBand.visible = false;
+    scene.add(fanBand);
 
-      if (held) {
-        const edge = new THREE.Mesh(
-          new THREE.RingGeometry(m.base / 2 + 0.62, m.base / 2 + 0.7, 48),
-          new THREE.MeshBasicMaterial({ color: THEME.sel, transparent: true, opacity: 0.95, side: THREE.DoubleSide, depthWrite: false }),
-        );
-        edge.rotation.x = -Math.PI / 2;
-        edge.position.y = 0.035;
-        g.add(edge);
+    const fanEdge = new THREE.LineSegments(
+      new THREE.BufferGeometry(),
+      new THREE.LineBasicMaterial({ color: THEME.sightEdge, transparent: true, opacity: 0.85 }),
+    );
+    fanEdge.visible = false;
+    scene.add(fanEdge);
+
+    function updateFan(m) {
+
+      const inside = m && Math.abs(m.x) <= BW / 2 && Math.abs(m.z) <= BD / 2;
+      if (!m || !state.showFan || !inside) {
+        fanMesh.visible = fanBand.visible = fanEdge.visible = false;
+        return;
       }
+      const segs = blockers();
+      const far = Math.hypot(BW, BD);
+      const pts = visibilityPolygon(m.x, m.z, segs, far);
+      if (pts.length < 3) {
+        fanMesh.visible = fanBand.visible = fanEdge.visible = false;
+        return;
+      }
+      const y = 0.09;
+
+      const inward = (q) => {
+        const dx = q[0] - m.x, dz = q[1] - m.z;
+        const d = Math.hypot(dx, dz);
+        if (d < 1e-6) return [q[0], q[1]];
+        const w = Math.min(THEME.bandIn, d * 0.55);
+        return [q[0] - dx / d * w, q[1] - dz / d * w];
+      };
+      const er = ((THEME.sightEdge >> 16) & 255) / 255;
+      const eg = ((THEME.sightEdge >> 8) & 255) / 255;
+      const eb = (THEME.sightEdge & 255) / 255;
+
+      const pos = [], edge = [], band = [], bandCol = [];
+      const put = (q, alpha) => { band.push(q[0], y, q[1]); bandCol.push(er, eg, eb, alpha); };
+
+      for (let i = 0; i < pts.length; i++) {
+        const a = pts[i], b = pts[(i + 1) % pts.length];
+        pos.push(m.x, y, m.z, a[0], y, a[1], b[0], y, b[1]);
+        edge.push(a[0], y, a[1], b[0], y, b[1]);
+
+        const ia = inward(a), ib = inward(b), A = THEME.sightBand;
+        put(ia, 0); put(a, A); put(b, A);
+        put(ia, 0); put(b, A); put(ib, 0);
+      }
+
+      fanMesh.geometry.dispose();
+      fanMesh.geometry = new THREE.BufferGeometry();
+      fanMesh.geometry.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+
+      fanBand.geometry.dispose();
+      fanBand.geometry = new THREE.BufferGeometry();
+      fanBand.geometry.setAttribute('position', new THREE.Float32BufferAttribute(band, 3));
+      fanBand.geometry.setAttribute('color', new THREE.Float32BufferAttribute(bandCol, 4));
+
+      fanEdge.geometry.dispose();
+      fanEdge.geometry = new THREE.BufferGeometry();
+      fanEdge.geometry.setAttribute('position', new THREE.Float32BufferAttribute(edge, 3));
+
+      fanMesh.visible = fanBand.visible = fanEdge.visible = true;
     }
 
-    const arrow = new THREE.Mesh(
-      new THREE.ConeGeometry(m.base * 0.18, m.base * 0.34, 3),
-      new THREE.MeshBasicMaterial({ color: THEME.mark }),
-    );
-    arrow.rotation.set(Math.PI / 2, 0, 0);
-
-    arrow.position.set(0, BASE_H + 0.02, m.base * 0.5);
-    g.add(arrow);
-
-    const visor = new THREE.Mesh(
-      new THREE.BoxGeometry(side * 0.66, side * 0.18, side * 0.08),
-      new THREE.MeshBasicMaterial({ color: THEME.mark, ...dim }),
-    );
-    visor.position.set(0, BASE_H + side * 0.68, side * 0.5);
-    g.add(visor);
-
-    const pick = new THREE.Mesh(
-      new THREE.CylinderGeometry(Math.max(m.base / 2, PICK_MIN_R), Math.max(m.base / 2, PICK_MIN_R), topOf(m), 12),
-      new THREE.MeshBasicMaterial({ visible: false }),
-    );
-    pick.position.y = topOf(m) / 2;
-    g.add(pick);
-
-    g.position.set(m.x, 0, m.z);
-    g.rotation.y = m.facing || 0;
-    g.userData.id = m.id;
-    modelGroup.add(g);
-    meshOf.set(m.id, g);
-  }
-}
-
-function makeRing(color, opacity) {
-  const mesh = new THREE.Mesh(
-    new THREE.RingGeometry(0.97, 1, 96),
-    new THREE.MeshBasicMaterial({ color, transparent: true, opacity, side: THREE.DoubleSide, depthWrite: false }),
-  );
-  mesh.rotation.x = -Math.PI / 2;
-  mesh.visible = false;
-  scene.add(mesh);
-  return mesh;
-}
-const rangeRing = makeRing(THEME.sel, 0.95);
-const originRing = makeRing(THEME.from, 0.7);
-const nearRing = makeRing(THEME.mate, 0.8);
-const originDisc = new THREE.Mesh(
-  new THREE.CircleGeometry(1, 96),
-  new THREE.MeshBasicMaterial({ color: THEME.sel, transparent: true, opacity: 0.06, depthWrite: false }),
-);
-originDisc.rotation.x = -Math.PI / 2;
-originDisc.visible = false;
-scene.add(originDisc);
-
-const keepOut = new THREE.Group();
-keepOut.visible = false;
-scene.add(keepOut);
-
-function updateKeepOut() {
-  keepOut.clear();
-  const u = selU();
-  if (!u || !isDeploying()) { keepOut.visible = false; return; }
-  for (const { m, u: o } of allModels()) {
-    if (o.side === u.side || o.inReserve) continue;
-    const r = RULES.ingress.fromEnemyIn + m.base / 2;
-    const ring = new THREE.Mesh(
-      new THREE.RingGeometry(r * 0.985, r, 72),
-      new THREE.MeshBasicMaterial({ color: THEME.danger, transparent: true, opacity: 0.75, side: THREE.DoubleSide, depthWrite: false }),
-    );
-    ring.rotation.x = -Math.PI / 2;
-    ring.position.set(m.x, 0.08, m.z);
-    keepOut.add(ring);
-    const disc = new THREE.Mesh(
-      new THREE.CircleGeometry(r, 72),
-      new THREE.MeshBasicMaterial({ color: THEME.danger, transparent: true, opacity: 0.07, depthWrite: false }),
-    );
-    disc.rotation.x = -Math.PI / 2;
-    disc.position.set(m.x, 0.04, m.z);
-    keepOut.add(disc);
-  }
-  keepOut.visible = true;
-}
-
-const fanMesh = new THREE.Mesh(
-  new THREE.BufferGeometry(),
-  new THREE.MeshBasicMaterial({
-    color: THEME.sight, transparent: true, opacity: THEME.sightFill,
-    side: THREE.DoubleSide, depthWrite: false,
-  }),
-);
-fanMesh.visible = false;
-scene.add(fanMesh);
-
-const fanBand = new THREE.Mesh(
-  new THREE.BufferGeometry(),
-  new THREE.MeshBasicMaterial({
-    vertexColors: true, transparent: true, side: THREE.DoubleSide, depthWrite: false,
-  }),
-);
-fanBand.visible = false;
-scene.add(fanBand);
-
-const fanEdge = new THREE.LineSegments(
-  new THREE.BufferGeometry(),
-  new THREE.LineBasicMaterial({ color: THEME.sightEdge, transparent: true, opacity: 0.85 }),
-);
-fanEdge.visible = false;
-scene.add(fanEdge);
-
-function updateFan(m) {
-
-  const inside = m && Math.abs(m.x) <= BW / 2 && Math.abs(m.z) <= BD / 2;
-  if (!m || !state.showFan || !inside) {
-    fanMesh.visible = fanBand.visible = fanEdge.visible = false;
-    return;
-  }
-  const segs = blockers();
-  const far = Math.hypot(BW, BD);
-  const pts = visibilityPolygon(m.x, m.z, segs, far);
-  if (pts.length < 3) {
-    fanMesh.visible = fanBand.visible = fanEdge.visible = false;
-    return;
-  }
-  const y = 0.09;
-
-  const inward = (q) => {
-    const dx = q[0] - m.x, dz = q[1] - m.z;
-    const d = Math.hypot(dx, dz);
-    if (d < 1e-6) return [q[0], q[1]];
-    const w = Math.min(THEME.bandIn, d * 0.55);
-    return [q[0] - dx / d * w, q[1] - dz / d * w];
-  };
-  const er = ((THEME.sightEdge >> 16) & 255) / 255;
-  const eg = ((THEME.sightEdge >> 8) & 255) / 255;
-  const eb = (THEME.sightEdge & 255) / 255;
-
-  const pos = [], edge = [], band = [], bandCol = [];
-  const put = (q, alpha) => { band.push(q[0], y, q[1]); bandCol.push(er, eg, eb, alpha); };
-
-  for (let i = 0; i < pts.length; i++) {
-    const a = pts[i], b = pts[(i + 1) % pts.length];
-    pos.push(m.x, y, m.z, a[0], y, a[1], b[0], y, b[1]);
-    edge.push(a[0], y, a[1], b[0], y, b[1]);
-
-    const ia = inward(a), ib = inward(b), A = THEME.sightBand;
-    put(ia, 0); put(a, A); put(b, A);
-    put(ia, 0); put(b, A); put(ib, 0);
-  }
-
-  fanMesh.geometry.dispose();
-  fanMesh.geometry = new THREE.BufferGeometry();
-  fanMesh.geometry.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-
-  fanBand.geometry.dispose();
-  fanBand.geometry = new THREE.BufferGeometry();
-  fanBand.geometry.setAttribute('position', new THREE.Float32BufferAttribute(band, 3));
-  fanBand.geometry.setAttribute('color', new THREE.Float32BufferAttribute(bandCol, 4));
-
-  fanEdge.geometry.dispose();
-  fanEdge.geometry = new THREE.BufferGeometry();
-  fanEdge.geometry.setAttribute('position', new THREE.Float32BufferAttribute(edge, 3));
-
-  fanMesh.visible = fanBand.visible = fanEdge.visible = true;
-}
-
-function originOf(m) {
-  const p = state.pending && state.pending.models[m.id];
-  return p ? { x: p.x, z: p.z } : { x: m.x, z: m.z };
-}
-
-function usedOf(m) {
-  const o = originOf(m);
-  return Math.hypot(m.x - o.x, m.z - o.z);
-}
-
-function updateRings() {
-  const u = selU(), m = selM();
-  updateKeepOut();
-
-  if (!u || !m || !isMovePhase()) {
-    rangeRing.visible = originRing.visible = originDisc.visible = nearRing.visible = false;
-    return;
-  }
-
-  if (isDeploying() || u.inReserve) {
-    rangeRing.visible = originRing.visible = originDisc.visible = false;
-    nearRing.scale.setScalar(RULES.coherency.nearIn + m.base / 2);
-    nearRing.position.set(m.x, 0.07, m.z);
-    nearRing.visible = u.models.length > 1;
-    return;
-  }
-  if (u.move == null) {
-    rangeRing.visible = originRing.visible = originDisc.visible = false;
-  } else {
-    const from = originOf(m);
-    const left = Math.max(0, u.move - usedOf(m));
-    originRing.scale.setScalar(u.move);
-    originRing.position.set(from.x, 0.05, from.z);
-    originDisc.scale.setScalar(u.move);
-    originDisc.position.set(from.x, 0.03, from.z);
-    originRing.visible = originDisc.visible = true;
-    rangeRing.scale.setScalar(Math.max(left, 0.02));
-    rangeRing.position.set(m.x, 0.06, m.z);
-    rangeRing.visible = left > 0.05;
-  }
-
-  nearRing.scale.setScalar(RULES.coherency.nearIn + m.base / 2);
-  nearRing.position.set(m.x, 0.07, m.z);
-  nearRing.visible = u.models.length > 1;
-}
-
-const $ = (id) => document.getElementById(id);
-const labelsEl = $('labels');
-const labelOf = new Map();
-const v3 = new THREE.Vector3();
-
-function updateLabels() {
-  const me = selM();
-  const myUnit = selU();
-  const segs = me ? blockers() : null;
-  const { nearIn, farIn } = RULES.coherency;
-
-  for (const { m } of allModels()) {
-    let el = labelOf.get(m.id);
-    if (!el) {
-      el = document.createElement('div');
-      el.className = 'lab';
-      labelsEl.appendChild(el);
-      labelOf.set(m.id, el);
+    function originOf(m) {
+      const p = state.pending && state.pending.models[m.id];
+      return p ? { x: p.x, z: p.z } : { x: m.x, z: m.z };
     }
-    if (!me || m.id === me.id || unitOfModel(m.id).inReserve) { el.style.display = 'none'; continue; }
 
-    const on = (id) => state.labelBits.has(id);
-    const gap = edgeGap(me, m);
-    let cls = 'lab';
-    const says = [];
+    function usedOf(m) {
+      const o = originOf(m);
+      return Math.hypot(m.x - o.x, m.z - o.z);
+    }
 
-    const say = (ko, ref, note) => says.push('<span class="w">' + ko
-      + (ref ? '<i>' + ref + '</i>' : '')
-      + (note ? '<em>' + note + '</em>' : '') + '</span>');
+    function updateRings() {
+      const u = selU(), m = selM();
+      updateKeepOut();
 
-    const tgtUnit = unitOfModel(m.id);
-    const ally = tgtUnit.side === myUnit.side;
-
-    if (ally && !on('ally')) { el.style.display = 'none'; continue; }
-
-    if (myUnit.models.includes(m)) {
-
-      const off = gap > farIn;
-      if (on('coh') && !state.mode) {
-        cls += ' mate' + (off ? ' off' : '');
-        if (gap <= nearIn) say('결속 짝', BIT.coh.ref);
-        else if (off) say(farIn + '인치 초과', BIT.coh.ref);
-        else say('같은 유닛');
+      if (!u || !m || !isMovePhase()) {
+        rangeRing.visible = originRing.visible = originDisc.visible = nearRing.visible = false;
+        return;
       }
-    } else if (ally) {
 
-      cls += ' mate';
-      say('아군');
-    } else {
-      const tu = tgtUnit;
-      const st = sightTo(me, m, tu, segs);
-      if (st.visible) {
-        const cov = coverFor(tu, me, segs).ok;
-        if (cov && on('cover')) { cls += ' cover'; say(BIT.cover.ko, BIT.cover.ref); }
-        else if (on('see')) { cls += ' see'; say('보인다', BIT.see.ref, '중심선'); }
+      if (isDeploying() || u.inReserve) {
+        rangeRing.visible = originRing.visible = originDisc.visible = false;
+        nearRing.scale.setScalar(RULES.coherency.nearIn + m.base / 2);
+        nearRing.position.set(m.x, 0.07, m.z);
+        nearRing.visible = u.models.length > 1;
+        return;
+      }
+      if (u.move == null) {
+        rangeRing.visible = originRing.visible = originDisc.visible = false;
       } else {
+        const from = originOf(m);
+        const left = Math.max(0, u.move - usedOf(m));
+        originRing.scale.setScalar(u.move);
+        originRing.position.set(from.x, 0.05, from.z);
+        originDisc.scale.setScalar(u.move);
+        originDisc.position.set(from.x, 0.03, from.z);
+        originRing.visible = originDisc.visible = true;
+        rangeRing.scale.setScalar(Math.max(left, 0.02));
+        rangeRing.position.set(m.x, 0.06, m.z);
+        rangeRing.visible = left > 0.05;
+      }
 
-        const shown = st.why.filter((w) => on(w.id));
-        if (shown.length) { cls += ' blind'; for (const w of shown) say(w.ko, w.ref, w.note); }
+      nearRing.scale.setScalar(RULES.coherency.nearIn + m.base / 2);
+      nearRing.position.set(m.x, 0.07, m.z);
+      nearRing.visible = u.models.length > 1;
+    }
+
+    const $ = (id) => document.getElementById(id);
+    const labelsEl = $('labels');
+    const labelOf = new Map();
+    const v3 = new THREE.Vector3();
+
+    function updateLabels() {
+      const me = selM();
+      const myUnit = selU();
+      const segs = me ? blockers() : null;
+      const { nearIn, farIn } = RULES.coherency;
+
+      for (const { m } of allModels()) {
+        let el = labelOf.get(m.id);
+        if (!el) {
+          el = document.createElement('div');
+          el.className = 'lab';
+          labelsEl.appendChild(el);
+          labelOf.set(m.id, el);
+        }
+        if (!me || m.id === me.id || unitOfModel(m.id).inReserve) { el.style.display = 'none'; continue; }
+
+        const on = (id) => state.labelBits.has(id);
+        const gap = edgeGap(me, m);
+        let cls = 'lab';
+        const says = [];
+
+        const say = (ko, ref, note) => says.push('<span class="w">' + ko
+          + (ref ? '<i>' + ref + '</i>' : '')
+          + (note ? '<em>' + note + '</em>' : '') + '</span>');
+
+        const tgtUnit = unitOfModel(m.id);
+        const ally = tgtUnit.side === myUnit.side;
+
+        if (ally && !on('ally')) { el.style.display = 'none'; continue; }
+
+        if (myUnit.models.includes(m)) {
+
+          const off = gap > farIn;
+          if (on('coh') && !state.mode) {
+            cls += ' mate' + (off ? ' off' : '');
+            if (gap <= nearIn) say('결속 짝', BIT.coh.ref);
+            else if (off) say(farIn + '인치 초과', BIT.coh.ref);
+            else say('같은 유닛');
+          }
+        } else if (ally) {
+
+          cls += ' mate';
+          say('아군');
+        } else {
+          const tu = tgtUnit;
+          const st = sightTo(me, m, tu, segs);
+          if (st.visible) {
+            const cov = coverFor(tu, me, segs).ok;
+            if (cov && on('cover')) { cls += ' cover'; say(BIT.cover.ko, BIT.cover.ref); }
+            else if (on('see')) { cls += ' see'; say('보인다', BIT.see.ref, '중심선'); }
+          } else {
+
+            const shown = st.why.filter((w) => on(w.id));
+            if (shown.length) { cls += ' blind'; for (const w of shown) say(w.ko, w.ref, w.note); }
+          }
+        }
+
+        if (!on('dist') && !says.length) { el.style.display = 'none'; continue; }
+        el.className = cls;
+        el.innerHTML = (on('dist') ? '<span class="d">' + gap.toFixed(1) + '"</span>' : '')
+          + says.join('');
+
+        v3.set(m.x, topOf(m) + 0.45, m.z).project(camera);
+        if (v3.z > 1) { el.style.display = 'none'; continue; }
+        el.style.display = 'block';
+        el.style.left = ((v3.x * 0.5 + 0.5) * innerWidth) + 'px';
+        el.style.top = ((-v3.y * 0.5 + 0.5) * innerHeight) + 'px';
       }
     }
 
-    if (!on('dist') && !says.length) { el.style.display = 'none'; continue; }
-    el.className = cls;
-    el.innerHTML = (on('dist') ? '<span class="d">' + gap.toFixed(1) + '"</span>' : '')
-      + says.join('');
+    function openTags() {
 
-    v3.set(m.x, topOf(m) + 0.45, m.z).project(camera);
-    if (v3.z > 1) { el.style.display = 'none'; continue; }
-    el.style.display = 'block';
-    el.style.left = ((v3.x * 0.5 + 0.5) * innerWidth) + 'px';
-    el.style.top = ((-v3.y * 0.5 + 0.5) * innerHeight) + 'px';
-  }
-}
+      $('tagList').innerHTML = RULES.labelBits.map((b) =>
+        '<div class="tag"><div class="nm">' + b.ko
+        + (b.en ? '<span class="en">' + b.en + '</span>' : '')
+        + (b.ref ? '<span class="ref">' + b.ref + '</span>' : '<span class="ref">보기 설정</span>')
+        + '</div>'
+        + '<p><span class="k">조건</span>' + b.when + '</p>'
+        + '<p><span class="k">효과</span>' + b.what + '</p></div>').join('');
+      $('tagbox').classList.add('on');
+    }
 
-function openTags() {
+    function drawBits() {
+      const box = $('bits');
+      box.innerHTML = RULES.labelBits.map((b) =>
+        '<button class="bit" data-bit="' + b.id + '" aria-pressed="' + state.labelBits.has(b.id) + '">'
+        + b.ko + (b.ref ? '<span class="ref">' + b.ref + '</span>' : '') + '</button>').join('')
+        + '<button class="all" id="btnBitsAll">'
+        + (state.labelBits.size ? '모두 끄기' : '모두 켜기') + '</button>';
+      for (const el of box.querySelectorAll('[data-bit]')) {
+        el.onclick = () => {
+          const id = el.dataset.bit;
+          if (state.labelBits.has(id)) state.labelBits.delete(id);
+          else state.labelBits.add(id);
+          drawBits();
+          syncHudHeight();
+        };
+      }
+      $('btnBitsAll').onclick = () => {
+        if (state.labelBits.size) state.labelBits.clear();
+        else for (const b of RULES.labelBits) state.labelBits.add(b.id);
+        drawBits();
+      };
+    }
 
-  $('tagList').innerHTML = RULES.labelBits.map((b) =>
-    '<div class="tag"><div class="nm">' + b.ko
-    + (b.en ? '<span class="en">' + b.en + '</span>' : '')
-    + (b.ref ? '<span class="ref">' + b.ref + '</span>' : '<span class="ref">보기 설정</span>')
-    + '</div>'
-    + '<p><span class="k">조건</span>' + b.when + '</p>'
-    + '<p><span class="k">효과</span>' + b.what + '</p></div>').join('');
-  $('tagbox').classList.add('on');
-}
+    function syncHudHeight() {
+      document.documentElement.style.setProperty('--hud-h', $('hud').offsetHeight + 'px');
+    }
 
-function drawBits() {
-  const box = $('bits');
-  box.innerHTML = RULES.labelBits.map((b) =>
-    '<button class="bit" data-bit="' + b.id + '" aria-pressed="' + state.labelBits.has(b.id) + '">'
-    + b.ko + (b.ref ? '<span class="ref">' + b.ref + '</span>' : '') + '</button>').join('')
-    + '<button class="all" id="btnBitsAll">'
-    + (state.labelBits.size ? '모두 끄기' : '모두 켜기') + '</button>';
-  for (const el of box.querySelectorAll('[data-bit]')) {
-    el.onclick = () => {
-      const id = el.dataset.bit;
-      if (state.labelBits.has(id)) state.labelBits.delete(id);
-      else state.labelBits.add(id);
-      drawBits();
+    function drawHud() {
+      const p = part();
+      $('hudSide').textContent = SIDES[state.side].ko;
+      $('hudSide').className = 'side ' + SIDES[state.side].css;
+      $('hudRound').textContent = state.round;
+      $('hudPart').textContent = p.ko;
+      $('hudRef').textContent = p.ref;
+      $('hudSkip').style.display = state.moveOnly ? '' : 'none';
+      $('btnFlow').setAttribute('aria-pressed', String(state.moveOnly));
+      $('btnFlow').textContent = state.moveOnly ? '이동만' : '전체 턴';
+
+      $('btnCam').innerHTML = '시점<span class="wide"> · ' + CAMS[camIndex].ko + '</span>';
+      $('btnView').textContent = state.freeCam ? '자유시점' : '전장시점';
+      $('btnView').setAttribute('aria-pressed', String(state.freeCam));
+      $('btnBits').setAttribute('aria-pressed', String(state.showBits));
+      $('bits').classList.toggle('on', state.showBits);
+      syncHudHeight();
+    }
+
+    function drawSel() {
+      const u = selU();
+      const box = $('selBox');
+      if (!u) {
+        box.innerHTML = isMovePhase()
+          ? '<p class="muted">움직일 유닛의 모델을 누르세요. 자기 진영만 골라집니다.</p>'
+          : '<p class="muted">지금은 <b>' + part().ko + '</b>입니다. 손이 열리는 것은 이동 페이즈뿐입니다.</p>';
+        drawModelHud();
+        return;
+      }
+      const chk = canCommit(u);
+      const rows = u.models.map((m) => {
+        const used = usedOf(m);
+        const left = u.move == null ? null : Math.max(0, u.move - used);
+        return '<div class="sub ' + (m.id === state.selModel ? 'on' : '') + '" data-mm="' + m.id + '">'
+          + '<span class="mono">' + m.id + '</span> · 간 ' + used.toFixed(1)
+          + (left == null ? '' : ' / 남은 ' + left.toFixed(1)) + '인치 · 방향 ' + deg(m.facing) + '°'
+          + (chk.coh.nearBad.includes(m.id) ? ' <span class="bad">결속 짝 없음</span>' : '')
+          + (chk.coh.farBad.includes(m.id) ? ' <span class="bad">' + RULES.coherency.farIn + '인치 초과</span>' : '')
+          + (chk.over.includes(m.id) ? ' <span class="bad">겹침</span>' : '')
+          + '</div>';
+      }).join('');
+
+      let foot;
+      if (u.locked) {
+        foot = '<p class="warn">확정됨 — 이 페이즈에 다시 고를 수 없다 (09.02).</p>';
+      } else if (u.inReserve) {
+
+        foot = '<p class="muted">예비대에 있다. 판에 들어오는 길은 <b>진입 이동</b>이다 (20.04)'
+          + (u.deepStrike
+            ? ' — 이 유닛은 <b>심층 타격</b>이라 전장 어디에나 놓을 수 있다 (24.09).'
+            : ' — 전장 가장자리 ' + RULES.ingress.setUpIn + '인치 안에 온전히 놓아야 한다.')
+          + '</p>'
+          + (isDeploying()
+            ? '<p class="muted">' + (state.mode === 'deployTurn'
+              ? '모델을 끌면 그쪽을 바라본다. <b>놓을 때도 방향은 놓는 사람이 정한다</b> (03.02).'
+              : '모델을 끌어 자리를 잡는다. <b>놓는 것은 이동이 아니라</b> 거리 제한이 없다 (03.02).') + '</p>'
+            + (chk.ok
+              ? '<p class="ok">여기 놓을 수 있다 (' + (u.deepStrike ? '24.09' : '20.04') + ').</p>'
+              : '<p class="bad">여기 놓을 수 없다 —<br>· ' + chk.why.join('<br>· ') + '</p>')
+            + '<p class="muted">⚠ 배치 구역은 임무가 정하는 것이라 이 판에 없다 — 「3라운드 전 상대 배치 구역 금지」는 재지 않는다.</p>'
+            : '<p class="muted">판 위 모델 아래의 <b>[배치]</b>로 시작한다.</p>');
+      } else if (!state.mode) {
+        foot = '<p class="muted">보는 중이다. 판은 아직 안 바뀐다 — 판 위 모델 아래의 '
+          + '<b>[이동]</b>·<b>[회전]</b>으로 손을 연다.</p>'
+          + (u.move == null ? '<p class="warn">이동 거리 미입력 — 이동할 수 없다.</p>' : '');
+      } else {
+        foot = '<p class="muted">' + (state.mode === 'move'
+          ? '모델을 끌어 옮긴다. 남은 거리 밖으로는 안 나간다.'
+          : '모델을 끌면 그쪽을 바라본다. <b>돌리는 것은 거리에 안 든다</b> (03.01).') + '</p>'
+          + (chk.ok
+            ? '<p class="ok">이동을 마칠 수 있다 (03.01).</p>'
+            : '<p class="bad">아직 마칠 수 없다 —<br>· ' + chk.why.join('<br>· ') + '</p>');
+      }
+
+      box.innerHTML =
+        '<div class="card on">'
+        + '<div class="nm"><span class="dot" style="background:' + hex(SIDES[u.side].color) + '"></span>' + u.name + '</div>'
+        + '<div class="row"><label>이동 거리 M <span class="muted">사람이 적는다</span></label>'
+        + '<input type="number" id="selMove" step="0.5" min="0" value="' + (u.move ?? '') + '"></div>'
+        + '<p class="muted">모델 ' + u.models.length + '기 — 눌러서 손이 닿을 모델을 고른다 (03.01)</p>'
+        + rows
+        + (state.hudHidden && !u.locked
+          ? '<div class="row"><button id="btnHudBack">판 위 손잡이 다시 열기</button></div>'
+          : '')
+        + (selM()
+          ? '<div class="row"><label>고른 모델 방향 <span class="muted">높이 축 하나</span></label>'
+          + '<input type="number" id="selFace" step="5" min="0" max="359" value="' + deg(selM().facing) + '"><span class="muted">°</span></div>'
+          : '')
+        + '<p class="muted">' + (u.models.length > 1
+          ? '결속 — 서로 ' + RULES.coherency.nearIn + '인치 안에 짝이 있고, 모두 '
+          + RULES.coherency.farIn + '인치 안 (03.03)'
+          : '모델이 하나뿐이라 결속을 따지지 않는다 (03.03).') + '</p>'
+        + foot + '</div>';
+
+      $('selMove').oninput = (e) => {
+        const v = e.target.value.trim();
+        u.move = v === '' ? null : Math.max(0, +v);
+        updateRings(); drawSel(); drawUnits();
+      };
+      if ($('btnHudBack')) $('btnHudBack').onclick = () => { state.hudHidden = false; drawSel(); };
+      if ($('selFace')) $('selFace').oninput = (e) => setFacing(selM(), (+e.target.value || 0) * Math.PI / 180);
+      for (const el of box.querySelectorAll('[data-mm]')) {
+        el.onclick = () => {
+          state.selModel = el.dataset.mm;
+          state.hudHidden = false;
+          buildModels(); drawSel(); updateRings(); updateFan(selM());
+        };
+      }
+
+      drawModelHud();
+    }
+
+    function drawModelHud() {
+      const box = $('mhud');
+      const u = selU(), m = selM();
+      if (!u || !m || !isMovePhase() || u.locked || state.hudHidden) {
+        box.className = ''; box.innerHTML = ''; return;
+      }
+
+      const chk = canCommit(u);
+      const btn = (id, ko, on, dis, cls) => '<button id="' + id + '"'
+        + (cls ? ' class="' + cls + '"' : '') + ' aria-pressed="' + !!on + '"'
+        + (dis ? ' disabled' : '') + '>' + ko + '</button>';
+
+      const hold = btn('mHold', '저장');
+      let rows;
+      if (u.inReserve) {
+
+        const bar = '<div class="mrow">'
+          + btn('mDeploy', '배치', state.mode === 'deploy')
+          + btn('mDeployTurn', '회전', state.mode === 'deployTurn') + hold + '</div>';
+        rows = isDeploying()
+          ? bar + '<div class="mrow">' + btn('mCancel', '취소', false, false, 'no')
+          + btn('mCommit', '확정', false, !chk.ok, 'ok') + '</div>'
+          : bar;
+      } else if (!state.mode) {
+        rows = '<div class="mrow">' + btn('mMove', '이동', false, u.move == null)
+          + btn('mTurn', '회전') + hold + '</div>';
+      } else {
+        rows = '<div class="mrow">' + btn('mMove', '이동', state.mode === 'move', u.move == null)
+          + btn('mTurn', '회전', state.mode === 'turn') + hold + '</div>'
+          + '<div class="mrow">' + btn('mCancel', '취소', false, false, 'no') + btn('mCommit', '확정', false, !chk.ok, 'ok') + '</div>';
+      }
+
+      const say = state.mode && !chk.ok ? '<div class="mwhy">' + chk.why[0] + '</div>' : '';
+
+      box.className = 'on';
+      box.innerHTML = rows + say;
+      const bind = (id, fn) => { if ($(id)) $(id).onclick = fn; };
+      bind('mDeploy', () => enterMode('deploy'));
+      bind('mDeployTurn', () => enterMode('deployTurn'));
+      bind('mMove', () => enterMode('move'));
+      bind('mTurn', () => enterMode('turn'));
+      bind('mCommit', () => commitMove());
+      bind('mCancel', () => cancelMove());
+      bind('mHold', () => { state.hudHidden = true; drawSel(); });
+      placeModelHud();
+    }
+
+    function placeModelHud() {
+      const box = $('mhud');
+      if (!box.classList.contains('on')) return;
+      const m = selM();
+      if (!m) return;
+
+      if (grab) { box.style.visibility = 'hidden'; return; }
+      v3.set(m.x, 0, m.z).project(camera);
+      if (v3.z > 1) { box.style.visibility = 'hidden'; return; }
+      box.style.visibility = 'visible';
+
+      const w = box.offsetWidth || 140, h = box.offsetHeight || 60, pad = 8;
+      const x = (v3.x * 0.5 + 0.5) * innerWidth;
+      const y = (-v3.y * 0.5 + 0.5) * innerHeight + 14;
+      box.style.left = Math.max(w / 2 + pad, Math.min(innerWidth - w / 2 - pad, x)) + 'px';
+      box.style.top = Math.max(pad, Math.min(innerHeight - h - pad, y)) + 'px';
+    }
+
+    function drawUnits() {
+      $('unitList').innerHTML = state.units.map((u) =>
+        '<div class="card ' + (u.id === state.selUnit ? 'on' : '') + (u.locked ? ' done' : '')
+        + '" data-un="' + u.id + '" style="cursor:pointer">'
+        + '<div class="nm"><span class="dot" style="background:' + hex(SIDES[u.side].color) + '"></span>' + u.name + '</div>'
+        + '<div class="muted mono">M ' + (u.move ?? '—') + ' · 모델 ' + u.models.length + '기'
+        + (u.inReserve ? ' · 예비대' : '') + (u.locked ? ' · 확정됨' : '') + '</div>'
+        + '<div class="muted">' + (u.keywords || []).join(' · ')
+        + (u.deepStrike ? ' · 심층 타격 24.09' : '')
+        + (u.loneOperativeIn != null ? ' · 단독 요원 ' + u.loneOperativeIn + '인치 24.24' : '')
+        + '</div></div>').join('');
+      for (const el of $('unitList').querySelectorAll('[data-un]')) {
+        el.onclick = () => selectUnit(el.dataset.un);
+      }
+    }
+
+    function drawTerrainSel() {
+      const box = $('trnSel');
+      const t = state.terrain.find((x) => x.id === state.selTerrain);
+      if (!t) {
+        box.innerHTML = '<p class="muted">판에서 지형 조각을 누르면 여기에 나옵니다. '
+          + '지형에는 임자가 없어 <b>어느 턴에서든</b> 고를 수 있습니다.</p>';
+        return;
+      }
+      const cat = RULES.terrainCats[t.cat];
+      box.innerHTML = '<div class="card on">'
+        + '<div class="nm mono">' + t.w + ' × ' + t.d + '인치'
+        + (t.rot ? ' · ' + t.rot + '°' : '') + '</div>'
+        + '<div class="row">' + Object.entries(RULES.terrainCats).map(([k, v]) =>
+          '<button data-setcat="' + k + '" aria-pressed="' + (t.cat === k) + '">' + v.ko + '</button>').join('')
+        + '</div>'
+        + '<p class="muted">' + cat.what + '</p>'
+        + '<p class="muted">어느 조각이 무엇인지는 <b>판을 꾸미는 사람이 정한다</b> — '
+        + '원지가 조각마다 말해 주지 않는다 (13.02).</p>'
+        + '</div>';
+      for (const el of box.querySelectorAll('[data-setcat]')) {
+        el.onclick = () => {
+          t.cat = el.dataset.setcat;
+          buildTerrain(); drawTerrainSel(); drawTerrain(); drawSight();
+          updateFan(selM());
+        };
+      }
+    }
+
+    function drawTerrain() {
+      $('trnList').innerHTML = state.terrain.map((t) =>
+        '<div class="card ' + (t.id === state.selTerrain ? 'on' : '') + '" data-pick="' + t.id + '"'
+        + ' style="cursor:pointer"><div class="nm mono">' + t.w + ' × ' + t.d + '인치</div>'
+        + '<div class="row"><label>유형 <span class="muted">13.02</span></label>'
+        + '<select data-trn="' + t.id + '">'
+        + Object.entries(RULES.terrainCats).map(([k, v]) =>
+          '<option value="' + k + '"' + (t.cat === k ? ' selected' : '') + '>' + v.ko + '</option>').join('')
+        + '</select></div></div>').join('');
+      for (const el of $('trnList').querySelectorAll('[data-trn]')) {
+        el.onchange = () => {
+          state.terrain.find((t) => t.id === el.dataset.trn).cat = el.value;
+          buildTerrain(); drawTerrainSel(); updateFan(selM()); drawSight();
+        };
+      }
+      for (const el of $('trnList').querySelectorAll('[data-pick]')) {
+        el.onclick = (ev) => {
+          if (ev.target.closest('select')) return;
+          selectTerrain(el.dataset.pick);
+        };
+      }
+    }
+
+    function drawSight() {
+      const me = selM();
+      const box = $('sightBox');
+      if (!me) { box.innerHTML = '<p class="muted">모델을 고르면 여기에 나옵니다.</p>'; return; }
+      const myUnit = selU();
+      const segs = blockers();
+
+      box.innerHTML = state.units.filter((u) => u.side !== myUnit.side && !u.inReserve).map((u) => {
+
+        const per = u.models.map((m) => sightTo(me, m, u, segs));
+        const seen = per.filter((x) => x.visible);
+        const near = Math.min(...per.map((x) => x.gap));
+        const cov = seen.length ? coverFor(u, me, segs) : null;
+        const why = [...new Set(per.flatMap((x) => x.why.map(sayWhy)))];
+        return '<div class="card">'
+          + '<div class="nm"><span class="dot" style="background:' + hex(SIDES[u.side].color) + '"></span>'
+          + u.name + '</div>'
+          + '<div class="muted mono">가장 가까운 모델 ' + near.toFixed(1) + '인치 · '
+          + seen.length + '/' + u.models.length + '기 보임</div>'
+          + (seen.length
+            ? (cov.ok
+              ? '<p class="warn">엄폐 효과 — 이 유닛을 노리는 사격은 BS 가 1 나빠진다 (13.08)</p>'
+              : '<p class="ok">엄폐 없음 — 모든 모델이 그 조건을 만족하지는 않는다 (13.08)</p>')
+            : '<p class="bad">안 보인다 — 대상으로 지정할 수 없다 (04.02)</p>')
+          + (why.length ? '<p class="muted">걸린 것 — ' + why.join(' · ') + '</p>' : '')
+          + '</div>';
+      }).join('') || '<p class="muted">판 위에 남이 없습니다.</p>';
+    }
+
+    function drawPanel() { drawSel(); drawUnits(); drawSight(); }
+
+    function openGate() {
+      const p = part();
+      $('gWho').textContent = SIDES[state.side].ko + ' · 라운드 ' + state.round;
+      $('gWho').className = 'who ' + SIDES[state.side].css;
+      $('gPh').textContent = p.ko;
+      $('gRef').textContent = p.ref;
+      $('gSay').innerHTML = p.say;
+      $('gNext').textContent = p.act ? '이동을 시작한다 →' : '다음 →';
+      $('gate').classList.add('on');
+    }
+
+    function nextPart() {
+      state.partIndex++;
+      if (state.partIndex >= parts().length) {
+        state.partIndex = 0;
+        if (state.side === 'A') state.side = 'B';
+        else { state.side = 'A'; state.round++; }
+      }
+
+      if (isMovePhase()) {
+        for (const u of state.units) {
+          if (u.side !== state.side) continue;
+          u.locked = false;
+        }
+      }
+      clearSelection();
+      buildModels();
+      drawHud(); drawPanel(); updateRings(); updateFan(null);
+      openGate();
+    }
+
+    function clearSelection() {
+      state.selUnit = null;
+      state.selModel = null;
+      state.mode = null;
+      state.pending = null;
+    }
+
+    function selectUnit(id, modelId) {
+      if (!isMovePhase()) return;
+      const u = unit(id);
+      if (!u || u.side !== state.side) return;
+
+      if (state.selUnit !== id) {
+        if (state.pending) restorePending();
+        state.mode = null;
+        state.pending = null;
+      }
+      state.hudHidden = false;
+      state.selUnit = id;
+      state.selModel = modelId || u.models[0].id;
+      buildModels();
+      drawPanel(); updateRings(); updateFan(selM());
+    }
+
+    function setFacing(m, rad) {
+      if (!m) return;
+      m.facing = rad;
+      const g = meshOf.get(m.id);
+      if (g) g.rotation.y = rad;
+      drawSel();
+    }
+
+    function enterMode(mode) {
+      const u = selU();
+      if (!u || u.locked) return;
+      const wantDeploy = mode === 'deploy' || mode === 'deployTurn';
+      if (wantDeploy !== !!u.inReserve) return;
+      if (mode === 'move' && u.move == null) return;
+      if (!state.pending) {
+        state.pending = {
+          models: Object.fromEntries(u.models.map((m) => [m.id, { x: m.x, z: m.z, facing: m.facing }])),
+        };
+      }
+      state.mode = mode;
+      drawSel(); updateRings();
+    }
+
+    function commitMove() {
+      const u = selU();
+      if (!u || !canCommit(u).ok) return;
+      if (isDeploying()) u.inReserve = false;
+      u.locked = true;
+      clearSelection();
+      buildModels();
+      drawPanel(); updateRings(); updateFan(null);
+    }
+
+    function restorePending() {
+      const u = selU();
+      if (!u || !state.pending) return;
+      for (const m of u.models) {
+        const p = state.pending.models[m.id];
+        if (!p) continue;
+        m.x = p.x; m.z = p.z; m.facing = p.facing;
+        const g = meshOf.get(m.id);
+        if (g) { g.position.set(m.x, 0, m.z); g.rotation.y = m.facing; }
+      }
+    }
+
+    function cancelMove() {
+      if (!selU() || !state.pending) return;
+      restorePending();
+      state.mode = null;
+      state.pending = null;
+      drawPanel(); updateRings(); updateFan(selM());
+    }
+
+    const ray = new THREE.Raycaster();
+    const ptr = new THREE.Vector2();
+    const ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const hitPt = new THREE.Vector3();
+
+    let orbiting = null;
+    let grab = null;
+
+    const pointers = new Map();
+    let pinch = null;
+    let pinchLock = false;
+
+    const pinchNow = () => {
+      const [a, b] = [...pointers.values()];
+      return { dist: Math.hypot(a.x - b.x, a.y - b.y), mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+    };
+
+    function toPointer(e) {
+      ptr.x = (e.clientX / innerWidth) * 2 - 1;
+      ptr.y = -(e.clientY / innerHeight) * 2 + 1;
+      ray.setFromCamera(ptr, camera);
+    }
+
+    function pickModel(e) {
+      toPointer(e);
+      const hit = ray.intersectObjects(modelGroup.children, true)[0];
+      if (!hit) return null;
+      let o = hit.object;
+      while (o && !o.userData.id) o = o.parent;
+      return o ? o.userData.id : null;
+    }
+
+    function pickTerrain(e) {
+      toPointer(e);
+      for (const hit of ray.intersectObjects(terrainGroup.children, false)) {
+        if (hit.object.userData.tid) return hit.object.userData.tid;
+      }
+      return null;
+    }
+
+    function selectTerrain(id) {
+      state.selTerrain = id;
+      buildTerrain();
+      drawTerrainSel();
+      drawTerrain();
+    }
+
+    function capture(e) {
+      try { renderer.domElement.setPointerCapture(e.pointerId); } catch { }
+    }
+
+    renderer.domElement.addEventListener('pointerdown', (e) => {
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size >= 2) {
+
+        grab = null; orbiting = null; pinchLock = true;
+        if (pointers.size === 2) pinch = pinchNow();
+        capture(e);
+        return;
+      }
+      if (pinchLock) return;
+
+      const hitId = (e.button !== 2 && isMovePhase()) ? pickModel(e) : null;
+      if (hitId) {
+        const u = unitOfModel(hitId);
+
+        if (state.mode && u && u.id !== state.selUnit) return;
+        if (u && u.side === state.side && !u.locked) {
+          selectUnit(u.id, hitId);
+          const m = selM();
+
+          if (state.mode && m) {
+            grab = m.id;
+            capture(e);
+          }
+          return;
+        }
+      }
+
+      orbiting = {
+        x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY,
+        pan: e.button === 2 && state.freeCam,
+        tid: e.button === 2 ? null : pickTerrain(e),
+      };
+      capture(e);
+    });
+
+    renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    renderer.domElement.addEventListener('pointermove', (e) => {
+      if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size >= 2) {
+        if (pointers.size !== 2 || !pinch) return;
+        const now = pinchNow();
+        if (pinch.dist > 8 && now.dist > 8) cam.dist *= pinch.dist / now.dist;
+
+        if (state.freeCam) panCam(now.mx - pinch.mx, now.my - pinch.my);
+        else applyCam();
+        pinch = now;
+        return;
+      }
+      if (orbiting) {
+        const dx = e.clientX - orbiting.x, dy = e.clientY - orbiting.y;
+        if (orbiting.pan) panCam(dx, dy);
+        else {
+          cam.az -= dx * 0.006;
+          cam.el += dy * 0.005;
+          applyCam();
+        }
+        orbiting = { ...orbiting, x: e.clientX, y: e.clientY };
+        return;
+      }
+      if (!grab) return;
+      const u = selU(), m = selM();
+      if (!u || !m) return;
+      toPointer(e);
+      if (!ray.ray.intersectPlane(ground, hitPt)) return;
+
+      if (isTurning()) {
+
+        setFacing(m, Math.atan2(hitPt.x - m.x, hitPt.z - m.z));
+        return;
+      }
+
+      const o = originOf(m);
+      let dx = hitPt.x - o.x, dz = hitPt.z - o.z;
+      const len = Math.hypot(dx, dz);
+      if (!isDeploying() && len > u.move) { dx = dx / len * u.move; dz = dz / len * u.move; }
+
+      const r = m.base / 2;
+      m.x = Math.min(BW / 2 - r, Math.max(-BW / 2 + r, o.x + dx));
+      m.z = Math.min(BD / 2 - r, Math.max(-BD / 2 + r, o.z + dz));
+
+      meshOf.get(m.id).position.set(m.x, 0, m.z);
+      updateRings();
+      updateFan(m);
+      drawSel();
+    });
+
+    function endDrag(e) {
+      pointers.delete(e.pointerId);
+      if (pointers.size < 2) pinch = null;
+      if (pointers.size === 0) pinchLock = false;
+      if (pinchLock) { grab = null; orbiting = null; return; }
+      if (orbiting) {
+
+        const moved = Math.hypot(e.clientX - orbiting.x0, e.clientY - orbiting.y0);
+        if (moved < 4 && !orbiting.pan) selectTerrain(orbiting.tid);
+        orbiting = null;
+      }
+      if (grab) { grab = null; drawSel(); }
+      try { renderer.domElement.releasePointerCapture(e.pointerId); } catch { }
+    }
+    renderer.domElement.addEventListener('pointerup', endDrag);
+    renderer.domElement.addEventListener('pointercancel', endDrag);
+    renderer.domElement.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      cam.dist *= e.deltaY > 0 ? 1.1 : 0.9;
+      applyCam();
+    }, { passive: false });
+
+    $('btnNext').onclick = () => nextPart();
+    $('gNext').onclick = () => $('gate').classList.remove('on');
+    $('btnCam').onclick = () => { usePreset((camIndex + 1) % CAMS.length); drawHud(); };
+    $('btnBits').onclick = () => { state.showBits = !state.showBits; drawHud(); };
+    $('btnTags').onclick = () => openTags();
+    $('tagClose').onclick = () => $('tagbox').classList.remove('on');
+
+    $('tagbox').onclick = (e) => { if (e.target === $('tagbox')) $('tagbox').classList.remove('on'); };
+    $('btnView').onclick = () => {
+      state.freeCam = !state.freeCam;
+      applyCam();
+      drawHud();
+    };
+    $('btnFlow').onclick = () => {
+      state.moveOnly = !state.moveOnly;
+      state.partIndex = 0;
+      clearSelection();
+      buildModels();
+      drawHud(); drawPanel(); updateRings(); updateFan(null);
+      openGate();
+    };
+    $('btnPanel').onclick = () => {
+      state.panelOff = document.body.classList.toggle('panel-off');
+      $('btnPanel').textContent = state.panelOff ? '판 ◂' : '판 ▸';
       syncHudHeight();
     };
-  }
-  $('btnBitsAll').onclick = () => {
-    if (state.labelBits.size) state.labelBits.clear();
-    else for (const b of RULES.labelBits) state.labelBits.add(b.id);
-    drawBits();
-  };
-}
-
-function syncHudHeight() {
-  document.documentElement.style.setProperty('--hud-h', $('hud').offsetHeight + 'px');
-}
-
-function drawHud() {
-  const p = part();
-  $('hudSide').textContent = SIDES[state.side].ko;
-  $('hudSide').className = 'side ' + SIDES[state.side].css;
-  $('hudRound').textContent = state.round;
-  $('hudPart').textContent = p.ko;
-  $('hudRef').textContent = p.ref;
-  $('hudSkip').style.display = state.moveOnly ? '' : 'none';
-  $('btnFlow').setAttribute('aria-pressed', String(state.moveOnly));
-  $('btnFlow').textContent = state.moveOnly ? '이동만' : '전체 턴';
-  $('btnCam').textContent = '시점 · ' + CAMS[camIndex].ko;
-  $('btnView').textContent = state.freeCam ? '자유시점' : '전장시점';
-  $('btnView').setAttribute('aria-pressed', String(state.freeCam));
-  $('btnBits').setAttribute('aria-pressed', String(state.showBits));
-  $('bits').classList.toggle('on', state.showBits);
-  syncHudHeight();
-}
-
-function drawSel() {
-  const u = selU();
-  const box = $('selBox');
-  if (!u) {
-    box.innerHTML = isMovePhase()
-      ? '<p class="muted">움직일 유닛의 모델을 누르세요. 자기 진영만 골라집니다.</p>'
-      : '<p class="muted">지금은 <b>' + part().ko + '</b>입니다. 손이 열리는 것은 이동 페이즈뿐입니다.</p>';
-    drawModelHud();
-    return;
-  }
-  const chk = canCommit(u);
-  const rows = u.models.map((m) => {
-    const used = usedOf(m);
-    const left = u.move == null ? null : Math.max(0, u.move - used);
-    return '<div class="sub ' + (m.id === state.selModel ? 'on' : '') + '" data-mm="' + m.id + '">'
-      + '<span class="mono">' + m.id + '</span> · 간 ' + used.toFixed(1)
-      + (left == null ? '' : ' / 남은 ' + left.toFixed(1)) + '인치 · 방향 ' + deg(m.facing) + '°'
-      + (chk.coh.nearBad.includes(m.id) ? ' <span class="bad">결속 짝 없음</span>' : '')
-      + (chk.coh.farBad.includes(m.id) ? ' <span class="bad">' + RULES.coherency.farIn + '인치 초과</span>' : '')
-      + (chk.over.includes(m.id) ? ' <span class="bad">겹침</span>' : '')
-      + '</div>';
-  }).join('');
-
-  let foot;
-  if (u.locked) {
-    foot = '<p class="warn">확정됨 — 이 페이즈에 다시 고를 수 없다 (09.02).</p>';
-  } else if (u.inReserve) {
-
-    foot = '<p class="muted">예비대에 있다. 판에 들어오는 길은 <b>진입 이동</b>이다 (20.04)'
-      + (u.deepStrike
-        ? ' — 이 유닛은 <b>심층 타격</b>이라 전장 어디에나 놓을 수 있다 (24.09).'
-        : ' — 전장 가장자리 ' + RULES.ingress.setUpIn + '인치 안에 온전히 놓아야 한다.')
-      + '</p>'
-      + (isDeploying()
-        ? '<p class="muted">' + (state.mode === 'deployTurn'
-          ? '모델을 끌면 그쪽을 바라본다. <b>놓을 때도 방향은 놓는 사람이 정한다</b> (03.02).'
-          : '모델을 끌어 자리를 잡는다. <b>놓는 것은 이동이 아니라</b> 거리 제한이 없다 (03.02).') + '</p>'
-          + (chk.ok
-            ? '<p class="ok">여기 놓을 수 있다 (' + (u.deepStrike ? '24.09' : '20.04') + ').</p>'
-            : '<p class="bad">여기 놓을 수 없다 —<br>· ' + chk.why.join('<br>· ') + '</p>')
-          + '<p class="muted">⚠ 배치 구역은 임무가 정하는 것이라 이 판에 없다 — 「3라운드 전 상대 배치 구역 금지」는 재지 않는다.</p>'
-        : '<p class="muted">판 위 모델 아래의 <b>[배치]</b>로 시작한다.</p>');
-  } else if (!state.mode) {
-    foot = '<p class="muted">보는 중이다. 판은 아직 안 바뀐다 — 판 위 모델 아래의 '
-      + '<b>[이동]</b>·<b>[회전]</b>으로 손을 연다.</p>'
-      + (u.move == null ? '<p class="warn">이동 거리 미입력 — 이동할 수 없다.</p>' : '');
-  } else {
-    foot = '<p class="muted">' + (state.mode === 'move'
-      ? '모델을 끌어 옮긴다. 남은 거리 밖으로는 안 나간다.'
-      : '모델을 끌면 그쪽을 바라본다. <b>돌리는 것은 거리에 안 든다</b> (03.01).') + '</p>'
-      + (chk.ok
-        ? '<p class="ok">이동을 마칠 수 있다 (03.01).</p>'
-        : '<p class="bad">아직 마칠 수 없다 —<br>· ' + chk.why.join('<br>· ') + '</p>');
-  }
-
-  box.innerHTML =
-    '<div class="card on">'
-    + '<div class="nm"><span class="dot" style="background:' + hex(SIDES[u.side].color) + '"></span>' + u.name + '</div>'
-    + '<div class="row"><label>이동 거리 M <span class="muted">사람이 적는다</span></label>'
-    + '<input type="number" id="selMove" step="0.5" min="0" value="' + (u.move ?? '') + '"></div>'
-    + '<p class="muted">모델 ' + u.models.length + '기 — 눌러서 손이 닿을 모델을 고른다 (03.01)</p>'
-    + rows
-    + (state.hudHidden && !u.locked
-      ? '<div class="row"><button id="btnHudBack">판 위 손잡이 다시 열기</button></div>'
-      : '')
-    + (selM()
-      ? '<div class="row"><label>고른 모델 방향 <span class="muted">높이 축 하나</span></label>'
-        + '<input type="number" id="selFace" step="5" min="0" max="359" value="' + deg(selM().facing) + '"><span class="muted">°</span></div>'
-      : '')
-    + '<p class="muted">' + (u.models.length > 1
-      ? '결속 — 서로 ' + RULES.coherency.nearIn + '인치 안에 짝이 있고, 모두 '
-        + RULES.coherency.farIn + '인치 안 (03.03)'
-      : '모델이 하나뿐이라 결속을 따지지 않는다 (03.03).') + '</p>'
-    + foot + '</div>';
-
-  $('selMove').oninput = (e) => {
-    const v = e.target.value.trim();
-    u.move = v === '' ? null : Math.max(0, +v);
-    updateRings(); drawSel(); drawUnits();
-  };
-  if ($('btnHudBack')) $('btnHudBack').onclick = () => { state.hudHidden = false; drawSel(); };
-  if ($('selFace')) $('selFace').oninput = (e) => setFacing(selM(), (+e.target.value || 0) * Math.PI / 180);
-  for (const el of box.querySelectorAll('[data-mm]')) {
-    el.onclick = () => {
-      state.selModel = el.dataset.mm;
-      state.hudHidden = false;
-      buildModels(); drawSel(); updateRings(); updateFan(selM());
-    };
-  }
-
-  drawModelHud();
-}
-
-function drawModelHud() {
-  const box = $('mhud');
-  const u = selU(), m = selM();
-  if (!u || !m || !isMovePhase() || u.locked || state.hudHidden) {
-    box.className = ''; box.innerHTML = ''; return;
-  }
-
-  const chk = canCommit(u);
-  const btn = (id, ko, on, dis, cls) => '<button id="' + id + '"'
-    + (cls ? ' class="' + cls + '"' : '') + ' aria-pressed="' + !!on + '"'
-    + (dis ? ' disabled' : '') + '>' + ko + '</button>';
-
-  const hold = btn('mHold', '저장');
-  let rows;
-  if (u.inReserve) {
-
-    const bar = '<div class="mrow">'
-      + btn('mDeploy', '배치', state.mode === 'deploy')
-      + btn('mDeployTurn', '회전', state.mode === 'deployTurn') + hold + '</div>';
-    rows = isDeploying()
-      ? bar + '<div class="mrow">' + btn('mCancel', '취소', false, false, 'no')
-        + btn('mCommit', '확정', false, !chk.ok, 'ok') + '</div>'
-      : bar;
-  } else if (!state.mode) {
-    rows = '<div class="mrow">' + btn('mMove', '이동', false, u.move == null)
-      + btn('mTurn', '회전') + hold + '</div>';
-  } else {
-    rows = '<div class="mrow">' + btn('mMove', '이동', state.mode === 'move', u.move == null)
-      + btn('mTurn', '회전', state.mode === 'turn') + hold + '</div>'
-      + '<div class="mrow">' + btn('mCancel', '취소', false, false, 'no') + btn('mCommit', '확정', false, !chk.ok, 'ok') + '</div>';
-  }
-
-  const say = state.mode && !chk.ok ? '<div class="mwhy">' + chk.why[0] + '</div>' : '';
-
-  box.className = 'on';
-  box.innerHTML = rows + say;
-  const bind = (id, fn) => { if ($(id)) $(id).onclick = fn; };
-  bind('mDeploy', () => enterMode('deploy'));
-  bind('mDeployTurn', () => enterMode('deployTurn'));
-  bind('mMove', () => enterMode('move'));
-  bind('mTurn', () => enterMode('turn'));
-  bind('mCommit', () => commitMove());
-  bind('mCancel', () => cancelMove());
-  bind('mHold', () => { state.hudHidden = true; drawSel(); });
-  placeModelHud();
-}
-
-function placeModelHud() {
-  const box = $('mhud');
-  if (!box.classList.contains('on')) return;
-  const m = selM();
-  if (!m) return;
-
-  if (grab) { box.style.visibility = 'hidden'; return; }
-  v3.set(m.x, 0, m.z).project(camera);
-  if (v3.z > 1) { box.style.visibility = 'hidden'; return; }
-  box.style.visibility = 'visible';
-  box.style.left = ((v3.x * 0.5 + 0.5) * innerWidth) + 'px';
-  box.style.top = ((-v3.y * 0.5 + 0.5) * innerHeight + 14) + 'px';
-}
-
-function drawUnits() {
-  $('unitList').innerHTML = state.units.map((u) =>
-    '<div class="card ' + (u.id === state.selUnit ? 'on' : '') + (u.locked ? ' done' : '')
-    + '" data-un="' + u.id + '" style="cursor:pointer">'
-    + '<div class="nm"><span class="dot" style="background:' + hex(SIDES[u.side].color) + '"></span>' + u.name + '</div>'
-    + '<div class="muted mono">M ' + (u.move ?? '—') + ' · 모델 ' + u.models.length + '기'
-    + (u.inReserve ? ' · 예비대' : '') + (u.locked ? ' · 확정됨' : '') + '</div>'
-    + '<div class="muted">' + (u.keywords || []).join(' · ')
-    + (u.deepStrike ? ' · 심층 타격 24.09' : '')
-    + (u.loneOperativeIn != null ? ' · 단독 요원 ' + u.loneOperativeIn + '인치 24.24' : '')
-    + '</div></div>').join('');
-  for (const el of $('unitList').querySelectorAll('[data-un]')) {
-    el.onclick = () => selectUnit(el.dataset.un);
-  }
-}
-
-function drawTerrainSel() {
-  const box = $('trnSel');
-  const t = state.terrain.find((x) => x.id === state.selTerrain);
-  if (!t) {
-    box.innerHTML = '<p class="muted">판에서 지형 조각을 누르면 여기에 나옵니다. '
-      + '지형에는 임자가 없어 <b>어느 턴에서든</b> 고를 수 있습니다.</p>';
-    return;
-  }
-  const cat = RULES.terrainCats[t.cat];
-  box.innerHTML = '<div class="card on">'
-    + '<div class="nm mono">' + t.w + ' × ' + t.d + '인치'
-    + (t.rot ? ' · ' + t.rot + '°' : '') + '</div>'
-    + '<div class="row">' + Object.entries(RULES.terrainCats).map(([k, v]) =>
-      '<button data-setcat="' + k + '" aria-pressed="' + (t.cat === k) + '">' + v.ko + '</button>').join('')
-    + '</div>'
-    + '<p class="muted">' + cat.what + '</p>'
-    + '<p class="muted">어느 조각이 무엇인지는 <b>판을 꾸미는 사람이 정한다</b> — '
-    + '원지가 조각마다 말해 주지 않는다 (13.02).</p>'
-    + '</div>';
-  for (const el of box.querySelectorAll('[data-setcat]')) {
-    el.onclick = () => {
-      t.cat = el.dataset.setcat;
-      buildTerrain(); drawTerrainSel(); drawTerrain(); drawSight();
+    $('btnFan').onclick = (e) => {
+      state.showFan = !state.showFan;
+      e.target.setAttribute('aria-pressed', String(state.showFan));
+      e.target.textContent = state.showFan ? '켬' : '끔';
       updateFan(selM());
     };
-  }
-}
-
-function drawTerrain() {
-  $('trnList').innerHTML = state.terrain.map((t) =>
-    '<div class="card ' + (t.id === state.selTerrain ? 'on' : '') + '" data-pick="' + t.id + '"'
-    + ' style="cursor:pointer"><div class="nm mono">' + t.w + ' × ' + t.d + '인치</div>'
-    + '<div class="row"><label>유형 <span class="muted">13.02</span></label>'
-    + '<select data-trn="' + t.id + '">'
-    + Object.entries(RULES.terrainCats).map(([k, v]) =>
-      '<option value="' + k + '"' + (t.cat === k ? ' selected' : '') + '>' + v.ko + '</option>').join('')
-    + '</select></div></div>').join('');
-  for (const el of $('trnList').querySelectorAll('[data-trn]')) {
-    el.onchange = () => {
-      state.terrain.find((t) => t.id === el.dataset.trn).cat = el.value;
-      buildTerrain(); drawTerrainSel(); updateFan(selM()); drawSight();
+    $('cutH').oninput = (e) => {
+      state.cutHeight = Math.max(0, +e.target.value || 0);
+      buildTerrain();
+      updateFan(selM());
     };
-  }
-  for (const el of $('trnList').querySelectorAll('[data-pick]')) {
-    el.onclick = (ev) => {
-      if (ev.target.closest('select')) return;
-      selectTerrain(el.dataset.pick);
-    };
-  }
-}
 
-function drawSight() {
-  const me = selM();
-  const box = $('sightBox');
-  if (!me) { box.innerHTML = '<p class="muted">모델을 고르면 여기에 나옵니다.</p>'; return; }
-  const myUnit = selU();
-  const segs = blockers();
-
-  box.innerHTML = state.units.filter((u) => u.side !== myUnit.side && !u.inReserve).map((u) => {
-
-    const per = u.models.map((m) => sightTo(me, m, u, segs));
-    const seen = per.filter((x) => x.visible);
-    const near = Math.min(...per.map((x) => x.gap));
-    const cov = seen.length ? coverFor(u, me, segs) : null;
-    const why = [...new Set(per.flatMap((x) => x.why.map(sayWhy)))];
-    return '<div class="card">'
-      + '<div class="nm"><span class="dot" style="background:' + hex(SIDES[u.side].color) + '"></span>'
-      + u.name + '</div>'
-      + '<div class="muted mono">가장 가까운 모델 ' + near.toFixed(1) + '인치 · '
-      + seen.length + '/' + u.models.length + '기 보임</div>'
-      + (seen.length
-        ? (cov.ok
-          ? '<p class="warn">엄폐 효과 — 이 유닛을 노리는 사격은 BS 가 1 나빠진다 (13.08)</p>'
-          : '<p class="ok">엄폐 없음 — 모든 모델이 그 조건을 만족하지는 않는다 (13.08)</p>')
-        : '<p class="bad">안 보인다 — 대상으로 지정할 수 없다 (04.02)</p>')
-      + (why.length ? '<p class="muted">걸린 것 — ' + why.join(' · ') + '</p>' : '')
-      + '</div>';
-  }).join('') || '<p class="muted">판 위에 남이 없습니다.</p>';
-}
-
-function drawPanel() { drawSel(); drawUnits(); drawSight(); }
-
-function openGate() {
-  const p = part();
-  $('gWho').textContent = SIDES[state.side].ko + ' · 라운드 ' + state.round;
-  $('gWho').className = 'who ' + SIDES[state.side].css;
-  $('gPh').textContent = p.ko;
-  $('gRef').textContent = p.ref;
-  $('gSay').innerHTML = p.say;
-  $('gNext').textContent = p.act ? '이동을 시작한다 →' : '다음 →';
-  $('gate').classList.add('on');
-}
-
-function nextPart() {
-  state.partIndex++;
-  if (state.partIndex >= parts().length) {
-    state.partIndex = 0;
-    if (state.side === 'A') state.side = 'B';
-    else { state.side = 'A'; state.round++; }
-  }
-
-  if (isMovePhase()) {
-    for (const u of state.units) {
-      if (u.side !== state.side) continue;
-      u.locked = false;
-    }
-  }
-  clearSelection();
-  buildModels();
-  drawHud(); drawPanel(); updateRings(); updateFan(null);
-  openGate();
-}
-
-function clearSelection() {
-  state.selUnit = null;
-  state.selModel = null;
-  state.mode = null;
-  state.pending = null;
-}
-
-function selectUnit(id, modelId) {
-  if (!isMovePhase()) return;
-  const u = unit(id);
-  if (!u || u.side !== state.side) return;
-
-  if (state.selUnit !== id) {
-    if (state.pending) restorePending();
-    state.mode = null;
-    state.pending = null;
-  }
-  state.hudHidden = false;
-  state.selUnit = id;
-  state.selModel = modelId || u.models[0].id;
-  buildModels();
-  drawPanel(); updateRings(); updateFan(selM());
-}
-
-function setFacing(m, rad) {
-  if (!m) return;
-  m.facing = rad;
-  const g = meshOf.get(m.id);
-  if (g) g.rotation.y = rad;
-  drawSel();
-}
-
-function enterMode(mode) {
-  const u = selU();
-  if (!u || u.locked) return;
-  const wantDeploy = mode === 'deploy' || mode === 'deployTurn';
-  if (wantDeploy !== !!u.inReserve) return;
-  if (mode === 'move' && u.move == null) return;
-  if (!state.pending) {
-    state.pending = {
-      models: Object.fromEntries(u.models.map((m) => [m.id, { x: m.x, z: m.z, facing: m.facing }])),
-    };
-  }
-  state.mode = mode;
-  drawSel(); updateRings();
-}
-
-function commitMove() {
-  const u = selU();
-  if (!u || !canCommit(u).ok) return;
-  if (isDeploying()) u.inReserve = false;
-  u.locked = true;
-  clearSelection();
-  buildModels();
-  drawPanel(); updateRings(); updateFan(null);
-}
-
-function restorePending() {
-  const u = selU();
-  if (!u || !state.pending) return;
-  for (const m of u.models) {
-    const p = state.pending.models[m.id];
-    if (!p) continue;
-    m.x = p.x; m.z = p.z; m.facing = p.facing;
-    const g = meshOf.get(m.id);
-    if (g) { g.position.set(m.x, 0, m.z); g.rotation.y = m.facing; }
-  }
-}
-
-function cancelMove() {
-  if (!selU() || !state.pending) return;
-  restorePending();
-  state.mode = null;
-  state.pending = null;
-  drawPanel(); updateRings(); updateFan(selM());
-}
-
-const ray = new THREE.Raycaster();
-const ptr = new THREE.Vector2();
-const ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-const hitPt = new THREE.Vector3();
-
-let orbiting = null;
-let grab = null;
-
-function toPointer(e) {
-  ptr.x = (e.clientX / innerWidth) * 2 - 1;
-  ptr.y = -(e.clientY / innerHeight) * 2 + 1;
-  ray.setFromCamera(ptr, camera);
-}
-
-function pickModel(e) {
-  toPointer(e);
-  const hit = ray.intersectObjects(modelGroup.children, true)[0];
-  if (!hit) return null;
-  let o = hit.object;
-  while (o && !o.userData.id) o = o.parent;
-  return o ? o.userData.id : null;
-}
-
-function pickTerrain(e) {
-  toPointer(e);
-  for (const hit of ray.intersectObjects(terrainGroup.children, false)) {
-    if (hit.object.userData.tid) return hit.object.userData.tid;
-  }
-  return null;
-}
-
-function selectTerrain(id) {
-  state.selTerrain = id;
-  buildTerrain();
-  drawTerrainSel();
-  drawTerrain();
-}
-
-function capture(e) {
-  try { renderer.domElement.setPointerCapture(e.pointerId); } catch {  }
-}
-
-renderer.domElement.addEventListener('pointerdown', (e) => {
-
-  const hitId = (e.button !== 2 && isMovePhase()) ? pickModel(e) : null;
-  if (hitId) {
-    const u = unitOfModel(hitId);
-
-    if (state.mode && u && u.id !== state.selUnit) return;
-    if (u && u.side === state.side && !u.locked) {
-      selectUnit(u.id, hitId);
-      const m = selM();
-
-      if (state.mode && m) {
-        grab = m.id;
-        capture(e);
+    function applyCam() {
+      const L = CAM_LIMIT;
+      if (!state.freeCam) { cam.tx = 0; cam.tz = 0; }
+      else {
+        cam.tx = Math.max(-BW / 2 - L.panPad, Math.min(BW / 2 + L.panPad, cam.tx));
+        cam.tz = Math.max(-BD / 2 - L.panPad, Math.min(BD / 2 + L.panPad, cam.tz));
       }
-      return;
+      cam.dist = Math.max(L.distMin, Math.min(L.distMax, cam.dist));
+      cam.el = Math.max(L.elMin, Math.min(L.elMax, cam.el));
+
+      const elFloor = Math.asin(Math.min(1, L.eyeMin / cam.dist));
+      cam.el = Math.max(cam.el, elFloor);
+
+      const r = Math.cos(cam.el) * cam.dist;
+      camera.position.set(cam.tx + Math.sin(cam.az) * r, Math.sin(cam.el) * cam.dist, cam.tz + Math.cos(cam.az) * r);
+      camera.lookAt(cam.tx, 0, cam.tz);
     }
-  }
 
-  orbiting = {
-    x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY,
-    pan: e.button === 2 && state.freeCam,
-    tid: e.button === 2 ? null : pickTerrain(e),
-  };
-  capture(e);
-});
-
-renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
-
-renderer.domElement.addEventListener('pointermove', (e) => {
-  if (orbiting) {
-    const dx = e.clientX - orbiting.x, dy = e.clientY - orbiting.y;
-    if (orbiting.pan) panCam(dx, dy);
-    else {
-      cam.az -= dx * 0.006;
-      cam.el += dy * 0.005;
+    function usePreset(i) {
+      camIndex = i;
+      Object.assign(cam, { az: CAMS[i].az, el: CAMS[i].el, dist: CAMS[i].dist });
       applyCam();
     }
-    orbiting = { ...orbiting, x: e.clientX, y: e.clientY };
-    return;
-  }
-  if (!grab) return;
-  const u = selU(), m = selM();
-  if (!u || !m) return;
-  toPointer(e);
-  if (!ray.ray.intersectPlane(ground, hitPt)) return;
 
-  if (isTurning()) {
+    function panCam(dxPix, dyPix) {
+      const perPix = cam.dist * 2 * Math.tan(camera.fov * Math.PI / 360) / innerHeight;
+      const right = [Math.cos(cam.az), -Math.sin(cam.az)];
+      const fwd = [Math.sin(cam.az), Math.cos(cam.az)];
+      cam.tx -= (dxPix * right[0] + dyPix * fwd[0] / Math.max(Math.sin(cam.el), 0.2)) * perPix;
+      cam.tz -= (dxPix * right[1] + dyPix * fwd[1] / Math.max(Math.sin(cam.el), 0.2)) * perPix;
+      applyCam();
+    }
 
-    setFacing(m, Math.atan2(hitPt.x - m.x, hitPt.z - m.z));
-    return;
-  }
+    function resize() {
+      renderer.setSize(innerWidth, innerHeight);
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      syncHudHeight();
+    }
+    addEventListener('resize', resize);
 
-  const o = originOf(m);
-  let dx = hitPt.x - o.x, dz = hitPt.z - o.z;
-  const len = Math.hypot(dx, dz);
-  if (!isDeploying() && len > u.move) { dx = dx / len * u.move; dz = dz / len * u.move; }
+    function loop() {
+      requestAnimationFrame(loop);
+      updateLabels();
+      placeModelHud();
+      renderer.render(scene, camera);
+    }
 
-  const r = m.base / 2;
-  m.x = Math.min(BW / 2 - r, Math.max(-BW / 2 + r, o.x + dx));
-  m.z = Math.min(BD / 2 - r, Math.max(-BD / 2 + r, o.z + dz));
-
-  meshOf.get(m.id).position.set(m.x, 0, m.z);
-  updateRings();
-  updateFan(m);
-  drawSel();
-});
-
-function endDrag(e) {
-  if (orbiting) {
-
-    const moved = Math.hypot(e.clientX - orbiting.x0, e.clientY - orbiting.y0);
-    if (moved < 4 && !orbiting.pan) selectTerrain(orbiting.tid);
-    orbiting = null;
-  }
-  if (grab) { grab = null; drawSel(); }
-  try { renderer.domElement.releasePointerCapture(e.pointerId); } catch {  }
-}
-renderer.domElement.addEventListener('pointerup', endDrag);
-renderer.domElement.addEventListener('pointercancel', endDrag);
-renderer.domElement.addEventListener('wheel', (e) => {
-  e.preventDefault();
-  cam.dist *= e.deltaY > 0 ? 1.1 : 0.9;
-  applyCam();
-}, { passive: false });
-
-$('btnNext').onclick = () => nextPart();
-$('gNext').onclick = () => $('gate').classList.remove('on');
-$('btnCam').onclick = () => { usePreset((camIndex + 1) % CAMS.length); drawHud(); };
-$('btnBits').onclick = () => { state.showBits = !state.showBits; drawHud(); };
-$('btnTags').onclick = () => openTags();
-$('tagClose').onclick = () => $('tagbox').classList.remove('on');
-
-$('tagbox').onclick = (e) => { if (e.target === $('tagbox')) $('tagbox').classList.remove('on'); };
-$('btnView').onclick = () => {
-  state.freeCam = !state.freeCam;
-  applyCam();
-  drawHud();
-};
-$('btnFlow').onclick = () => {
-  state.moveOnly = !state.moveOnly;
-  state.partIndex = 0;
-  clearSelection();
-  buildModels();
-  drawHud(); drawPanel(); updateRings(); updateFan(null);
-  openGate();
-};
-$('btnPanel').onclick = () => {
-  const off = document.body.classList.toggle('panel-off');
-  $('btnPanel').textContent = off ? '판 ◂' : '판 ▸';
-};
-$('btnFan').onclick = (e) => {
-  state.showFan = !state.showFan;
-  e.target.setAttribute('aria-pressed', String(state.showFan));
-  e.target.textContent = state.showFan ? '켬' : '끔';
-  updateFan(selM());
-};
-$('cutH').oninput = (e) => {
-  state.cutHeight = Math.max(0, +e.target.value || 0);
-  buildTerrain();
-  updateFan(selM());
-};
-
-function applyCam() {
-  const L = CAM_LIMIT;
-  if (!state.freeCam) { cam.tx = 0; cam.tz = 0; }
-  else {
-    cam.tx = Math.max(-BW / 2 - L.panPad, Math.min(BW / 2 + L.panPad, cam.tx));
-    cam.tz = Math.max(-BD / 2 - L.panPad, Math.min(BD / 2 + L.panPad, cam.tz));
-  }
-  cam.dist = Math.max(L.distMin, Math.min(L.distMax, cam.dist));
-  cam.el = Math.max(L.elMin, Math.min(L.elMax, cam.el));
-
-  const elFloor = Math.asin(Math.min(1, L.eyeMin / cam.dist));
-  cam.el = Math.max(cam.el, elFloor);
-
-  const r = Math.cos(cam.el) * cam.dist;
-  camera.position.set(cam.tx + Math.sin(cam.az) * r, Math.sin(cam.el) * cam.dist, cam.tz + Math.cos(cam.az) * r);
-  camera.lookAt(cam.tx, 0, cam.tz);
-}
-
-function usePreset(i) {
-  camIndex = i;
-  Object.assign(cam, { az: CAMS[i].az, el: CAMS[i].el, dist: CAMS[i].dist });
-  applyCam();
-}
-
-function panCam(dxPix, dyPix) {
-  const perPix = cam.dist * 2 * Math.tan(camera.fov * Math.PI / 360) / innerHeight;
-  const right = [Math.cos(cam.az), -Math.sin(cam.az)];
-  const fwd = [Math.sin(cam.az), Math.cos(cam.az)];
-  cam.tx -= (dxPix * right[0] + dyPix * fwd[0] / Math.max(Math.sin(cam.el), 0.2)) * perPix;
-  cam.tz -= (dxPix * right[1] + dyPix * fwd[1] / Math.max(Math.sin(cam.el), 0.2)) * perPix;
-  applyCam();
-}
-
-function resize() {
-  renderer.setSize(innerWidth, innerHeight);
-  camera.aspect = innerWidth / innerHeight;
-  camera.updateProjectionMatrix();
-  syncHudHeight();
-}
-addEventListener('resize', resize);
-
-function loop() {
-  requestAnimationFrame(loop);
-  updateLabels();
-  placeModelHud();
-  renderer.render(scene, camera);
-}
-
-buildTerrain();
-buildModels();
-drawTerrainSel();
-drawBits();
-usePreset(0);
-resize();
-drawHud();
-drawPanel();
-drawTerrain();
-openGate();
-loop();
-</script>
+    state.panelOff = innerWidth <= 640;
+    document.body.classList.toggle('panel-off', state.panelOff);
+    $('btnPanel').textContent = state.panelOff ? '판 ◂' : '판 ▸';
+    buildTerrain();
+    buildModels();
+    drawTerrainSel();
+    drawBits();
+    usePreset(0);
+    resize();
+    drawHud();
+    drawPanel();
+    drawTerrain();
+    openGate();
+    loop();
+  </script>
 </body>
+
 </html>
