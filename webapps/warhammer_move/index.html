@@ -1148,7 +1148,7 @@ layout: dev_apps
 
       showBits: false,
 
-      panelOff: false,
+      panelOff: true,      // 판은 닫힌 채로 연다 (2026-08-22 human)
 
       labelBits: new Set(RULES.labelBits.map((b) => b.id)),
       showFan: true,
@@ -1394,7 +1394,22 @@ layout: dev_apps
 
     const camera = new THREE.PerspectiveCamera(42, 1, 0.5, 500);
 
-    const cam = { az: 0, el: 0.78, dist: 88, tx: 0, tz: 0 };
+    /**
+     * 시점은 **진영마다 따로 기억한다** (2026-08-22 human 지시).
+     *
+     *   ① 처음 그 진영 턴이 되면 — **자기 유닛을 등지고 상대 유닛을 바라보는** 기본 각도로 연다.
+     *      A 는 az:π, B 는 az:0 — 서로 180° 마주보게 잡았다.
+     *   ② 이미 그 진영으로 한 번 이상 왔었다면 — **그때 두고 간 시점 그대로** 돌아간다.
+     *      오빗·팬·줌으로 시점을 만졌으면 다음에 그 진영 턴이 왔을 때 그 자리 그대로 열린다.
+     *
+     * 적는 자리는 `nextPart()` 하나뿐이다 — 진영이 바뀌는 순간 **떠나는 진영**의 시점을 적는다.
+     */
+    const camDefault = {
+      A: { az: Math.PI, el: 0.78, dist: 88, tx: 0, tz: 0 },
+      B: { az: 0, el: 0.78, dist: 88, tx: 0, tz: 0 },
+    };
+    const camSaved = { A: null, B: null };
+    const cam = { ...camDefault.A };
     const CAMS = [
       { ko: '비스듬히', az: 0, el: 0.78, dist: 88 },
       { ko: '위에서', az: 0, el: 1.5, dist: 96 },
@@ -2163,8 +2178,15 @@ layout: dev_apps
       state.partIndex++;
       if (state.partIndex >= parts().length) {
         state.partIndex = 0;
+        const leaving = state.side;
         if (state.side === 'A') state.side = 'B';
         else { state.side = 'A'; state.round++; }
+        // ★ 턴이 넘어가면 시점도 그 진영을 따라간다 — 고정 각도로 무조건 돌리지 않는다.
+        //   떠나는 진영이 보던 자리를 기억해 두고, 새로 온 진영은 자기가 두고 간 자리로
+        //   돌아가거나 처음이면 기본 구도로 연다.
+        camSaved[leaving] = { ...cam };
+        Object.assign(cam, camSaved[state.side] || camDefault[state.side]);
+        applyCam();
       }
 
       if (isMovePhase()) {
@@ -2475,7 +2497,9 @@ layout: dev_apps
 
     function usePreset(i) {
       camIndex = i;
-      Object.assign(cam, { az: CAMS[i].az, el: CAMS[i].el, dist: CAMS[i].dist });
+      // ⚠ `az` 는 여기서 안 건드린다 — 아래 마운트의 usePreset(0) 이 A 진영 기준각(Math.PI)을
+      //   0 으로 되돌려 첫 화면이 반대로 열린다. 시점 버튼은 기울기·거리만 바꾼다.
+      Object.assign(cam, { el: CAMS[i].el, dist: CAMS[i].dist });
       applyCam();
     }
 
@@ -2503,7 +2527,9 @@ layout: dev_apps
       renderer.render(scene, camera);
     }
 
-    state.panelOff = innerWidth <= 640;
+    // 판은 **닫힌 채로 연다** (2026-08-22 human 지시). 화면이 넓어도 마찬가지다 —
+    // 처음 눈에 들어와야 하는 것은 판(3D)이고, 곁의 설명은 필요할 때 [판 ▸] 로 편다.
+    state.panelOff = true;
     document.body.classList.toggle('panel-off', state.panelOff);
     $('btnPanel').textContent = state.panelOff ? '판 ◂' : '판 ▸';
     buildTerrain();
