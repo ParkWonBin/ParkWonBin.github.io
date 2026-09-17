@@ -1,4 +1,14 @@
 # Demo
+- title : Color Picker Lab
+  url : /webapps/color_picker
+  url_app : /webapps/color_picker/app.html
+  repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/color_picker/index.html
+  thumbnail :
+  type : demo
+  desc : <strong> Color Picker Lab </strong>
+    <br> 원판 위 점과 엣지로 색을 배치하고
+    <br> 보간 곡선과 그라데이션을 다듬는 도구입니다.
+
 - title : 워해머 판 · 턴과 이동
   url : /webapps/warhammer_move
   url_app : /webapps/warhammer_move/app.html

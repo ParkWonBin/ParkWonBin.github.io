@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Color Picker Lab</title>
+<style>
+  :root {
+    --bg: #17171a;
+    --panel: #202025;
+    --panel-2: #2a2a31;
+    --line: #34343c;
+    --text: #e8e8ec;
+    --muted: #9696a2;
+    --accent: #7aa2ff;
+    --danger: #ff6b7d;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0;
+    padding: 16px;
+    background: var(--bg);
+    color: var(--text);
+    font: 13px/1.45 system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+  }
+  h1 { font-size: 15px; font-weight: 600; margin: 0 0 12px; }
+  h2 { font-size: 12px; font-weight: 600; margin: 0 0 8px; color: var(--muted); letter-spacing: .02em; }
+  code { font: 12px/1.3 ui-monospace, "Cascadia Mono", Consolas, monospace; }
+  .muted { color: var(--muted); }
+  .grow { flex: 1; }
+
+  .top { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  .previews { display: flex; flex-direction: column; gap: 10px; }
+  #disc {
+    display: block;
+    width: min(360px, calc(100vw - 58px));
+    aspect-ratio: 1;
+    touch-action: none;
+    cursor: crosshair;
+  }
+  #bar {
+    display: block;
+    width: min(360px, calc(100vw - 58px));
+    height: 52px;
+    cursor: pointer;
+  }
+  .side { flex: 1; min-width: 260px; display: flex; flex-direction: column; gap: 12px; }
+  .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .row + .row { margin-top: 8px; }
+
+  .sw {
+    display: inline-block; width: 18px; height: 18px; border-radius: 4px;
+    border: 1px solid rgba(255,255,255,.25); flex: none;
+  }
+  .sw.big { width: 32px; height: 32px; border-radius: 6px; }
+
+  input[type="color"] { width: 40px; height: 32px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: none; cursor: pointer; }
+  input.hex, select {
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
+    border-radius: 6px; padding: 5px 8px; font: inherit;
+  }
+  input.hex { width: 92px; font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+  input[type="range"] { width: 140px; accent-color: var(--accent); }
+  .btn {
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
+    border-radius: 6px; padding: 5px 10px; font: inherit; cursor: pointer;
+  }
+  .btn:hover { border-color: #4a4a55; }
+  .btn.danger { color: var(--danger); }
+  ul.help { margin: 0; padding-left: 18px; color: var(--muted); }
+  ul.help b { color: var(--text); font-weight: 500; }
+
+  .edges-head { display: flex; align-items: baseline; gap: 8px; margin: 20px 0 10px; }
+  .edges-head h2 { margin: 0; font-size: 13px; color: var(--text); }
+  .edges { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+  .card.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+  .card-head { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+  .card-head .title { font-weight: 600; margin-left: 4px; }
+  .icon {
+    background: none; border: 1px solid transparent; color: var(--muted); border-radius: 5px;
+    width: 26px; height: 26px; cursor: pointer; font-size: 14px; line-height: 1;
+  }
+  .icon:hover { color: var(--text); border-color: var(--line); }
+  .bez { display: block; width: 100%; height: auto; touch-action: none; }
+  .bez .plot { fill: #1a1a1f; stroke: var(--line); }
+  .bez .grid { stroke: #2a2a31; }
+  .bez .diag { stroke: #45454f; stroke-dasharray: 4 4; }
+  .bez .arm { stroke: #8a8a96; stroke-width: 1; }
+  .bez .curve { fill: none; stroke: var(--text); stroke-width: 2.5; }
+  .bez .end { fill: #8a8a96; }
+  .bez .handle { fill: var(--accent); stroke: #fff; stroke-width: 2; cursor: grab; }
+  .bez .handle-hit { fill: transparent; cursor: grab; }
+  .strip { display: block; width: 100%; height: 16px; border-radius: 4px; margin-top: 6px; image-rendering: auto; }
+  .card-foot { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .card-foot select { padding: 3px 6px; }
+  .card-foot code { color: var(--muted); }
+  .empty { color: var(--muted); padding: 16px; border: 1px dashed var(--line); border-radius: 10px; }
+</style>
+</head>
+<body>
+<h1>Color Picker Lab</h1>
+
+<div class="top">
+  <div class="panel previews">
+    <canvas id="disc"></canvas>
+    <canvas id="bar"></canvas>
+  </div>
+
+  <div class="side">
+    <section class="panel">
+      <h2>선택</h2>
+      <div id="insEmpty" class="muted">원판에서 점이나 엣지를 선택하세요.</div>
+      <div id="insVertex" hidden>
+        <div class="row">
+          <input type="color" id="vColor">
+          <input id="vHex" class="hex" spellcheck="false" maxlength="7">
+          <span class="muted" id="vPos"></span>
+        </div>
+        <div class="row">
+          <span class="muted" id="vDeg"></span>
+          <span class="grow"></span>
+          <button class="btn danger" id="vDel">점 삭제</button>
+        </div>
+      </div>
+      <div id="insEdge" hidden>
+        <div class="row">
+          <span class="sw" id="eA"></span><span class="muted">→</span><span class="sw" id="eB"></span>
+          <span id="eName"></span>
+          <span class="grow"></span>
+          <button class="btn danger" id="eDel">엣지 삭제</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>커서 위치 색상</h2>
+      <div class="row">
+        <span class="sw big" id="hSw"></span>
+        <code id="hHex">—</code>
+        <span class="muted" id="hPos"></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>설정</h2>
+      <div class="row">
+        <label for="space">보간 색공간</label>
+        <select id="space">
+          <option value="oklab">OKLab (지각 균일)</option>
+          <option value="srgb">sRGB</option>
+        </select>
+      </div>
+      <div class="row">
+        <label for="spread">경계 선명도</label>
+        <input type="range" id="spread" min="0.5" max="4" step="0.1">
+        <code id="spreadVal"></code>
+      </div>
+      <div class="row">
+        <label><input type="checkbox" id="guides"> 점·선 가이드 표시</label>
+      </div>
+      <div class="row">
+        <button class="btn" id="copyJson">JSON 복사</button>
+        <button class="btn" id="copyCss">막대 CSS 복사</button>
+        <span class="grow"></span>
+        <button class="btn danger" id="reset">초기화</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>조작법</h2>
+      <ul class="help">
+        <li><b>원판 빈 곳 클릭</b>: 그 위치의 현재 색으로 점 추가</li>
+        <li><b>점 드래그</b>: 이동 · <b>더블클릭</b>: 색 선택</li>
+        <li><b>점 선택 후 Shift+다른 점 클릭</b>: 엣지 연결 / 해제</li>
+        <li><b>점 선택 후 Shift+빈 곳 클릭</b>: 새 점 추가하고 바로 연결</li>
+        <li><b>Delete</b>: 선택 삭제 · <b>Esc</b>: 선택 해제</li>
+        <li>막대는 엣지를 만든 순서대로, 길이에 비례해 펼친 모습이에요</li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<div class="edges-head">
+  <h2>엣지 곡선</h2><span class="muted" id="edgeCount"></span>
+</div>
+<div id="edgeEmpty" class="empty">엣지가 없어요. 점을 선택하고 Shift+클릭으로 다른 점과 이어 보세요.</div>
+<div class="edges" id="edgeList"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  const $ = (s, root = document) => root.querySelector(s);
+  const TAU = Math.PI * 2;
+  const STORE_KEY = 'color-picker-lab:v1';
+  const DISC_MARGIN = 12;   // css px around the disc so handles on the rim stay visible
+  const LOW_RES = 150;      // field resolution while dragging
+  const LUT_N = 256;
+  const PRESETS = {
+    linear: [0, 0, 1, 1],
+    ease: [0.25, 0.1, 0.25, 1],
+    'ease-in': [0.42, 0, 1, 1],
+    'ease-out': [0, 0, 0.58, 1],
+    'ease-in-out': [0.42, 0, 0.58, 1],
+    snap: [0.9, 0, 0.1, 1],
+  };
+
+  const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v);
+  const round3 = v => Math.round(v * 1000) / 1000;
+  const uid = () => Math.random().toString(36).slice(2, 9);
+
+  // ---------- color ----------
+  function hexToRgb(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255];
+  }
+  function rgbToHex(r, g, b) {
+    const c = v => Math.round(clamp01(v) * 255).toString(16).padStart(2, '0');
+    return '#' + c(r) + c(g) + c(b);
+  }
+  function hslToHex(h, s, l) {
+    const f = n => {
+      const k = (n + h / 30) % 12;
+      return l - s * Math.min(l, 1 - l) * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+    };
+    return rgbToHex(f(0), f(8), f(4));
+  }
+  const toLinear = v => (v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+  const GAMMA_N = 8192;
+  const GAMMA = new Float32Array(GAMMA_N + 1);
+  for (let i = 0; i <= GAMMA_N; i++) {
+    const v = i / GAMMA_N;
+    GAMMA[i] = v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055;
+  }
+  const toGamma = v => (v <= 0 ? 0 : v >= 1 ? 1 : GAMMA[(v * GAMMA_N + 0.5) | 0]);
+
+  function srgbToOklab([r, g, b]) {
+    r = toLinear(r); g = toLinear(g); b = toLinear(b);
+    const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+    const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+    const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+    return [
+      0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+      1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+      0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s,
+    ];
+  }
+
+  // Blend space: colors are mixed in state.space, then converted back to sRGB (0..1) into out.
+  function toSpace(hex) {
+    const rgb = hexToRgb(hex);
+    return state.space === 'oklab' ? srgbToOklab(rgb) : rgb;
+  }
+  function fromSpace(c0, c1, c2, out) {
+    if (state.space !== 'oklab') {
+      out[0] = clamp01(c0); out[1] = clamp01(c1); out[2] = clamp01(c2);
+      return out;
+    }
+    let l = c0 + 0.3963377774 * c1 + 0.2158037573 * c2;
+    let m = c0 - 0.1055613458 * c1 - 0.0638541728 * c2;
+    let s = c0 - 0.0894841775 * c1 - 1.2914855480 * c2;
+    l = l * l * l; m = m * m * m; s = s * s * s;
+    out[0] = toGamma(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s);
+    out[1] = toGamma(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s);
+    out[2] = toGamma(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s);
+    return out;
+  }
+
+  // ---------- easing ----------
+  function makeEase([x1, y1, x2, y2]) {
+    const bx = t => t * (3 * (1 - t) * (1 - t) * x1 + 3 * (1 - t) * t * x2 + t * t);
+    const by = t => t * (3 * (1 - t) * (1 - t) * y1 + 3 * (1 - t) * t * y2 + t * t);
+    return x => {
+      let lo = 0, hi = 1;
+      for (let i = 0; i < 26; i++) {
+        const mid = (lo + hi) / 2;
+        if (bx(mid) < x) lo = mid; else hi = mid;
+      }
+      return by((lo + hi) / 2);
+    };
+  }
+
+  // ---------- state ----------
+  function defaultState() {
+    const v1 = { id: uid(), x: -0.6, y: 0.25, color: '#ff4d6d' };
+    const v2 = { id: uid(), x: 0.0, y: -0.5, color: '#ffd166' };
+    const v3 = { id: uid(), x: 0.6, y: 0.3, color: '#3a86ff' };
+    return {
+      space: 'oklab',
+      spread: 2,
+      guides: true,
+      vertices: [v1, v2, v3],
+      edges: [
+        { id: uid(), a: v1.id, b: v2.id, bez: [...PRESETS.linear] },
+        { id: uid(), a: v2.id, b: v3.id, bez: [...PRESETS['ease-in-out']] },
+      ],
+    };
+  }
+  function load() {
+    try {
+      const s = JSON.parse(localStorage.getItem(STORE_KEY));
+      if (!s || !Array.isArray(s.vertices) || !Array.isArray(s.edges)) return null;
+      const ids = new Set(s.vertices.map(v => v.id));
+      s.edges = s.edges.filter(e => ids.has(e.a) && ids.has(e.b) && Array.isArray(e.bez));
+      return Object.assign(defaultState(), s);
+    } catch { return null; }
+  }
+  let saveTimer = 0;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch { /* storage unavailable */ }
+    }, 200);
+  }
+
+  let state = load() || defaultState();
+  let sel = { type: null, id: null }; // type: 'v' | 'e' | null
+
+  const vertexById = id => state.vertices.find(v => v.id === id);
+  const edgeById = id => state.edges.find(e => e.id === id);
+
+  // ---------- compiled model ----------
+  let compiled = null;
+  function model() {
+    if (compiled) return compiled;
+    const used = new Set();
+    const edges = [];
+    for (const ed of state.edges) {
+      const A = vertexById(ed.a), B = vertexById(ed.b);
+      if (!A || !B) continue;
+      used.add(A.id); used.add(B.id);
+      const ex = B.x - A.x, ey = B.y - A.y, l2 = ex * ex + ey * ey;
+      edges.push({
+        id: ed.id, ax: A.x, ay: A.y, ex, ey,
+        inv: l2 > 1e-12 ? 1 / l2 : 0,
+        len: Math.sqrt(l2),
+        lut: buildLut(A.color, B.color, ed.bez),
+      });
+    }
+    const iso = state.vertices
+      .filter(v => !used.has(v.id))
+      .map(v => ({ x: v.x, y: v.y, c: toSpace(v.color) }));
+    compiled = { edges, iso, any: edges.length + iso.length > 0, byId: new Map(edges.map(e => [e.id, e])) };
+    return compiled;
+  }
+  function buildLut(hexA, hexB, bez) {
+    const a = toSpace(hexA), b = toSpace(hexB), ease = makeEase(bez);
+    const lut = new Float32Array(LUT_N * 3);
+    for (let i = 0; i < LUT_N; i++) {
+      const t = ease(i / (LUT_N - 1));
+      for (let k = 0; k < 3; k++) lut[i * 3 + k] = a[k] + (b[k] - a[k]) * t;
+    }
+    return lut;
+  }
+
+  // Color of the disc at normalized (nx, ny): inverse-distance blend of the nearest point on every
+  // edge (eased along the edge) plus every unconnected vertex.
+  function sampleField(m, nx, ny, out) {
+    const p = state.spread;
+    let sw = 0, c0 = 0, c1 = 0, c2 = 0;
+    for (const e of m.edges) {
+      let s = ((nx - e.ax) * e.ex + (ny - e.ay) * e.ey) * e.inv;
+      s = s < 0 ? 0 : s > 1 ? 1 : s;
+      const dx = e.ax + e.ex * s - nx, dy = e.ay + e.ey * s - ny;
+      const w = 1 / Math.pow(dx * dx + dy * dy + 1e-7, p);
+      const i = ((s * (LUT_N - 1) + 0.5) | 0) * 3;
+      sw += w; c0 += w * e.lut[i]; c1 += w * e.lut[i + 1]; c2 += w * e.lut[i + 2];
+    }
+    for (const v of m.iso) {
+      const dx = v.x - nx, dy = v.y - ny;
+      const w = 1 / Math.pow(dx * dx + dy * dy + 1e-7, p);
+      sw += w; c0 += w * v.c[0]; c1 += w * v.c[1]; c2 += w * v.c[2];
+    }
+    if (!sw) return null;
+    return fromSpace(c0 / sw, c1 / sw, c2 / sw, out);
+  }
+
+  // Edges laid end to end in creation order, each proportional to its length.
+  function barSegments(m) {
+    const total = m.edges.reduce((sum, e) => sum + e.len, 0);
+    const equal = total < 1e-9;
+    let at = 0;
+    return m.edges.map(e => {
+      const w = equal ? 1 / m.edges.length : e.len / total;
+      const seg = { e, start: at, end: at + w };
+      at += w;
+      return seg;
+    });
+  }
+  function sampleBar(segs, u, out) {
+    let seg = segs[segs.length - 1];
+    for (const sg of segs) if (u < sg.end) { seg = sg; break; }
+    const span = seg.end - seg.start;
+    const s = span > 0 ? clamp01((u - seg.start) / span) : 0;
+    const i = ((s * (LUT_N - 1) + 0.5) | 0) * 3;
+    fromSpace(seg.e.lut[i], seg.e.lut[i + 1], seg.e.lut[i + 2], out);
+    return seg;
+  }
+
+  // ---------- canvases ----------
+  const disc = $('#disc'), dctx = disc.getContext('2d');
+  const bar = $('#bar'), bctx = bar.getContext('2d');
+  const field = document.createElement('canvas'), fctx = field.getContext('2d');
+  const barRow = document.createElement('canvas'), rctx = barRow.getContext('2d');
+  let discCss = 360, barCss = 360, dpr = 1;
+
+  function sizeCanvases() {
+    dpr = window.devicePixelRatio || 1;
+    discCss = disc.clientWidth;
+    barCss = bar.clientWidth;
+    disc.width = disc.height = Math.round(discCss * dpr);
+    bar.width = Math.round(barCss * dpr);
+    bar.height = Math.round(bar.clientHeight * dpr);
+  }
+  const discGeom = () => ({ c: discCss / 2, R: discCss / 2 - DISC_MARGIN });
+  const highRes = () => Math.min(Math.round((discCss - 2 * DISC_MARGIN) * dpr), 560);
+
+  let raf = 0, wantFast = false, fieldDirty = true, fieldRes = 0;
+  function invalidate(fast = false) {
+    wantFast = fast;
+    if (!raf) raf = requestAnimationFrame(frame);
+  }
+  function frame() {
+    raf = 0;
+    const res = wantFast ? LOW_RES : highRes();
+    if (fieldDirty || res !== fieldRes) {
+      renderField(res);
+      fieldDirty = false;
+      fieldRes = res;
+    }
+    drawDisc();
+    drawBar();
+  }
+
+  function renderField(res) {
+    const m = model();
+    field.width = field.height = res;
+    if (!m.any) return;
+    const img = fctx.createImageData(res, res), d = img.data, out = [0, 0, 0];
+    for (let y = 0; y < res; y++) {
+      const ny = ((y + 0.5) / res) * 2 - 1;
+      for (let x = 0; x < res; x++) {
+        const nx = ((x + 0.5) / res) * 2 - 1;
+        if (nx * nx + ny * ny > 1.03) continue;
+        sampleField(m, nx, ny, out);
+        const k = (y * res + x) * 4;
+        d[k] = out[0] * 255; d[k + 1] = out[1] * 255; d[k + 2] = out[2] * 255; d[k + 3] = 255;
+      }
+    }
+    fctx.putImageData(img, 0, 0);
+  }
+
+  function drawDisc() {
+    const ctx = dctx, m = model(), { c, R } = discGeom();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, discCss, discCss);
+
+    if (m.any) {
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(field, c - R, c - R, 2 * R, 2 * R);
+      ctx.globalCompositeOperation = 'destination-in';
+      ctx.beginPath(); ctx.arc(c, c, R, 0, TAU); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+    } else {
+      ctx.fillStyle = '#26262c';
+      ctx.beginPath(); ctx.arc(c, c, R, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#9696a2';
+      ctx.font = '13px system-ui, "Malgun Gothic", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('클릭해서 색을 찍어 보세요', c, c + 4);
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,.14)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(c, c, R + 0.5, 0, TAU); ctx.stroke();
+
+    const P = v => [c + v.x * R, c + v.y * R];
+    for (const ed of state.edges) {
+      const A = vertexById(ed.a), B = vertexById(ed.b);
+      if (!A || !B) continue;
+      const selected = sel.type === 'e' && sel.id === ed.id;
+      if (!state.guides && !selected) continue;
+      const [ax, ay] = P(A), [bx, by] = P(B);
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = selected ? 6 : 3.5;
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+      ctx.strokeStyle = selected ? '#7aa2ff' : 'rgba(255,255,255,.85)'; ctx.lineWidth = selected ? 3 : 1.5;
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    }
+    for (const v of state.vertices) {
+      const [x, y] = P(v);
+      const selected = sel.type === 'v' && sel.id === v.id;
+      if (!state.guides && !selected) {
+        ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(x, y, 3, 0, TAU); ctx.stroke();
+        continue;
+      }
+      const r = selected ? 9 : 7;
+      ctx.fillStyle = v.color;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.stroke();
+      ctx.lineWidth = 2; ctx.strokeStyle = selected ? '#7aa2ff' : '#fff'; ctx.stroke();
+    }
+  }
+
+  function drawBar() {
+    const ctx = bctx, m = model();
+    const H = bar.clientHeight, gh = 38;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, barCss, H);
+
+    ctx.save();
+    ctx.beginPath(); ctx.roundRect(0, 0, barCss, gh, 6); ctx.clip();
+    if (!m.edges.length) {
+      ctx.fillStyle = '#26262c'; ctx.fillRect(0, 0, barCss, gh);
+      ctx.fillStyle = '#9696a2';
+      ctx.font = '12px system-ui, "Malgun Gothic", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('엣지를 만들면 여기에 펼쳐져요', barCss / 2, gh / 2 + 4);
+      ctx.restore();
+      return;
+    }
+    const segs = barSegments(m);
+    const W = bar.width;
+    barRow.width = W; barRow.height = 1;
+    const img = rctx.createImageData(W, 1), d = img.data, out = [0, 0, 0];
+    for (let x = 0; x < W; x++) {
+      sampleBar(segs, (x + 0.5) / W, out);
+      d[x * 4] = out[0] * 255; d[x * 4 + 1] = out[1] * 255; d[x * 4 + 2] = out[2] * 255; d[x * 4 + 3] = 255;
+    }
+    rctx.putImageData(img, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(barRow, 0, 0, barCss, gh);
+    if (state.guides) {
+      for (const sg of segs.slice(1)) {
+        const x = Math.round(sg.start * barCss) + 0.5;
+        ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, gh); ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, gh); ctx.stroke();
+      }
+    }
+    ctx.restore();
+
+    const selSeg = sel.type === 'e' && segs.find(sg => sg.e.id === sel.id);
+    if (selSeg) {
+      ctx.fillStyle = '#7aa2ff';
+      ctx.beginPath();
+      ctx.roundRect(selSeg.start * barCss + 1, gh + 6, (selSeg.end - selSeg.start) * barCss - 2, 5, 2.5);
+      ctx.fill();
+    }
+  }
+
+  // ---------- change plumbing ----------
+  function changed(fast) {
+    compiled = null;
+    fieldDirty = true;
+    invalidate(fast);
+    updateCards();
+    if (!fast) save();
+  }
+  function structureChanged() {
+    syncCards();
+    renderInspector();
+    changed(false);
+  }
+  function select(type, id, reveal = false) {
+    sel = type ? { type, id } : { type: null, id: null };
+    renderInspector();
+    for (const [cid, card] of cards) card.el.classList.toggle('sel', sel.type === 'e' && sel.id === cid);
+    if (reveal && type === 'e') cards.get(id)?.el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    invalidate(false);
+  }
+  function deleteSelection() {
+    if (sel.type === 'v') {
+      state.vertices = state.vertices.filter(v => v.id !== sel.id);
+      state.edges = state.edges.filter(e => e.a !== sel.id && e.b !== sel.id);
+    } else if (sel.type === 'e') {
+      state.edges = state.edges.filter(e => e.id !== sel.id);
+    } else return;
+    sel = { type: null, id: null };
+    structureChanged();
+  }
+  function toggleEdge(a, b) {
+    const existing = state.edges.find(e => (e.a === a && e.b === b) || (e.a === b && e.b === a));
+    if (existing) state.edges = state.edges.filter(e => e !== existing);
+    else state.edges.push({ id: uid(), a, b, bez: [...PRESETS.linear] });
+  }
+
+  // ---------- disc interaction ----------
+  function discPoint(e) {
+    const rect = disc.getBoundingClientRect(), { c, R } = discGeom();
+    const px = e.clientX - rect.left, py = e.clientY - rect.top;
+    return { px, py, nx: (px - c) / R, ny: (py - c) / R };
+  }
+  function hitVertex(px, py) {
+    const { c, R } = discGeom();
+    for (let i = state.vertices.length - 1; i >= 0; i--) {
+      const v = state.vertices[i];
+      if (Math.hypot(c + v.x * R - px, c + v.y * R - py) <= 11) return v;
+    }
+    return null;
+  }
+  function hitEdge(px, py) {
+    const { c, R } = discGeom();
+    for (let i = state.edges.length - 1; i >= 0; i--) {
+      const ed = state.edges[i], A = vertexById(ed.a), B = vertexById(ed.b);
+      if (!A || !B) continue;
+      const ax = c + A.x * R, ay = c + A.y * R, ex = (B.x - A.x) * R, ey = (B.y - A.y) * R;
+      const l2 = ex * ex + ey * ey;
+      const s = l2 ? clamp01(((px - ax) * ex + (py - ay) * ey) / l2) : 0;
+      if (Math.hypot(ax + ex * s - px, ay + ey * s - py) <= 6) return ed;
+    }
+    return null;
+  }
+  function clampToDisc(x, y) {
+    const r = Math.hypot(x, y);
+    return r > 1 ? [x / r, y / r] : [x, y];
+  }
+
+  let dragId = null;
+  disc.addEventListener('pointerdown', e => {
+    const { px, py, nx, ny } = discPoint(e);
+    const hitV = hitVertex(px, py);
+    if (hitV) {
+      if (e.shiftKey && sel.type === 'v' && sel.id !== hitV.id && vertexById(sel.id)) {
+        toggleEdge(sel.id, hitV.id);
+        select('v', hitV.id);
+        structureChanged();
+        return;
+      }
+      select('v', hitV.id);
+      dragId = hitV.id;
+      disc.setPointerCapture(e.pointerId);
+      return;
+    }
+    const hitE = !e.shiftKey && hitEdge(px, py);
+    if (hitE) { select('e', hitE.id, true); return; }
+    if (nx * nx + ny * ny > 1) { select(null); return; }
+
+    const sampled = sampleField(model(), nx, ny, [0, 0, 0]);
+    const color = sampled ? rgbToHex(...sampled) : hslToHex(Math.random() * 360, 0.8, 0.6);
+    const v = { id: uid(), x: round3(nx), y: round3(ny), color };
+    const from = e.shiftKey && sel.type === 'v' && vertexById(sel.id) ? sel.id : null;
+    state.vertices.push(v);
+    if (from) toggleEdge(from, v.id);
+    select('v', v.id);
+    dragId = v.id;
+    disc.setPointerCapture(e.pointerId);
+    structureChanged();
+  });
+  disc.addEventListener('pointermove', e => {
+    const { nx, ny } = discPoint(e);
+    if (dragId) {
+      const v = vertexById(dragId);
+      if (v) {
+        [v.x, v.y] = clampToDisc(nx, ny).map(round3);
+        renderInspector();
+        changed(true);
+      }
+    }
+    showHover(nx * nx + ny * ny <= 1 ? sampleField(model(), nx, ny, [0, 0, 0]) : null, posLabel(nx, ny));
+  });
+  const endDrag = () => {
+    if (!dragId) return;
+    dragId = null;
+    changed(false);
+  };
+  disc.addEventListener('pointerup', endDrag);
+  disc.addEventListener('pointercancel', endDrag);
+  disc.addEventListener('pointerleave', () => { if (!dragId) showHover(null, ''); });
+  disc.addEventListener('dblclick', e => {
+    const { px, py } = discPoint(e);
+    const v = hitVertex(px, py);
+    if (v) { select('v', v.id); $('#vColor').click(); }
+  });
+
+  // ---------- bar interaction ----------
+  function barU(e) {
+    const rect = bar.getBoundingClientRect();
+    return clamp01((e.clientX - rect.left) / rect.width);
+  }
+  bar.addEventListener('pointermove', e => {
+    const m = model();
+    if (!m.edges.length) return;
+    const out = [0, 0, 0];
+    sampleBar(barSegments(m), barU(e), out);
+    showHover(out, `막대 ${(barU(e) * 100).toFixed(1)}%`);
+  });
+  bar.addEventListener('pointerleave', () => showHover(null, ''));
+  bar.addEventListener('pointerdown', e => {
+    const m = model();
+    if (!m.edges.length) return;
+    const seg = sampleBar(barSegments(m), barU(e), [0, 0, 0]);
+    select('e', seg.e.id, true);
+  });
+
+  // ---------- side panels ----------
+  function posLabel(x, y) {
+    const r = Math.hypot(x, y);
+    const deg = ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
+    return `x ${x.toFixed(2)}, y ${y.toFixed(2)} · r ${r.toFixed(2)}, ${deg.toFixed(0)}°`;
+  }
+  function showHover(rgb, label) {
+    const hex = rgb ? rgbToHex(...rgb) : null;
+    $('#hSw').style.background = hex || 'transparent';
+    $('#hHex').textContent = hex || '—';
+    $('#hPos').textContent = hex ? label : '';
+  }
+
+  function renderInspector() {
+    if (sel.type === 'v' && !vertexById(sel.id)) sel = { type: null, id: null };
+    if (sel.type === 'e' && !edgeById(sel.id)) sel = { type: null, id: null };
+    const v = sel.type === 'v' ? vertexById(sel.id) : null;
+    const ed = sel.type === 'e' ? edgeById(sel.id) : null;
+    $('#insEmpty').hidden = !!(v || ed);
+    $('#insVertex').hidden = !v;
+    $('#insEdge').hidden = !ed;
+    if (v) {
+      $('#vColor').value = v.color;
+      if (document.activeElement !== $('#vHex')) $('#vHex').value = v.color;
+      $('#vPos').textContent = posLabel(v.x, v.y);
+      $('#vDeg').textContent = `연결된 엣지 ${state.edges.filter(e => e.a === v.id || e.b === v.id).length}개`;
+    }
+    if (ed) {
+      $('#eA').style.background = vertexById(ed.a).color;
+      $('#eB').style.background = vertexById(ed.b).color;
+      $('#eName').textContent = `엣지 ${state.edges.indexOf(ed) + 1}`;
+    }
+  }
+
+  function setVertexColor(hex, final) {
+    const v = sel.type === 'v' && vertexById(sel.id);
+    if (!v) return;
+    v.color = hex.toLowerCase();
+    renderInspector();
+    changed(!final);
+  }
+  $('#vColor').addEventListener('input', e => setVertexColor(e.target.value, false));
+  $('#vColor').addEventListener('change', e => setVertexColor(e.target.value, true));
+  $('#vHex').addEventListener('input', e => {
+    let s = e.target.value.trim();
+    if (!s.startsWith('#')) s = '#' + s;
+    if (/^#[0-9a-f]{6}$/i.test(s)) setVertexColor(s, true);
+  });
+  $('#vHex').addEventListener('blur', renderInspector);
+  $('#vDel').addEventListener('click', deleteSelection);
+  $('#eDel').addEventListener('click', deleteSelection);
+
+  $('#space').addEventListener('change', e => { state.space = e.target.value; changed(false); });
+  $('#spread').addEventListener('input', e => {
+    state.spread = +e.target.value;
+    $('#spreadVal').textContent = state.spread.toFixed(1);
+    changed(true);
+  });
+  $('#spread').addEventListener('change', () => changed(false));
+  $('#guides').addEventListener('change', e => { state.guides = e.target.checked; invalidate(false); save(); });
+
+  function syncSettings() {
+    $('#space').value = state.space;
+    $('#spread').value = state.spread;
+    $('#spreadVal').textContent = (+state.spread).toFixed(1);
+    $('#guides').checked = state.guides;
+  }
+
+  async function copyText(btn, text) {
+    const label = btn.textContent;
+    let ok = false;
+    try {
+      await navigator.clipboard.writeText(text);
+      ok = true;
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      ok = document.execCommand('copy');
+      ta.remove();
+    }
+    btn.textContent = ok ? '복사됨' : '복사 실패';
+    setTimeout(() => { btn.textContent = label; }, 1200);
+  }
+  $('#copyJson').addEventListener('click', e => {
+    const { space, spread, vertices, edges } = state;
+    const data = {
+      space, spread,
+      vertices,
+      edges: edges.map(({ id, a, b, bez }) => ({ id, from: a, to: b, bezier: bez })),
+    };
+    copyText(e.currentTarget, JSON.stringify(data, null, 2));
+  });
+  $('#copyCss').addEventListener('click', e => {
+    const m = model();
+    if (!m.edges.length) return;
+    const segs = barSegments(m), out = [0, 0, 0], stops = [];
+    const N = 40;
+    for (let i = 0; i <= N; i++) {
+      const u = i / N;
+      sampleBar(segs, u, out);
+      stops.push(`${rgbToHex(...out)} ${+(u * 100).toFixed(1)}%`);
+    }
+    copyText(e.currentTarget, `background: linear-gradient(90deg, ${stops.join(', ')});`);
+  });
+  let resetArmed = 0;
+  $('#reset').addEventListener('click', e => {
+    const btn = e.currentTarget;
+    if (!resetArmed) {
+      btn.textContent = '한 번 더 누르면 초기화';
+      resetArmed = setTimeout(() => { resetArmed = 0; btn.textContent = '초기화'; }, 2500);
+      return;
+    }
+    clearTimeout(resetArmed);
+    resetArmed = 0;
+    btn.textContent = '초기화';
+    state = defaultState();
+    sel = { type: null, id: null };
+    syncSettings();
+    structureChanged();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.target.closest('input, select, textarea')) return;
+    if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteSelection(); }
+    else if (e.key === 'Escape') select(null);
+  });
+
+  // ---------- edge cards ----------
+  const cards = new Map();
+  const PLOT_W = 200, PLOT_H = 140;
+
+  function createCard(id) {
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.innerHTML = `
+      <div class="card-head">
+        <span class="sw" data-a></span><span class="muted">→</span><span class="sw" data-b></span>
+        <span class="title"></span><span class="grow"></span>
+        <button class="icon" data-swap title="방향 뒤집기">⇄</button>
+        <button class="icon" data-del title="엣지 삭제">✕</button>
+      </div>
+      <svg class="bez" viewBox="-14 -14 ${PLOT_W + 28} ${PLOT_H + 28}">
+        <rect class="plot" x="0" y="0" width="${PLOT_W}" height="${PLOT_H}"/>
+        <path class="grid" d="M50 0V140M100 0V140M150 0V140M0 35H200M0 70H200M0 105H200"/>
+        <line class="diag" x1="0" y1="${PLOT_H}" x2="${PLOT_W}" y2="0"/>
+        <line class="arm" data-arm="0"/><line class="arm" data-arm="1"/>
+        <path class="curve"/>
+        <circle class="end" cx="0" cy="${PLOT_H}" r="3.5"/><circle class="end" cx="${PLOT_W}" cy="0" r="3.5"/>
+        <circle class="handle" data-h="0" r="6"/><circle class="handle" data-h="1" r="6"/>
+        <circle class="handle-hit" data-h="0" r="14"/><circle class="handle-hit" data-h="1" r="14"/>
+      </svg>
+      <canvas class="strip" width="${LUT_N}" height="1"></canvas>
+      <div class="card-foot">
+        <select data-preset>
+          <option value="custom" hidden>사용자 지정</option>
+          ${Object.keys(PRESETS).map(k => `<option value="${k}">${k}</option>`).join('')}
+        </select>
+        <code data-code></code>
+      </div>`;
+
+    const svg = $('svg', el);
+    let dragH = -1;
+    el.addEventListener('pointerdown', ev => {
+      if (!ev.target.closest('button, select')) select('e', id);
+    });
+    svg.addEventListener('pointerdown', ev => {
+      const h = ev.target.closest('[data-h]');
+      if (!h) return;
+      dragH = +h.dataset.h;
+      svg.setPointerCapture(ev.pointerId);
+      ev.preventDefault();
+    });
+    svg.addEventListener('pointermove', ev => {
+      if (dragH < 0) return;
+      const ed = edgeById(id);
+      if (!ed) return;
+      const pt = new DOMPoint(ev.clientX, ev.clientY).matrixTransform(svg.getScreenCTM().inverse());
+      ed.bez[dragH * 2] = round3(clamp01(pt.x / PLOT_W));
+      ed.bez[dragH * 2 + 1] = round3(clamp01(1 - pt.y / PLOT_H));
+      changed(true);
+    });
+    const end = () => { if (dragH >= 0) { dragH = -1; changed(false); } };
+    svg.addEventListener('pointerup', end);
+    svg.addEventListener('pointercancel', end);
+
+    $('[data-preset]', el).addEventListener('change', ev => {
+      const ed = edgeById(id);
+      if (!ed || !PRESETS[ev.target.value]) return;
+      ed.bez = [...PRESETS[ev.target.value]];
+      changed(false);
+    });
+    $('[data-swap]', el).addEventListener('click', () => {
+      const ed = edgeById(id);
+      if (!ed) return;
+      [ed.a, ed.b] = [ed.b, ed.a];
+      const [x1, y1, x2, y2] = ed.bez;
+      ed.bez = [1 - x2, 1 - y2, 1 - x1, 1 - y1].map(round3); // same curve, read backwards
+      renderInspector();
+      changed(false);
+    });
+    $('[data-del]', el).addEventListener('click', () => {
+      select('e', id);
+      deleteSelection();
+    });
+    return { el, svg, strip: $('.strip', el), stripCtx: $('.strip', el).getContext('2d') };
+  }
+
+  function updateCard(card, ed, index) {
+    const A = vertexById(ed.a), B = vertexById(ed.b);
+    if (!A || !B) return;
+    const el = card.el;
+    $('[data-a]', el).style.background = A.color;
+    $('[data-b]', el).style.background = B.color;
+    $('.title', el).textContent = `엣지 ${index + 1}`;
+    el.classList.toggle('sel', sel.type === 'e' && sel.id === ed.id);
+
+    const [x1, y1, x2, y2] = ed.bez;
+    const X = x => x * PLOT_W, Y = y => (1 - y) * PLOT_H;
+    $('.curve', el).setAttribute('d', `M0 ${PLOT_H}C${X(x1)} ${Y(y1)} ${X(x2)} ${Y(y2)} ${PLOT_W} 0`);
+    const arms = el.querySelectorAll('.arm');
+    [[0, PLOT_H, X(x1), Y(y1)], [PLOT_W, 0, X(x2), Y(y2)]].forEach(([ax, ay, bx, by], i) => {
+      arms[i].setAttribute('x1', ax); arms[i].setAttribute('y1', ay);
+      arms[i].setAttribute('x2', bx); arms[i].setAttribute('y2', by);
+    });
+    el.querySelectorAll('[data-h]').forEach(h => {
+      const i = +h.dataset.h;
+      h.setAttribute('cx', X(ed.bez[i * 2]));
+      h.setAttribute('cy', Y(ed.bez[i * 2 + 1]));
+    });
+    $('[data-code]', el).textContent = `cubic-bezier(${ed.bez.join(', ')})`;
+    const preset = Object.keys(PRESETS).find(k => PRESETS[k].every((v, i) => v === ed.bez[i]));
+    $('[data-preset]', el).value = preset || 'custom';
+
+    const compiledEdge = model().byId.get(ed.id);
+    if (compiledEdge) {
+      const img = card.stripCtx.createImageData(LUT_N, 1), d = img.data, out = [0, 0, 0];
+      for (let i = 0; i < LUT_N; i++) {
+        const lut = compiledEdge.lut;
+        fromSpace(lut[i * 3], lut[i * 3 + 1], lut[i * 3 + 2], out);
+        d[i * 4] = out[0] * 255; d[i * 4 + 1] = out[1] * 255; d[i * 4 + 2] = out[2] * 255; d[i * 4 + 3] = 255;
+      }
+      card.stripCtx.putImageData(img, 0, 0);
+    }
+  }
+
+  function updateCards() {
+    state.edges.forEach((ed, i) => { const card = cards.get(ed.id); if (card) updateCard(card, ed, i); });
+  }
+  function syncCards() {
+    const list = $('#edgeList');
+    const ids = new Set(state.edges.map(e => e.id));
+    for (const [id, card] of cards) if (!ids.has(id)) { card.el.remove(); cards.delete(id); }
+    state.edges.forEach(ed => {
+      let card = cards.get(ed.id);
+      if (!card) {
+        card = createCard(ed.id);
+        cards.set(ed.id, card);
+        list.appendChild(card.el); // edges are only ever appended, so DOM order follows state order
+      }
+    });
+    $('#edgeCount').textContent = `${state.edges.length}개`;
+    $('#edgeEmpty').hidden = state.edges.length > 0;
+  }
+
+  // ---------- boot ----------
+  new ResizeObserver(() => { sizeCanvases(); invalidate(false); }).observe(disc);
+  sizeCanvases();
+  syncSettings();
+  syncCards();
+  renderInspector();
+  changed(false);
+})();
+</script>
+</body>
+</html>
