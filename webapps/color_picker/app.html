@@ -33,23 +33,61 @@
 
   .top { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
-  .previews { display: flex; flex-direction: column; gap: 10px; }
+  .panel, .stack { display: flex; flex-direction: column; gap: 8px; }
+  .panel > h2 { margin: 0; }
+  .previews { gap: 10px; }
   #disc {
     display: block;
-    width: min(360px, calc(100vw - 58px));
+    width: min(380px, calc(100vw - 58px));
     aspect-ratio: 1;
+    border-radius: 8px;
     touch-action: none;
     cursor: crosshair;
   }
+  #disc.line { cursor: cell; }
   #bar {
     display: block;
-    width: min(360px, calc(100vw - 58px));
+    width: min(380px, calc(100vw - 58px));
     height: 52px;
     cursor: pointer;
   }
   .side { flex: 1; min-width: 260px; display: flex; flex-direction: column; gap: 12px; }
   .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .row + .row { margin-top: 8px; }
+  .row input[type="range"]:not(.track) { flex: 1; min-width: 100px; }
+  .lbl { width: 44px; flex: none; color: var(--muted); }
+  .lbl.sub { padding-left: 10px; }
+  .mode-hint { flex: 1; min-width: 150px; color: var(--muted); font-size: 12px; }
+
+  .seg {
+    display: inline-flex; gap: 2px; padding: 2px;
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 7px;
+  }
+  .seg button {
+    background: none; border: 0; border-radius: 5px; padding: 4px 10px;
+    color: var(--muted); font: inherit; cursor: pointer;
+  }
+  .seg button:hover { color: var(--text); }
+  .seg button.on { background: var(--accent); color: #0d1020; font-weight: 600; }
+  .seg.big button { padding: 7px 14px; }
+
+  .sliders { display: grid; grid-template-columns: auto 1fr 46px auto; gap: 8px; align-items: center; }
+  .sliders label { color: var(--muted); white-space: nowrap; }
+  .sliders code { text-align: right; color: var(--muted); }
+  input.track[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; min-width: 80px; height: 14px; margin: 0;
+    border-radius: 7px; border: 1px solid rgba(255,255,255,.15); background: #444;
+  }
+  input.track::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+    background: transparent; border: 3px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.6), inset 0 0 0 1px rgba(0,0,0,.6);
+  }
+  input.track::-moz-range-thumb {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: transparent; border: 3px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.6), inset 0 0 0 1px rgba(0,0,0,.6);
+  }
+  input.track::-moz-range-track { background: transparent; }
+  .btn.mini { padding: 2px 8px; font-size: 12px; }
 
   .sw {
     display: inline-block; width: 18px; height: 18px; border-radius: 4px;
@@ -106,6 +144,13 @@
 
 <div class="top">
   <div class="panel previews">
+    <div class="row">
+      <div class="seg big" data-key="mode">
+        <button type="button" data-v="point">점 편집</button>
+        <button type="button" data-v="line">선 편집</button>
+      </div>
+      <span class="mode-hint" id="modeHint"></span>
+    </div>
     <canvas id="disc"></canvas>
     <canvas id="bar"></canvas>
   </div>
@@ -114,10 +159,19 @@
     <section class="panel">
       <h2>선택</h2>
       <div id="insEmpty" class="muted">원판에서 점이나 엣지를 선택하세요.</div>
-      <div id="insVertex" hidden>
+      <div id="insVertex" class="stack" hidden>
         <div class="row">
           <input type="color" id="vColor">
           <input id="vHex" class="hex" spellcheck="false" maxlength="7">
+          <span class="grow"></span>
+          <div class="seg" data-key="pickModel">
+            <button type="button" data-v="oklch" title="지각 밝기 기준 — 밝기 통일에 적합">OKLCH</button>
+            <button type="button" data-v="hsl">HSL</button>
+          </div>
+        </div>
+        <div class="sliders" id="pickSliders"></div>
+        <div class="muted" style="font-size:12px">전체: 이 값을 모든 점에 적용 (예: 밝기만 통일하고 색상은 유지)</div>
+        <div class="row">
           <span class="muted" id="vPos"></span>
         </div>
         <div class="row">
@@ -165,18 +219,64 @@
       <div class="row">
         <button class="btn" id="copyJson">JSON 복사</button>
         <button class="btn" id="copyCss">막대 CSS 복사</button>
+        <button class="btn" id="savePng">PNG 저장</button>
         <span class="grow"></span>
         <button class="btn danger" id="reset">초기화</button>
       </div>
     </section>
 
     <section class="panel">
+      <h2>스타일</h2>
+      <div class="row">
+        <span class="lbl">배경</span>
+        <div class="seg" data-key="bgMode">
+          <button type="button" data-v="transparent">투명</button>
+          <button type="button" data-v="white">흰색</button>
+          <button type="button" data-v="custom">사용자 지정</button>
+        </div>
+        <input type="color" id="bgColor">
+      </div>
+      <div class="row">
+        <span class="lbl">그림자</span>
+        <label><input type="checkbox" id="shadowOn"> 사용</label>
+      </div>
+      <div class="stack" id="shadowOpts">
+        <div class="row">
+          <span class="lbl sub">색상</span>
+          <input type="color" id="shadowColor">
+        </div>
+        <div class="row">
+          <span class="lbl sub">크기</span>
+          <input type="range" id="shadowSize" min="0" max="100" step="1">
+          <code id="shadowSizeVal"></code>
+        </div>
+        <div class="row">
+          <span class="lbl sub">강도</span>
+          <input type="range" id="shadowStrength" min="0" max="100" step="1">
+          <code id="shadowStrengthVal"></code>
+        </div>
+      </div>
+      <div class="row">
+        <span class="lbl">표면</span>
+        <div class="seg" data-key="surface">
+          <button type="button" data-v="none">없음</button>
+          <button type="button" data-v="2d" title="병뚜껑처럼 테두리 강조">2D</button>
+          <button type="button" data-v="3d" title="구처럼 입체 음영">3D</button>
+        </div>
+      </div>
+      <div class="row" id="surfaceOpts">
+        <span class="lbl sub">강도</span>
+        <input type="range" id="surfaceStrength" min="0" max="100" step="1">
+        <code id="surfaceStrengthVal"></code>
+      </div>
+    </section>
+
+    <section class="panel">
       <h2>조작법</h2>
       <ul class="help">
-        <li><b>원판 빈 곳 클릭</b>: 그 위치의 현재 색으로 점 추가</li>
-        <li><b>점 드래그</b>: 이동 · <b>더블클릭</b>: 색 선택</li>
-        <li><b>점 선택 후 Shift+다른 점 클릭</b>: 엣지 연결 / 해제</li>
-        <li><b>점 선택 후 Shift+빈 곳 클릭</b>: 새 점 추가하고 바로 연결</li>
+        <li><b>점 편집</b> — 빈 곳 클릭: 그 위치의 현재 색으로 점 추가 · 점 드래그: 이동 · 선 클릭: 엣지 선택 · 더블클릭: 색 선택</li>
+        <li><b>선 편집</b> — 점을 차례로 클릭: 엣지 연결 / 해제 · 빈 곳 클릭: 새 점 추가하고 바로 연결 · 같은 점 다시 클릭: 선택 해제</li>
+        <li>PC에서는 점 편집 중 <b>Shift</b>를 누르고 있으면 선 편집으로 동작해요</li>
         <li><b>Delete</b>: 선택 삭제 · <b>Esc</b>: 선택 해제</li>
         <li>막대는 엣지를 만든 순서대로, 길이에 비례해 펼친 모습이에요</li>
       </ul>
@@ -187,7 +287,7 @@
 <div class="edges-head">
   <h2>엣지 곡선</h2><span class="muted" id="edgeCount"></span>
 </div>
-<div id="edgeEmpty" class="empty">엣지가 없어요. 점을 선택하고 Shift+클릭으로 다른 점과 이어 보세요.</div>
+<div id="edgeEmpty" class="empty">엣지가 없어요. 선 편집 모드에서 점을 차례로 눌러 이어 보세요.</div>
 <div class="edges" id="edgeList"></div>
 
 <script>
@@ -197,8 +297,8 @@
   const $ = (s, root = document) => root.querySelector(s);
   const TAU = Math.PI * 2;
   const STORE_KEY = 'color-picker-lab:v1';
-  const DISC_MARGIN = 12;   // css px around the disc so handles on the rim stay visible
   const LOW_RES = 150;      // field resolution while dragging
+  const DRAG_SLOP = 4;      // css px a press must travel before it moves a point (keeps taps from nudging)
   const LUT_N = 256;
   const PRESETS = {
     linear: [0, 0, 1, 1],
@@ -229,6 +329,21 @@
     };
     return rgbToHex(f(0), f(8), f(4));
   }
+  function hexToHsl(hex) {
+    const [r, g, b] = hexToRgb(hex);
+    const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min, l = (max + min) / 2;
+    let h = 0, s = 0;
+    if (d > 1e-9) {
+      s = d / (1 - Math.abs(2 * l - 1));
+      h = 60 * (max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4);
+      if (h < 0) h += 360;
+    }
+    return [h, s, l];
+  }
+  function hexToRgba(hex, a) {
+    const [r, g, b] = hexToRgb(hex);
+    return `rgba(${Math.round(r * 255)},${Math.round(g * 255)},${Math.round(b * 255)},${a})`;
+  }
   const toLinear = v => (v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
   const GAMMA_N = 8192;
   const GAMMA = new Float32Array(GAMMA_N + 1);
@@ -249,6 +364,59 @@
       0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s,
     ];
   }
+  function oklabToLinear(L, a, b, out) {
+    let l = L + 0.3963377774 * a + 0.2158037573 * b;
+    let m = L - 0.1055613458 * a - 0.0638541728 * b;
+    let s = L - 0.0894841775 * a - 1.2914855480 * b;
+    l = l * l * l; m = m * m * m; s = s * s * s;
+    out[0] = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+    out[1] = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+    out[2] = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+    return out;
+  }
+  // OKLCH as [hue°, chroma, lightness] — same component order as HSL so sliders line up.
+  function hexToOklch(hex) {
+    const [L, a, b] = srgbToOklab(hexToRgb(hex));
+    const h = Math.atan2(b, a) * 180 / Math.PI;
+    return [h < 0 ? h + 360 : h, Math.hypot(a, b), L];
+  }
+  // Out-of-gamut colors keep their lightness and hue and give up chroma until they fit in sRGB.
+  function oklchToHex(h, c, l) {
+    const hr = h * Math.PI / 180, ca = Math.cos(hr), sa = Math.sin(hr), rgb = [0, 0, 0];
+    const fits = C => {
+      oklabToLinear(l, C * ca, C * sa, rgb);
+      return rgb.every(v => v >= -1e-4 && v <= 1 + 1e-4);
+    };
+    if (!fits(c)) {
+      let lo = 0, hi = c;
+      for (let i = 0; i < 20; i++) {
+        const mid = (lo + hi) / 2;
+        if (fits(mid)) lo = mid; else hi = mid;
+      }
+      oklabToLinear(l, lo * ca, lo * sa, rgb);
+    }
+    return rgbToHex(toGamma(rgb[0]), toGamma(rgb[1]), toGamma(rgb[2]));
+  }
+
+  const pct = v => (v * 100).toFixed(0) + '%';
+  const PICK_MODELS = {
+    oklch: {
+      from: hexToOklch, to: oklchToHex,
+      comps: [
+        { label: '색상 H', min: 0, max: 360, step: 1, fmt: v => v.toFixed(0) + '°' },
+        { label: '채도 C', min: 0, max: 0.37, step: 0.001, fmt: v => v.toFixed(3) },
+        { label: '밝기 L', min: 0, max: 1, step: 0.001, fmt: v => (v * 100).toFixed(1) },
+      ],
+    },
+    hsl: {
+      from: hexToHsl, to: hslToHex,
+      comps: [
+        { label: '색상 H', min: 0, max: 360, step: 1, fmt: v => v.toFixed(0) + '°' },
+        { label: '채도 S', min: 0, max: 1, step: 0.001, fmt: pct },
+        { label: '밝기 L', min: 0, max: 1, step: 0.001, fmt: pct },
+      ],
+    },
+  };
 
   // Blend space: colors are mixed in state.space, then converted back to sRGB (0..1) into out.
   function toSpace(hex) {
@@ -293,6 +461,16 @@
       space: 'oklab',
       spread: 2,
       guides: true,
+      mode: 'point',          // 'point' | 'line'
+      pickModel: 'oklch',     // 'oklch' | 'hsl'
+      bgMode: 'transparent',  // 'transparent' | 'white' | 'custom'
+      bgColor: '#20232b',
+      shadowOn: false,
+      shadowColor: '#000000',
+      shadowSize: 50,
+      shadowStrength: 50,
+      surface: 'none',        // 'none' | '2d' | '3d'
+      surfaceStrength: 70,
       vertices: [v1, v2, v3],
       edges: [
         { id: uid(), a: v1.id, b: v2.id, bez: [...PRESETS.linear] },
@@ -404,7 +582,8 @@
   // ---------- canvases ----------
   const disc = $('#disc'), dctx = disc.getContext('2d');
   const bar = $('#bar'), bctx = bar.getContext('2d');
-  const field = document.createElement('canvas'), fctx = field.getContext('2d');
+  const field = document.createElement('canvas');
+  const layer = document.createElement('canvas'); // the masked disc body, composited with its shadow
   const barRow = document.createElement('canvas'), rctx = barRow.getContext('2d');
   let discCss = 360, barCss = 360, dpr = 1;
 
@@ -416,8 +595,10 @@
     bar.width = Math.round(barCss * dpr);
     bar.height = Math.round(bar.clientHeight * dpr);
   }
-  const discGeom = () => ({ c: discCss / 2, R: discCss / 2 - DISC_MARGIN });
-  const highRes = () => Math.min(Math.round((discCss - 2 * DISC_MARGIN) * dpr), 560);
+  // The margin leaves room for rim handles and for the largest shadow, so the disc never jumps in size.
+  const discGeomFor = size => ({ c: size / 2, R: size / 2 - Math.max(12, Math.round(size * 0.09)) });
+  const discGeom = () => discGeomFor(discCss);
+  const highRes = () => Math.min(Math.round(2 * discGeom().R * dpr), 560);
 
   let raf = 0, wantFast = false, fieldDirty = true, fieldRes = 0;
   function invalidate(fast = false) {
@@ -428,18 +609,19 @@
     raf = 0;
     const res = wantFast ? LOW_RES : highRes();
     if (fieldDirty || res !== fieldRes) {
-      renderField(res);
+      renderField(field, res);
       fieldDirty = false;
       fieldRes = res;
     }
-    drawDisc();
+    composeDisc(dctx, discCss, dpr, field, layer, true);
     drawBar();
   }
 
-  function renderField(res) {
+  function renderField(target, res) {
     const m = model();
-    field.width = field.height = res;
+    target.width = target.height = res;
     if (!m.any) return;
+    const fctx = target.getContext('2d');
     const img = fctx.createImageData(res, res), d = img.data, out = [0, 0, 0];
     for (let y = 0; y < res; y++) {
       const ny = ((y + 0.5) / res) * 2 - 1;
@@ -454,30 +636,138 @@
     fctx.putImageData(img, 0, 0);
   }
 
-  function drawDisc() {
-    const ctx = dctx, m = model(), { c, R } = discGeom();
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, discCss, discCss);
+  const bgFill = () => (state.bgMode === 'white' ? '#ffffff' : state.bgMode === 'custom' ? state.bgColor : null);
 
+  // Draws background, shadow, disc body, surface overlay and (optionally) guides into ctx.
+  // size is in css px; scale maps css px to the target's device pixels.
+  function composeDisc(ctx, size, scale, fieldCv, layerCv, guides) {
+    const m = model(), { c, R } = discGeomFor(size), px = Math.round(size * scale);
+
+    if (layerCv.width !== px || layerCv.height !== px) layerCv.width = layerCv.height = px;
+    const lc = layerCv.getContext('2d');
+    lc.setTransform(scale, 0, 0, scale, 0, 0);
+    lc.globalCompositeOperation = 'source-over';
+    lc.clearRect(0, 0, size, size);
     if (m.any) {
-      ctx.imageSmoothingEnabled = true;
-      ctx.drawImage(field, c - R, c - R, 2 * R, 2 * R);
-      ctx.globalCompositeOperation = 'destination-in';
-      ctx.beginPath(); ctx.arc(c, c, R, 0, TAU); ctx.fill();
-      ctx.globalCompositeOperation = 'source-over';
+      lc.imageSmoothingEnabled = true;
+      lc.drawImage(fieldCv, c - R, c - R, 2 * R, 2 * R);
     } else {
-      ctx.fillStyle = '#26262c';
-      ctx.beginPath(); ctx.arc(c, c, R, 0, TAU); ctx.fill();
+      lc.fillStyle = '#26262c';
+      lc.fillRect(c - R, c - R, 2 * R, 2 * R);
+    }
+    lc.globalCompositeOperation = 'destination-in';
+    lc.fillStyle = '#000'; // opaque mask — the previous frame may have left a translucent gradient here
+    lc.beginPath(); lc.arc(c, c, R, 0, TAU); lc.fill();
+    lc.globalCompositeOperation = 'source-atop'; // overlays stay inside the disc
+    drawSurface(lc, c, R);
+    lc.globalCompositeOperation = 'source-over';
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, px, px);
+    // On screen the background is the canvas's CSS; only exports paint it.
+    const bg = !guides && bgFill();
+    if (bg) { ctx.fillStyle = bg; ctx.fillRect(0, 0, px, px); }
+    if (state.shadowOn) {
+      // shadowBlur / shadowOffset ignore the transform, so they are given in device pixels.
+      const blur = R * 0.16 * state.shadowSize / 100;
+      ctx.shadowColor = hexToRgba(state.shadowColor, state.shadowStrength / 100);
+      ctx.shadowBlur = blur * scale;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = blur * 0.3 * scale;
+    }
+    ctx.drawImage(layerCv, 0, 0);
+    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    if (state.surface === 'none') {
+      ctx.strokeStyle = 'rgba(255,255,255,.14)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(c, c, R + 0.5, 0, TAU); ctx.stroke();
+    }
+    if (!guides) return;
+    if (!m.any) {
       ctx.fillStyle = '#9696a2';
       ctx.font = '13px system-ui, "Malgun Gothic", sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('클릭해서 색을 찍어 보세요', c, c + 4);
     }
-    ctx.strokeStyle = 'rgba(255,255,255,.14)';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.arc(c, c, R + 0.5, 0, TAU); ctx.stroke();
+    drawGuides(ctx, c, R);
+  }
 
+  // Lighting overlays, drawn with source-atop so they only touch the disc. Light comes from the top left.
+  function drawSurface(ctx, c, R) {
+    const k = state.surfaceStrength / 100;
+    if (state.surface === '2d') {
+      // bottle cap: flat face inside a bevelled, raised rim
+      const w = R * 0.075, inner = R - w;
+      let g = ctx.createLinearGradient(c - R, c - R, c + R, c + R);
+      g.addColorStop(0, `rgba(255,255,255,${0.07 * k})`);
+      g.addColorStop(1, `rgba(0,0,0,${0.07 * k})`);
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(c, c, R, 0, TAU); ctx.fill();
+
+      g = ctx.createRadialGradient(c + R * 0.02, c + R * 0.03, inner * 0.84, c + R * 0.02, c + R * 0.03, inner);
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(1, `rgba(0,0,0,${0.25 * k})`);
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(c, c, inner, 0, TAU); ctx.fill();
+
+      g = ctx.createLinearGradient(c - R, c - R, c + R, c + R);
+      g.addColorStop(0, `rgba(255,255,255,${0.6 * k})`);
+      g.addColorStop(0.5, `rgba(255,255,255,${0.06 * k})`);
+      g.addColorStop(1, `rgba(0,0,0,${0.5 * k})`);
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(c, c, R, 0, TAU); ctx.arc(c, c, inner, 0, TAU, true); ctx.fill();
+
+      g = ctx.createLinearGradient(c - R, c - R, c + R, c + R);
+      g.addColorStop(0, `rgba(0,0,0,${0.45 * k})`);
+      g.addColorStop(1, `rgba(255,255,255,${0.4 * k})`);
+      ctx.strokeStyle = g;
+      ctx.lineWidth = Math.max(1, R * 0.01);
+      ctx.beginPath(); ctx.arc(c, c, inner, 0, TAU); ctx.stroke();
+
+      ctx.strokeStyle = `rgba(0,0,0,${0.55 * k})`;
+      ctx.lineWidth = Math.max(1, R * 0.012);
+      ctx.beginPath(); ctx.arc(c, c, R - ctx.lineWidth / 2, 0, TAU); ctx.stroke();
+    } else if (state.surface === '3d') {
+      // sphere: diffuse falloff, limb darkening and a specular spot
+      const lx = c - R * 0.38, ly = c - R * 0.42;
+      let g = ctx.createRadialGradient(lx, ly, 0, lx, ly, R * 1.7);
+      g.addColorStop(0, `rgba(255,255,255,${0.35 * k})`);
+      g.addColorStop(0.3, 'rgba(255,255,255,0)');
+      g.addColorStop(0.55, 'rgba(0,0,0,0)');
+      g.addColorStop(1, `rgba(0,0,0,${0.65 * k})`);
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(c, c, R, 0, TAU); ctx.fill();
+
+      g = ctx.createRadialGradient(c, c, R * 0.7, c, c, R);
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(1, `rgba(0,0,0,${0.25 * k})`);
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(c, c, R, 0, TAU); ctx.fill();
+
+      g = ctx.createRadialGradient(lx, ly, 0, lx, ly, R * 0.32);
+      g.addColorStop(0, `rgba(255,255,255,${0.75 * k})`);
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(lx, ly, R * 0.32, 0, TAU); ctx.fill();
+    }
+  }
+
+  function drawGuides(ctx, c, R) {
     const P = v => [c + v.x * R, c + v.y * R];
+    const lineMode = effectiveMode() === 'line';
+    const from = sel.type === 'v' ? vertexById(sel.id) : null;
+    if (lineMode && from && hoverPx && !drag) {
+      const [ax, ay] = P(from);
+      ctx.setLineDash([5, 5]);
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(hoverPx[0], hoverPx[1]); ctx.stroke();
+      ctx.strokeStyle = '#7aa2ff'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(hoverPx[0], hoverPx[1]); ctx.stroke();
+      ctx.setLineDash([]);
+    }
     for (const ed of state.edges) {
       const A = vertexById(ed.a), B = vertexById(ed.b);
       if (!A || !B) continue;
@@ -503,6 +793,13 @@
       ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
       ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.stroke();
       ctx.lineWidth = 2; ctx.strokeStyle = selected ? '#7aa2ff' : '#fff'; ctx.stroke();
+      if (selected && lineMode) {
+        // marks the point the next click will connect from
+        ctx.setLineDash([3, 3]);
+        ctx.lineWidth = 1.5; ctx.strokeStyle = '#7aa2ff';
+        ctx.beginPath(); ctx.arc(x, y, r + 5, 0, TAU); ctx.stroke();
+        ctx.setLineDash([]);
+      }
     }
   }
 
@@ -596,15 +893,15 @@
     const px = e.clientX - rect.left, py = e.clientY - rect.top;
     return { px, py, nx: (px - c) / R, ny: (py - c) / R };
   }
-  function hitVertex(px, py) {
+  function hitVertex(px, py, tol) {
     const { c, R } = discGeom();
     for (let i = state.vertices.length - 1; i >= 0; i--) {
       const v = state.vertices[i];
-      if (Math.hypot(c + v.x * R - px, c + v.y * R - py) <= 11) return v;
+      if (Math.hypot(c + v.x * R - px, c + v.y * R - py) <= tol) return v;
     }
     return null;
   }
-  function hitEdge(px, py) {
+  function hitEdge(px, py, tol) {
     const { c, R } = discGeom();
     for (let i = state.edges.length - 1; i >= 0; i--) {
       const ed = state.edges[i], A = vertexById(ed.a), B = vertexById(ed.b);
@@ -612,7 +909,7 @@
       const ax = c + A.x * R, ay = c + A.y * R, ex = (B.x - A.x) * R, ey = (B.y - A.y) * R;
       const l2 = ex * ex + ey * ey;
       const s = l2 ? clamp01(((px - ax) * ex + (py - ay) * ey) / l2) : 0;
-      if (Math.hypot(ax + ex * s - px, ay + ey * s - py) <= 6) return ed;
+      if (Math.hypot(ax + ex * s - px, ay + ey * s - py) <= tol) return ed;
     }
     return null;
   }
@@ -621,60 +918,89 @@
     return r > 1 ? [x / r, y / r] : [x, y];
   }
 
-  let dragId = null;
+  // Line mode: clicks connect points. On a keyboard, holding Shift borrows line mode from point mode.
+  let shiftHeld = false;
+  const effectiveMode = () => (shiftHeld ? 'line' : state.mode);
+  function setShift(on) {
+    if (on === shiftHeld) return;
+    shiftHeld = on;
+    syncMode();
+  }
+  addEventListener('keydown', e => { if (e.key === 'Shift') setShift(true); });
+  addEventListener('keyup', e => { if (e.key === 'Shift') setShift(false); });
+  addEventListener('blur', () => setShift(false));
+
+  let drag = null;     // { id, px, py, moved }
+  let hoverPx = null;  // cursor position in css px, for the line-mode rubber band
+  function startDrag(id, e, px, py, moved) {
+    drag = { id, px, py, moved };
+    disc.setPointerCapture(e.pointerId);
+  }
   disc.addEventListener('pointerdown', e => {
+    if (e.shiftKey !== shiftHeld) setShift(e.shiftKey);
     const { px, py, nx, ny } = discPoint(e);
-    const hitV = hitVertex(px, py);
+    const touch = e.pointerType === 'touch';
+    const lineMode = effectiveMode() === 'line';
+    const from = sel.type === 'v' && vertexById(sel.id) ? sel.id : null;
+    const hitV = hitVertex(px, py, touch ? 20 : 11);
     if (hitV) {
-      if (e.shiftKey && sel.type === 'v' && sel.id !== hitV.id && vertexById(sel.id)) {
-        toggleEdge(sel.id, hitV.id);
+      if (lineMode && from === hitV.id) { select(null); return; } // same point twice: let go
+      if (lineMode && from) {
+        toggleEdge(from, hitV.id);
         select('v', hitV.id);
         structureChanged();
         return;
       }
       select('v', hitV.id);
-      dragId = hitV.id;
-      disc.setPointerCapture(e.pointerId);
+      startDrag(hitV.id, e, px, py, false);
       return;
     }
-    const hitE = !e.shiftKey && hitEdge(px, py);
+    const hitE = !lineMode && hitEdge(px, py, touch ? 12 : 6);
     if (hitE) { select('e', hitE.id, true); return; }
     if (nx * nx + ny * ny > 1) { select(null); return; }
 
     const sampled = sampleField(model(), nx, ny, [0, 0, 0]);
     const color = sampled ? rgbToHex(...sampled) : hslToHex(Math.random() * 360, 0.8, 0.6);
     const v = { id: uid(), x: round3(nx), y: round3(ny), color };
-    const from = e.shiftKey && sel.type === 'v' && vertexById(sel.id) ? sel.id : null;
     state.vertices.push(v);
-    if (from) toggleEdge(from, v.id);
+    if (lineMode && from) toggleEdge(from, v.id);
     select('v', v.id);
-    dragId = v.id;
-    disc.setPointerCapture(e.pointerId);
+    startDrag(v.id, e, px, py, true);
     structureChanged();
   });
   disc.addEventListener('pointermove', e => {
-    const { nx, ny } = discPoint(e);
-    if (dragId) {
-      const v = vertexById(dragId);
+    const { px, py, nx, ny } = discPoint(e);
+    hoverPx = e.pointerType === 'touch' ? null : [px, py];
+    if (drag) {
+      if (!drag.moved && Math.hypot(px - drag.px, py - drag.py) >= DRAG_SLOP) drag.moved = true;
+      const v = drag.moved && vertexById(drag.id);
       if (v) {
         [v.x, v.y] = clampToDisc(nx, ny).map(round3);
         renderInspector();
         changed(true);
       }
+    } else if (effectiveMode() === 'line' && sel.type === 'v') {
+      invalidate(false);
     }
     showHover(nx * nx + ny * ny <= 1 ? sampleField(model(), nx, ny, [0, 0, 0]) : null, posLabel(nx, ny));
   });
   const endDrag = () => {
-    if (!dragId) return;
-    dragId = null;
-    changed(false);
+    if (!drag) return;
+    const moved = drag.moved;
+    drag = null;
+    if (moved) changed(false);
   };
   disc.addEventListener('pointerup', endDrag);
   disc.addEventListener('pointercancel', endDrag);
-  disc.addEventListener('pointerleave', () => { if (!dragId) showHover(null, ''); });
+  disc.addEventListener('pointerleave', () => {
+    hoverPx = null;
+    invalidate(false);
+    if (!drag) showHover(null, '');
+  });
   disc.addEventListener('dblclick', e => {
+    if (effectiveMode() === 'line') return;
     const { px, py } = discPoint(e);
-    const v = hitVertex(px, py);
+    const v = hitVertex(px, py, 11);
     if (v) { select('v', v.id); $('#vColor').click(); }
   });
 
@@ -724,6 +1050,7 @@
       if (document.activeElement !== $('#vHex')) $('#vHex').value = v.color;
       $('#vPos').textContent = posLabel(v.x, v.y);
       $('#vDeg').textContent = `연결된 엣지 ${state.edges.filter(e => e.a === v.id || e.b === v.id).length}개`;
+      renderPicker(v);
     }
     if (ed) {
       $('#eA').style.background = vertexById(ed.a).color;
@@ -750,6 +1077,142 @@
   $('#vDel').addEventListener('click', deleteSelection);
   $('#eDel').addEventListener('click', deleteSelection);
 
+  // ---------- hue / chroma / lightness sliders ----------
+  // Slider values are kept here rather than re-derived from hex on every move, so gamut clipping
+  // and gray colors (no defined hue) don't make the other sliders jump.
+  let pick = { id: null, model: null, hex: null, v: [0, 0, 0] };
+  function syncPick(vtx) {
+    if (pick.id === vtx.id && pick.model === state.pickModel && pick.hex === vtx.color) return;
+    const next = PICK_MODELS[state.pickModel].from(vtx.color);
+    if (pick.id === vtx.id && pick.model === state.pickModel && next[1] < 1e-3) next[0] = pick.v[0];
+    pick = { id: vtx.id, model: state.pickModel, hex: vtx.color, v: next };
+  }
+  const sliders = [0, 1, 2].map(k => {
+    const label = document.createElement('label');
+    const input = document.createElement('input');
+    const code = document.createElement('code');
+    const all = document.createElement('button');
+    input.type = 'range';
+    input.className = 'track';
+    all.type = 'button';
+    all.className = 'btn mini';
+    all.textContent = '전체';
+    all.title = '이 값을 모든 점에 적용';
+    input.addEventListener('input', () => slide(k, +input.value, false));
+    input.addEventListener('change', () => slide(k, +input.value, true));
+    all.addEventListener('click', () => applyToAll(k));
+    $('#pickSliders').append(label, input, code, all);
+    return { label, input, code };
+  });
+  function renderPicker(vtx) {
+    syncPick(vtx);
+    const M = PICK_MODELS[pick.model];
+    sliders.forEach((s, k) => {
+      const comp = M.comps[k];
+      s.label.textContent = comp.label;
+      s.input.min = comp.min; s.input.max = comp.max; s.input.step = comp.step;
+      s.input.value = pick.v[k];
+      s.code.textContent = comp.fmt(pick.v[k]);
+      const stops = [];
+      for (let i = 0; i <= 12; i++) {
+        const p = [...pick.v];
+        p[k] = comp.min + (comp.max - comp.min) * i / 12;
+        stops.push(M.to(...p));
+      }
+      s.input.style.background = `linear-gradient(90deg, ${stops.join(', ')})`;
+    });
+  }
+  function slide(k, value, final) {
+    const vtx = sel.type === 'v' && vertexById(sel.id);
+    if (!vtx) return;
+    syncPick(vtx);
+    pick.v[k] = value;
+    vtx.color = pick.hex = PICK_MODELS[pick.model].to(...pick.v);
+    renderInspector();
+    changed(!final);
+  }
+  function applyToAll(k) {
+    const vtx = sel.type === 'v' && vertexById(sel.id);
+    if (!vtx) return;
+    syncPick(vtx);
+    const M = PICK_MODELS[pick.model];
+    for (const v of state.vertices) {
+      if (v === vtx) continue;
+      const p = M.from(v.color);
+      p[k] = pick.v[k];
+      v.color = M.to(...p);
+    }
+    renderInspector();
+    changed(false);
+  }
+
+  // ---------- segmented toggles ----------
+  const MODE_HINTS = {
+    point: '빈 곳 탭: 점 추가 · 점 드래그: 이동 · 선 탭: 엣지 선택',
+    line: '점을 차례로 탭: 연결/해제 · 빈 곳 탭: 추가+연결 · 같은 점 다시 탭: 선택 해제',
+  };
+  function syncSegs() {
+    document.querySelectorAll('.seg[data-key]').forEach(seg => {
+      const key = seg.dataset.key, cur = key === 'mode' ? effectiveMode() : state[key];
+      seg.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === cur));
+    });
+  }
+  function syncMode() {
+    syncSegs();
+    $('#modeHint').textContent = MODE_HINTS[effectiveMode()];
+    disc.classList.toggle('line', effectiveMode() === 'line');
+    invalidate(false);
+  }
+  const SEG_EFFECTS = { mode: syncMode, pickModel: renderInspector, bgMode: applyStyle, surface: applyStyle };
+  document.querySelectorAll('.seg[data-key]').forEach(seg => {
+    seg.addEventListener('click', e => {
+      const b = e.target.closest('button[data-v]');
+      if (!b) return;
+      state[seg.dataset.key] = b.dataset.v;
+      syncSegs();
+      SEG_EFFECTS[seg.dataset.key]();
+      save();
+    });
+  });
+
+  // ---------- style ----------
+  const CHECKER = 'repeating-conic-gradient(#2a2a31 0 25%, #202025 0 50%) 0 0 / 16px 16px';
+  function applyStyle() {
+    disc.style.background = bgFill() || CHECKER;
+    $('#bgColor').hidden = state.bgMode !== 'custom';
+    $('#shadowOpts').hidden = !state.shadowOn;
+    $('#surfaceOpts').hidden = state.surface === 'none';
+    $('#shadowSizeVal').textContent = state.shadowSize;
+    $('#shadowStrengthVal').textContent = state.shadowStrength + '%';
+    $('#surfaceStrengthVal').textContent = state.surfaceStrength + '%';
+    invalidate(false);
+  }
+  const bindStyle = (sel, key, prop, cast = v => v) => {
+    $(sel).addEventListener('input', e => { state[key] = cast(e.target[prop]); applyStyle(); save(); });
+  };
+  bindStyle('#bgColor', 'bgColor', 'value');
+  bindStyle('#shadowOn', 'shadowOn', 'checked');
+  bindStyle('#shadowColor', 'shadowColor', 'value');
+  bindStyle('#shadowSize', 'shadowSize', 'value', Number);
+  bindStyle('#shadowStrength', 'shadowStrength', 'value', Number);
+  bindStyle('#surfaceStrength', 'surfaceStrength', 'value', Number);
+
+  function savePng(btn) {
+    const size = 1024, out = document.createElement('canvas'), f = document.createElement('canvas');
+    out.width = out.height = size;
+    renderField(f, Math.round(2 * discGeomFor(size).R));
+    composeDisc(out.getContext('2d'), size, 1, f, document.createElement('canvas'), false);
+    out.toBlob(blob => {
+      if (!blob) { btn.textContent = '저장 실패'; setTimeout(() => { btn.textContent = 'PNG 저장'; }, 1200); return; }
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'color-disc.png';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    }, 'image/png');
+  }
+  $('#savePng').addEventListener('click', e => savePng(e.currentTarget));
+
   $('#space').addEventListener('change', e => { state.space = e.target.value; changed(false); });
   $('#spread').addEventListener('input', e => {
     state.spread = +e.target.value;
@@ -764,6 +1227,14 @@
     $('#spread').value = state.spread;
     $('#spreadVal').textContent = (+state.spread).toFixed(1);
     $('#guides').checked = state.guides;
+    $('#bgColor').value = state.bgColor;
+    $('#shadowOn').checked = state.shadowOn;
+    $('#shadowColor').value = state.shadowColor;
+    $('#shadowSize').value = state.shadowSize;
+    $('#shadowStrength').value = state.shadowStrength;
+    $('#surfaceStrength').value = state.surfaceStrength;
+    syncMode();
+    applyStyle();
   }
 
   async function copyText(btn, text) {
@@ -789,6 +1260,13 @@
       space, spread,
       vertices,
       edges: edges.map(({ id, a, b, bez }) => ({ id, from: a, to: b, bezier: bez })),
+      style: {
+        background: bgFill() || 'transparent',
+        shadow: state.shadowOn
+          ? { color: state.shadowColor, size: state.shadowSize, strength: state.shadowStrength }
+          : null,
+        surface: state.surface === 'none' ? null : { type: state.surface, strength: state.surfaceStrength },
+      },
     };
     copyText(e.currentTarget, JSON.stringify(data, null, 2));
   });
