@@ -67,6 +67,8 @@
   .unit { color: var(--muted); font-size: 11px; }
   .actions { display: flex; gap: 6px; margin-top: 8px; }
   .actions .btn { flex: 1; }
+  #modelActions { flex-wrap: wrap; }
+  #modelActions #splitBtn { flex-basis: 100%; }
 
   #gear {
     top: calc(env(safe-area-inset-top, 0px) + var(--gap));
@@ -160,6 +162,7 @@
     <div class="actions" id="modelActions" hidden>
       <button class="btn" id="lowBtn">⚡ 로우폴리</button>
       <button class="btn" id="dlBtn">⬇ 받기</button>
+      <button class="btn" id="splitBtn" title="떨어져 있는 덩어리를 각각의 모델로 나누기">🧩 파츠 분리</button>
     </div>
     <div class="actions">
       <button class="btn" id="dupBtn">복제</button>
@@ -191,6 +194,7 @@
 <div id="ctxMenu" class="panel" hidden>
   <button class="btn" id="ctxMove">✥ 이동</button>
   <button class="btn" id="ctxLow" data-model-only title="폴리를 줄인 사본을 옆에 만들기">⚡ 로우폴리</button>
+  <button class="btn" id="ctxSplit" data-model-only title="떨어져 있는 덩어리를 각각의 모델로 나누기">🧩 파츠 분리</button>
   <button class="btn" id="ctxDownload" data-model-only title="이 모델의 GLB 받기">⬇ 다운로드</button>
   <button class="btn danger" id="ctxDelete" title="Del 키">🗑 삭제</button>
 </div>
@@ -246,6 +250,7 @@ is-buffer/index.js:
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { clone as cloneObject } from 'three/addons/utils/SkeletonUtils.js';
 
@@ -671,6 +676,177 @@ async function downloadModel(objectId) {
   }
 }
 
+// ---------- split into parts ----------
+// A part is a group of triangle islands (vertices welded by position, so UV seams don't cut an island).
+// Islands whose bounding boxes touch or sit within PART_GAP of each other stay together, and crumbs
+// under PART_MIN_SHARE of all triangles join the nearest part. Each part becomes its own GLB.
+const PART_GAP = 0.01;       // × model diagonal
+const PART_MIN_SHARE = 0.01; // × total triangles
+const splitJobs = new Set(); // source assetIds being split
+const exporter = new GLTFExporter();
+const boxGap = (a, b) => Math.max(a.min.x - b.max.x, b.min.x - a.max.x, a.min.y - b.max.y, b.min.y - a.max.y, a.min.z - b.max.z, b.min.z - a.max.z);
+const boxDistance = (a, b) => Math.hypot(
+  Math.max(0, a.min.x - b.max.x, b.min.x - a.max.x),
+  Math.max(0, a.min.y - b.max.y, b.min.y - a.max.y),
+  Math.max(0, a.min.z - b.max.z, b.min.z - a.max.z));
+function unionFind(n) {
+  const parent = Int32Array.from({ length: n }, (_, i) => i);
+  const find = x => { while (parent[x] !== x) x = parent[x] = parent[parent[x]]; return x; };
+  return { find, union: (a, b) => { a = find(a); b = find(b); if (a !== b) parent[b] = a; } };
+}
+function meshIslands(mesh, weldTol) {
+  const pos = mesh.geometry.attributes.position, index = mesh.geometry.index?.array;
+  const n = pos.count, triCount = (index ? index.length : n) / 3;
+  const vert = (t, k) => index ? index[t * 3 + k] : t * 3 + k;
+  const world = Array.from({ length: n }, (_, i) => new THREE.Vector3().fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld));
+  const weldIds = new Map(), weld = new Int32Array(n);
+  world.forEach((p, i) => {
+    const key = `${Math.round(p.x / weldTol)},${Math.round(p.y / weldTol)},${Math.round(p.z / weldTol)}`;
+    if (!weldIds.has(key)) weldIds.set(key, i);
+    weld[i] = weldIds.get(key);
+  });
+  const uf = unionFind(n);
+  for (let t = 0; t < triCount; t++) for (let k = 1; k < 3; k++) uf.union(weld[vert(t, 0)], weld[vert(t, k)]);
+  const islands = new Map();
+  for (let t = 0; t < triCount; t++) {
+    const root = uf.find(weld[vert(t, 0)]);
+    let isl = islands.get(root);
+    if (!isl) islands.set(root, isl = { mesh, tris: [], box: new THREE.Box3() });
+    isl.tris.push(t);
+    for (let k = 0; k < 3; k++) isl.box.expandByPoint(world[vert(t, k)]);
+  }
+  return [...islands.values()];
+}
+function groupIslands(islands, gap) {
+  // sweep along X so only boxes that can overlap are compared
+  islands.sort((a, b) => a.box.min.x - b.box.min.x);
+  const uf = unionFind(islands.length);
+  for (let i = 0; i < islands.length; i++) {
+    for (let j = i + 1; j < islands.length && islands[j].box.min.x <= islands[i].box.max.x + gap; j++) {
+      if (boxGap(islands[i].box, islands[j].box) <= gap) uf.union(i, j);
+    }
+  }
+  const groups = new Map();
+  islands.forEach((isl, i) => {
+    const root = uf.find(i);
+    let g = groups.get(root);
+    if (!g) groups.set(root, g = { islands: [], tris: 0, box: new THREE.Box3() });
+    g.islands.push(isl);
+    g.tris += isl.tris.length;
+    g.box.union(isl.box);
+  });
+  const all = [...groups.values()].sort((a, b) => b.tris - a.tris);
+  const total = all.reduce((s, g) => s + g.tris, 0);
+  const parts = all.filter((g, i) => i === 0 || g.tris >= total * PART_MIN_SHARE);
+  for (const crumb of all.filter(g => !parts.includes(g))) {
+    const home = parts.reduce((a, b) => boxDistance(crumb.box, b.box) < boxDistance(crumb.box, a.box) ? b : a);
+    home.islands.push(...crumb.islands);
+    home.tris += crumb.tris;
+    home.box.union(crumb.box);
+  }
+  // left to right, then front to back, so part numbers follow the layout
+  const cx = g => (g.box.min.x + g.box.max.x) / 2;
+  return parts.sort((a, b) => cx(a) - cx(b) || a.box.min.z - b.box.min.z);
+}
+// Copy the listed vertices of an attribute. Position/normal/tangent become float so the world transform can be baked in.
+function pickAttribute(attr, order, asFloat) {
+  const size = attr.itemSize, inter = attr.isInterleavedBufferAttribute;
+  const raw = inter ? attr.data.array : attr.array, stride = inter ? attr.data.stride : size, offset = inter ? attr.offset : 0;
+  const out = new (asFloat ? Float32Array : raw.constructor)(order.length * size);
+  order.forEach((v, i) => {
+    for (let k = 0; k < size; k++) {
+      const value = raw[v * stride + offset + k];
+      out[i * size + k] = asFloat && attr.normalized ? THREE.MathUtils.denormalize(value, raw) : value;
+    }
+  });
+  return new THREE.BufferAttribute(out, size, asFloat ? false : attr.normalized);
+}
+function buildPart(part) {
+  const byMesh = new Map();
+  for (const isl of part.islands) {
+    if (!byMesh.has(isl.mesh)) byMesh.set(isl.mesh, []);
+    byMesh.get(isl.mesh).push(...isl.tris);
+  }
+  const root = new THREE.Scene();
+  for (const [mesh, tris] of byMesh) {
+    const src = mesh.geometry, index = src.index?.array;
+    const remap = new Map(), order = [], newIndex = new Uint32Array(tris.length * 3);
+    tris.sort((a, b) => a - b).forEach((t, i) => {
+      for (let k = 0; k < 3; k++) {
+        const v = index ? index[t * 3 + k] : t * 3 + k;
+        if (!remap.has(v)) { remap.set(v, order.length); order.push(v); }
+        newIndex[i * 3 + k] = remap.get(v);
+      }
+    });
+    const geo = new THREE.BufferGeometry();
+    for (const [name, attr] of Object.entries(src.attributes)) {
+      geo.setAttribute(name, pickAttribute(attr, order, ['position', 'normal', 'tangent'].includes(name)));
+    }
+    geo.setIndex(new THREE.BufferAttribute(order.length > 65535 ? newIndex : Uint16Array.from(newIndex), 1));
+    geo.applyMatrix4(mesh.matrixWorld);
+    const m = new THREE.Mesh(geo, mesh.material);
+    m.name = mesh.name;
+    root.add(m);
+  }
+  // each part sits centered on X/Z with its bottom on Y = 0
+  const box = new THREE.Box3().setFromObject(root), c = box.getCenter(new THREE.Vector3());
+  root.traverse(child => { if (child.isMesh) child.geometry.translate(-c.x, -box.min.y, -c.z); });
+  return root;
+}
+async function splitParts(objectId) {
+  const o = objById(objectId);
+  const src = o?.type === 'model' ? assets.get(o.assetId) : null;
+  if (!src?.template || splitJobs.has(o.assetId)) return;
+  const srcAssetId = o.assetId;
+  splitJobs.add(srcAssetId);
+  renderProps();
+  toast(`${o.name} 파츠 찾는 중…`);
+  await new Promise(r => setTimeout(r, 30)); // let the toast paint before the heavy work
+  try {
+    const bytes = await getAssetBytes(srcAssetId);
+    const gltf = await new Promise((resolve, reject) => loader.parse(bytes, '', resolve, reject));
+    const model = gltf.scene;
+    model.updateMatrixWorld(true);
+    const meshes = [];
+    model.traverse(child => { if (child.isMesh) meshes.push(child); });
+    if (meshes.some(m => m.isSkinnedMesh)) throw new Error('뼈대(스킨)가 있는 모델은 나눌 수 없어요');
+    const diag = new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3()).length();
+    const parts = groupIslands(meshes.flatMap(m => meshIslands(m, diag * 1e-5)), diag * PART_GAP);
+    if (parts.length < 2) { toast('떨어져 있는 파츠를 찾지 못했어요'); return; }
+
+    const base = src.name.replace(/\.(glb|gltf)$/i, '');
+    const cur = objById(objectId) ?? o;
+    const k = [cur.w / src.size[0], cur.h / src.size[1], cur.d / src.size[2]];
+    let along = cur.w / 2 + 0.3; // lay parts out beside the original along its local +X
+    let last = null;
+    for (const [i, part] of parts.entries()) {
+      toast(`${o.name} · 파츠 ${i + 1}/${parts.length} 만드는 중…`);
+      const buffer = await exporter.parseAsync(buildPart(part), { binary: true });
+      const id = uid();
+      const name = `${base}_part${i + 1}.glb`;
+      const asset = await registerAsset(id, name, buffer);
+      try { await assetDb.put({ id, name, data: buffer }); }
+      catch { asset.data = buffer; }
+      const [w, h, d] = asset.size.map((v, a) => round2(Math.max(v * k[a], 0.05)));
+      const p = toWorld(cur, along + w / 2, 0);
+      along += w + 0.3;
+      last = { ...cur, id: uid(), assetId: id, name: `${cur.name} ${i + 1}`, x: round2(p.x), z: round2(p.z), y: 0, w, h, d };
+      delete last.lowOf;
+      objects.push(last);
+      syncNode(last);
+    }
+    select(last.id);
+    save();
+    toast(`파츠 ${parts.length}개로 나눴어요 · 각각 선택해서 ⬇ 받기`);
+  } catch (err) {
+    console.error(err);
+    toast(`파츠를 나누지 못했어요: ${err.message}`);
+  } finally {
+    splitJobs.delete(srcAssetId);
+    renderProps();
+  }
+}
+
 // drag & drop GLB files anywhere on the page
 let dragDepth = 0;
 const hasFiles = e => [...(e.dataTransfer?.types ?? [])].includes('Files');
@@ -718,6 +894,9 @@ function renderProps() {
     const busy = lowJobs.has(o.assetId);
     $('#lowBtn').disabled = busy;
     $('#lowBtn').textContent = busy ? '변환 중…' : '⚡ 로우폴리';
+    const splitting = splitJobs.has(o.assetId);
+    $('#splitBtn').disabled = splitting;
+    $('#splitBtn').textContent = splitting ? '분리 중…' : '🧩 파츠 분리';
   }
   for (const input of propInputs) {
     if (input === document.activeElement) continue;
@@ -745,6 +924,7 @@ for (const input of propInputs) {
 }
 $('#lowBtn').addEventListener('click', () => makeLowPoly(selectedId));
 $('#dlBtn').addEventListener('click', () => downloadModel(selectedId));
+$('#splitBtn').addEventListener('click', () => splitParts(selectedId));
 $('#dupBtn').addEventListener('click', duplicateSelected);
 $('#delBtn').addEventListener('click', deleteSelected);
 
@@ -782,6 +962,7 @@ function openMenu(id, x, y) {
   for (const b of ctxMenu.querySelectorAll('[data-model-only]')) b.hidden = !isModel;
   $('#ctxMove').hidden = !features.move;
   $('#ctxLow').disabled = isModel && lowJobs.has(o.assetId);
+  $('#ctxSplit').disabled = isModel && splitJobs.has(o.assetId);
   ctxMenu.hidden = false;
   const r = ctxMenu.getBoundingClientRect();
   ctxMenu.style.left = clamp(x + 10, 8, innerWidth - r.width - 8) + 'px';
@@ -822,6 +1003,7 @@ function dragMove(e) {
 }
 $('#ctxMove').addEventListener('click', () => { if (menuAt) startMove(menuAt.id, menuAt.x, menuAt.y); });
 $('#ctxLow').addEventListener('click', () => { if (menuAt) { const id = menuAt.id; closeMenu(); makeLowPoly(id); } });
+$('#ctxSplit').addEventListener('click', () => { if (menuAt) { const id = menuAt.id; closeMenu(); splitParts(id); } });
 $('#ctxDownload').addEventListener('click', () => { if (menuAt) { const id = menuAt.id; closeMenu(); downloadModel(id); } });
 $('#ctxDelete').addEventListener('click', () => { if (menuAt) { select(menuAt.id); deleteSelected(); } });
 $('#moveCancel').addEventListener('click', () => endMove(false));
