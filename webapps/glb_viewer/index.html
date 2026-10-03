@@ -284,8 +284,13 @@ function defaultObjects() {
     { id: uid(), type: 'box', name: '상자', x: -2, z: 1, y: 0, w: 2, d: 1.2, h: 1, rot: 20, color: '#e76f51' },
     { id: uid(), type: 'cylinder', name: '원기둥', x: 1.5, z: -1.5, y: 0, w: 1, d: 1, h: 2.2, rot: 0, color: '#2a9d8f' },
     { id: uid(), type: 'sphere', name: '구', x: 2, z: 2, y: 0.3, w: 1.2, d: 1.2, h: 1.2, rot: 0, color: '#e9c46a' },
+    // Size is a placeholder until the file loads; `fit` makes restoreAssets resize it like an imported model.
+    { id: uid(), type: 'model', assetId: DEFAULT_MODEL.id, name: DEFAULT_MODEL.name.replace(/\.glb$/i, ''),
+      x: 0, z: 0, y: 0, w: 1.5, d: 1.5, h: 1.5, rot: 0, color: '#ffffff', fit: true },
   ];
 }
+// Bundled GLB shown on first visit; fetched from next to this page when it isn't in IndexedDB yet.
+const DEFAULT_MODEL = { id: 'default:shangho_261003', name: 'shangho_261003.glb', url: 'shangho_261003.glb' };
 const DEFAULT_CAMERA = { pos: [9, 9, 11], target: [0, 0, 0] };
 
 function loadState() {
@@ -473,7 +478,7 @@ async function restoreAssets() {
   const ids = [...new Set(objects.filter(o => o.type === 'model').map(o => o.assetId))];
   await Promise.all(ids.map(async id => {
     try {
-      const rec = await assetDb.get(id);
+      const rec = await assetDb.get(id) ?? (id === DEFAULT_MODEL.id ? await fetchDefaultModel() : null);
       if (!rec) throw new Error('missing');
       await registerAsset(id, rec.name, rec.data);
     } catch {
@@ -481,8 +486,26 @@ async function restoreAssets() {
     }
   }));
   if (ids.some(id => assets.get(id)?.error)) toast('저장된 GLB 일부를 찾지 못해 빨간 상자로 표시했어요');
+  let fitted = false;
+  for (const o of objects) {
+    const a = o.fit && assets.get(o.assetId);
+    if (!a?.template) continue;
+    const [sx, sy, sz] = a.size;
+    const f = 1.5 / Math.max(sx, sy, sz, 1e-4);
+    Object.assign(o, { w: round2(sx * f), h: round2(sy * f), d: round2(sz * f) });
+    delete o.fit;
+    fitted = true;
+  }
   objects.forEach(syncNode);
+  if (fitted) { renderProps(); save(); }
   requestRender();
+}
+async function fetchDefaultModel() {
+  const res = await fetch(DEFAULT_MODEL.url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const rec = { id: DEFAULT_MODEL.id, name: DEFAULT_MODEL.name, data: await res.arrayBuffer() };
+  await assetDb.put(rec).catch(() => {});
+  return rec;
 }
 
 // ---------- render loop (on demand) ----------
@@ -627,7 +650,7 @@ function runLowWorker(bytes, onStage) {
 async function getAssetBytes(assetId) {
   const a = assets.get(assetId);
   if (a?.data) return a.data.slice(0);
-  const rec = await assetDb.get(assetId);
+  const rec = await assetDb.get(assetId) ?? (assetId === DEFAULT_MODEL.id ? await fetchDefaultModel() : null);
   if (!rec) throw new Error('저장된 파일을 찾지 못했어요');
   return rec.data;
 }
@@ -1382,6 +1405,7 @@ $('#resetAll').addEventListener('click', e => {
   applyCamera(DEFAULT_CAMERA);
   objects.forEach(syncNode);
   applyFeatures();
+  restoreAssets();
   save();
 });
 
