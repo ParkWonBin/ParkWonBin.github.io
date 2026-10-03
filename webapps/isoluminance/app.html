@@ -1,0 +1,1106 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>같은 그림, 다른 도형</title>
+<style>
+  :root {
+    --bg: #f3f2ee; --surface: #ffffff; --line: #dcd9d1; --text: #1c1b19; --muted: #6d6961;
+    --accent: #2563eb; --chip: #f0eee9; --stage: #151515;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101010; --surface: #1a1a1a; --line: #2d2d2d; --text: #ebe9e4; --muted: #9b978f;
+      --accent: #7aa7ff; --chip: #242424; --stage: #0c0c0c;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101010; --surface: #1a1a1a; --line: #2d2d2d; --text: #ebe9e4; --muted: #9b978f;
+    --accent: #7aa7ff; --chip: #242424; --stage: #0c0c0c;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font: 14px/1.45 "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    padding: 14px 16px 24px;
+  }
+  body.locked { overflow: hidden; }
+  .wrap { width: min(100%, 1000px); margin: 0 auto; }
+  header.top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-bottom: 10px; }
+  header.top h1 { font-size: 18px; margin: 0; letter-spacing: -0.01em; }
+  header.top p { margin: 0; color: var(--muted); font-size: 13px; }
+
+  /* ---------- 뷰어 ---------- */
+  .grid {
+    display: grid; gap: 10px; margin: 0 auto;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+    grid-template-areas: "big big p9" "big big p6" "p1 p2 p3";
+    width: min(100%, calc(100svh - 110px), 1000px);
+    min-width: 300px; aspect-ratio: 1;
+  }
+  @media (max-width: 700px) {
+    .grid { width: 100%; min-width: 0; aspect-ratio: 3 / 4.1;
+      grid-template-rows: minmax(0, 1.55fr) minmax(0, 1.55fr) minmax(0, 1fr); gap: 6px; }
+  }
+  .cell {
+    position: relative; padding: 0; border: 0; border-radius: 10px; overflow: hidden;
+    background: var(--stage); cursor: pointer; color: inherit; font: inherit; min-height: 0;
+    outline: 2px solid transparent; outline-offset: 2px; transition: outline-color .15s;
+  }
+  .cell svg { display: block; width: 100%; height: 100%; }
+  .cell.on, .cell:focus-visible { outline-color: var(--accent); }
+  .tag {
+    position: absolute; left: 6px; bottom: 6px; pointer-events: none;
+    background: rgba(0,0,0,.62); color: #fff; font-size: 12px; padding: 2px 7px; border-radius: 6px;
+    white-space: nowrap; max-width: calc(100% - 12px); overflow: hidden; text-overflow: ellipsis;
+  }
+  .tag b { font-variant-numeric: tabular-nums; margin-right: 4px; opacity: .8; }
+
+  .big {
+    grid-area: big; display: flex; flex-direction: column; min-height: 0; overflow: hidden;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  }
+  .bighead { display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px 8px; }
+  .num {
+    flex: none; width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center;
+    background: var(--text); color: var(--surface); font-weight: 700; font-size: 14px;
+  }
+  .bighead .txt { min-width: 0; flex: 1; }
+  .bighead strong { font-size: 14px; }
+  .cap { display: block; color: var(--muted); font-size: 12px; }
+  .stage { position: relative; flex: 1; min-height: 0; background: var(--stage); }
+  .stage svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .foot { flex: none; padding: 7px 12px 9px; display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
+  .status { color: var(--muted); min-height: 18px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+  .status .sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; box-shadow: inset 0 0 0 1px rgba(127,127,127,.5); }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+  .legend .it { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .legend code { font: 11px ui-monospace, Consolas, monospace; color: var(--muted); }
+  .legend .arrow { color: var(--muted); }
+
+  /* ---------- 공통 컨트롤 ---------- */
+  .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; box-shadow: inset 0 0 0 1px rgba(0,0,0,.25); }
+  .controls { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+  label.ctl, span.ctl { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12px; }
+  input[type=range] { width: 110px; accent-color: var(--accent); }
+  select { font: inherit; font-size: 12px; padding: 4px 5px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--text); max-width: 100%; }
+  output { font-variant-numeric: tabular-nums; color: var(--muted); min-width: 36px; font-size: 12px; }
+  .seg { display: flex; gap: 2px; background: var(--chip); border-radius: 8px; padding: 2px; }
+  .seg button, .btn {
+    border: 0; background: transparent; color: var(--text); font: inherit; font-size: 12px;
+    padding: 6px 9px; border-radius: 6px; cursor: pointer; white-space: nowrap;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .seg button { flex: 1; }
+  .seg button.on { background: var(--surface); box-shadow: 0 1px 2px rgba(0,0,0,.15); font-weight: 600; }
+  .seg button:disabled { opacity: .4; cursor: default; }
+  .btn { background: var(--chip); }
+  .btn:hover:not(:disabled), .seg button:hover:not(:disabled) { filter: brightness(0.95); }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .cnt { margin-left: auto; color: var(--muted); font-size: 11px; font-weight: 400; font-variant-numeric: tabular-nums; }
+  .muted { color: var(--muted); font-size: 12px; margin: 0; }
+  [hidden] { display: none !important; }
+
+  /* ---------- 편집기 ---------- */
+  .editor {
+    width: min(100%, 1440px); margin: 22px auto 0;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+  }
+  .edtop { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  .edtitle { min-width: 0; flex: 1 1 320px; }
+  .edtitle h2 { margin: 0; font-size: 16px; }
+  .edtopctl { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  .edbody {
+    display: grid; grid-template-columns: 50px minmax(0, 1fr) 310px;
+    height: min(calc(100svh - 90px), 940px); min-height: 520px;
+  }
+  .edtools { display: flex; flex-direction: column; gap: 4px; padding: 8px 5px; border-right: 1px solid var(--line); }
+  .tool {
+    position: relative; width: 40px; height: 40px; border: 0; border-radius: 8px; background: transparent;
+    color: var(--text); cursor: pointer; display: grid; place-items: center;
+  }
+  .tool svg { width: 20px; height: 20px; }
+  .tool:hover { background: var(--chip); }
+  .tool.on { background: var(--text); color: var(--surface); }
+  .tool kbd { position: absolute; right: 2px; bottom: 1px; font-size: 9px; border: 0; background: transparent; padding: 0; color: inherit; opacity: .55; }
+  .edstage { position: relative; background: #0a0a0a; min-width: 0; min-height: 0; overflow: hidden; }
+  .edstage svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; user-select: none; }
+  .edstage.drawing svg { cursor: crosshair; }
+  .edstage.pan svg { cursor: grab; }
+  .edstage.panning svg { cursor: grabbing; }
+  .edhint {
+    position: absolute; left: 10px; top: 10px; max-width: calc(100% - 20px); pointer-events: none;
+    background: rgba(0,0,0,.6); color: #e8e8e8; font-size: 12px; padding: 4px 9px; border-radius: 6px;
+  }
+  .zoombar { position: absolute; left: 10px; bottom: 10px; display: flex; gap: 2px; background: rgba(0,0,0,.65); border-radius: 8px; padding: 2px; }
+  .zoombar button { border: 0; background: transparent; color: #eee; font: inherit; font-size: 13px; min-width: 32px; height: 28px; border-radius: 6px; cursor: pointer; font-variant-numeric: tabular-nums; }
+  .zoombar button:hover { background: rgba(255,255,255,.12); }
+  .edside { overflow-y: auto; border-left: 1px solid var(--line); padding: 12px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .grp { display: flex; flex-direction: column; gap: 7px; }
+  .grp > .lbl { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: .04em; }
+  .row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .row .btn { flex: 1 1 auto; }
+
+  .lyr { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .lyr + .lyr { margin-top: 6px; }
+  .lyr.on { border-color: var(--accent); }
+  .lh { display: flex; align-items: center; gap: 4px; padding: 3px; background: var(--chip); }
+  .lname { flex: 1; display: flex; align-items: center; gap: 7px; border: 0; background: transparent; color: var(--text); font: inherit; font-size: 12px; font-weight: 600; padding: 4px 6px; cursor: pointer; text-align: left; }
+  .mini { border: 1px solid var(--line); background: var(--surface); color: var(--text); font: inherit; font-size: 11px; border-radius: 6px; padding: 2px 7px; cursor: pointer; white-space: nowrap; }
+  .lyr ul { list-style: none; margin: 0; padding: 3px; }
+  .lyr ul:empty { display: none; }
+  .obj { display: flex; align-items: center; gap: 4px; border-radius: 6px; }
+  .obj.sel { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+  .oname { flex: 1; min-width: 0; text-align: left; border: 0; background: transparent; color: var(--text); font: inherit; font-size: 12px; padding: 4px 6px; cursor: pointer; display: flex; gap: 6px; align-items: center; }
+  .obj.fixed .oname { color: var(--muted); }
+  .mk { font-size: 10px; border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; color: var(--muted); white-space: nowrap; }
+  .pill { font: inherit; font-size: 11px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 999px; padding: 1px 9px; cursor: pointer; white-space: nowrap; }
+  .pill.on { background: var(--text); color: var(--surface); border-color: var(--text); }
+
+  .pname { display: flex; align-items: center; gap: 7px; font-weight: 600; font-size: 13px; }
+  .prow { display: grid; grid-template-columns: 62px minmax(0, 1fr); align-items: center; gap: 8px; font-size: 12px; }
+  .plbl { color: var(--muted); }
+  .note { font-size: 11.5px; color: var(--muted); background: var(--chip); border-radius: 8px; padding: 7px 9px; margin: 0; line-height: 1.5; }
+
+  .editor.max {
+    position: fixed; inset: 0; z-index: 50; width: auto; margin: 0; border-radius: 0; border: 0;
+    display: flex; flex-direction: column;
+  }
+  .editor.max .edbody { flex: 1; height: auto; min-height: 0; }
+  @media (max-width: 900px) {
+    .edbody { grid-template-columns: minmax(0, 1fr); height: auto; min-height: 0; }
+    .edtools { flex-direction: row; border-right: 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+    .edstage { height: min(100vw, 72svh); }
+    .edside { border-left: 0; border-top: 1px solid var(--line); overflow: visible; }
+    .editor.max .edbody { display: flex; flex-direction: column; }
+    .editor.max .edstage { flex: 1; height: auto; }
+    .editor.max .edside { max-height: 38svh; overflow-y: auto; }
+  }
+
+  footer.hint { margin: 12px auto 0; color: var(--muted); font-size: 12px; text-align: center; max-width: 1000px; }
+  kbd { font: 11px ui-monospace, Consolas, monospace; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--surface); }
+  @media (max-width: 700px) {
+    body { padding: 10px 16px 18px; }
+    .bighead .cap { display: none; }
+    .legend code { display: none; }
+    .tag { font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>같은 그림, 다른 도형</h1>
+    <p>한 장의 풀컬러 이미지라도 어떤 색으로 보느냐에 따라 보이는 도형이 다릅니다. 풀컬러는 그 모든 도형을 합친 결과입니다.</p>
+  </header>
+</div>
+
+<main class="grid" id="grid">
+  <section class="big">
+    <div class="bighead">
+      <span class="num" id="bigNum">9</span>
+      <div class="txt"><strong id="bigTitle"></strong><span class="cap" id="bigCap"></span></div>
+    </div>
+    <div class="stage"><svg id="bigSvg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet"></svg></div>
+    <div class="foot">
+      <div class="status" id="status"></div>
+      <div class="legend" id="legend"></div>
+      <div class="controls" id="viewCtl">
+        <label class="ctl">채도 <input type="range" id="satSl" min="0" max="1" step="0.01" value="1"><output id="satOut">100%</output></label>
+        <label class="ctl">보는 눈
+          <select id="cvdSel">
+            <option value="none">일반 시각</option>
+            <option value="protan">제1색맹 (적색 약)</option>
+            <option value="deutan">제2색맹 (녹색 약)</option>
+            <option value="tritan">제3색맹 (청색 약)</option>
+            <option value="achro">전색맹 (휘도만)</option>
+          </select>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <button class="cell" data-k="9" style="grid-area:p9" aria-label="9 풀컬러"><svg viewBox="0 0 1000 1000"></svg><span class="tag"><b>9</b>풀컬러</span></button>
+  <button class="cell" data-k="6" style="grid-area:p6" aria-label="6 흑백"><svg viewBox="0 0 1000 1000"></svg><span class="tag"><b>6</b>흑백</span></button>
+  <button class="cell" data-k="1" style="grid-area:p1"><svg viewBox="0 0 1000 1000"></svg><span class="tag"><b>1</b><span class="nm" data-i="0"></span></span></button>
+  <button class="cell" data-k="2" style="grid-area:p2"><svg viewBox="0 0 1000 1000"></svg><span class="tag"><b>2</b><span class="nm" data-i="1"></span></span></button>
+  <button class="cell" data-k="3" style="grid-area:p3"><svg viewBox="0 0 1000 1000"></svg><span class="tag"><b>3</b><span class="nm" data-i="2"></span> (자동)</span></button>
+</main>
+
+<section class="editor" id="editor">
+  <div class="edtop">
+    <div class="edtitle">
+      <h2>이미지 편집</h2>
+      <span class="cap" id="edCap"></span>
+    </div>
+    <div class="edtopctl">
+      <span class="ctl">바탕</span>
+      <div class="seg" id="bgSeg">
+        <button data-bg="layer">편집 레이어</button>
+        <button data-bg="full">풀컬러</button>
+        <button data-bg="gray">흑백</button>
+      </div>
+      <label class="ctl"><input type="checkbox" id="ghostChk" checked> 다른 레이어 윤곽</label>
+      <button class="btn" id="btnUndo" title="되돌리기 (Ctrl+Z)">되돌리기</button>
+      <button class="btn" id="btnMax" title="편집기를 화면 가득 (Esc로 복귀)">크게 보기</button>
+    </div>
+  </div>
+  <div class="edbody">
+    <div class="edtools" id="tools">
+      <button class="tool" data-tool="select" title="선택 · 이동 · 점 편집 (V)"><svg viewBox="0 0 20 20"><path d="M5 2.5l11 6.2-4.9 1.3-2.4 4.8z" fill="currentColor"/></svg><kbd>V</kbd></button>
+      <button class="tool" data-tool="rect" title="사각형 (R) · Shift: 정사각형"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="5" width="13" height="10" rx="1"/></svg><kbd>R</kbd></button>
+      <button class="tool" data-tool="ellipse" title="타원 (E) · Shift: 원"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><ellipse cx="10" cy="10" rx="7" ry="5.5"/></svg><kbd>E</kbd></button>
+      <button class="tool" data-tool="poly" title="다각형 (P) · 클릭으로 점 추가, 첫 점·더블클릭·Enter로 닫기"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M10 3l7 5-2.7 8H5.7L3 8z"/></svg><kbd>P</kbd></button>
+      <button class="tool" data-tool="pen" title="자유곡선 (F)"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2.5 14c2-6 4-9 6-6s3 6 5 2 2.5-6 4-6"/></svg><kbd>F</kbd></button>
+      <button class="tool" data-tool="hand" title="화면 이동 (H) · 언제든 Space+드래그"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v16M2 10h16M10 2L7.8 4.2M10 2l2.2 2.2M10 18l-2.2-2.2M10 18l2.2-2.2M2 10l2.2-2.2M2 10l2.2 2.2M18 10l-2.2-2.2M18 10l-2.2 2.2"/></svg><kbd>H</kbd></button>
+    </div>
+    <div class="edstage" id="edStage">
+      <svg id="edSvg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="edhint" id="edHint"></div>
+      <div class="zoombar">
+        <button data-z="out" title="축소 (-)">−</button>
+        <button data-z="fit" id="zoomPct" title="화면에 맞춤 (Ctrl+0)">100%</button>
+        <button data-z="in" title="확대 (+)">+</button>
+      </div>
+    </div>
+    <aside class="edside">
+      <section class="grp">
+        <div class="lbl">레이어 · 개체</div>
+        <div id="objList"></div>
+      </section>
+      <section class="grp">
+        <div class="lbl">선택한 개체</div>
+        <div id="props" class="grp"></div>
+      </section>
+      <section class="grp">
+        <div class="lbl">설정</div>
+        <label class="ctl">팔레트
+          <select id="palSel">
+            <option value="oyn">주황 · 노랑 · 남색</option>
+            <option value="rgb">빨강 · 초록 · 파랑</option>
+          </select>
+        </label>
+        <label class="ctl">공통 휘도 Y <input type="range" id="ySl" min="0.1" max="0.6" step="0.01"><output id="yOut"></output></label>
+        <div class="row">
+          <button class="btn" id="btnClear" title="현재 레이어의 편집 가능한 도형을 모두 지움">레이어 비우기</button>
+          <button class="btn" id="btnExample">예시로 되돌리기</button>
+        </div>
+        <div class="row">
+          <button class="btn" id="btnExport">JSON 저장</button>
+          <button class="btn" id="btnImport">JSON 열기</button>
+          <input type="file" id="fileIn" accept=".json,application/json" hidden>
+        </div>
+      </section>
+    </aside>
+  </div>
+</section>
+
+<footer class="hint">
+  뷰어: <kbd>9</kbd> 풀컬러 · <kbd>6</kbd> 흑백 · <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> 색 채널 &nbsp;|&nbsp;
+  편집: <kbd>V</kbd><kbd>R</kbd><kbd>E</kbd><kbd>P</kbd><kbd>F</kbd><kbd>H</kbd> 도구 · <kbd>Enter</kbd> 점 편집 전환 · <kbd>L</kbd> 고정 · <kbd>Del</kbd> 삭제 · <kbd>Ctrl</kbd>+<kbd>D</kbd> 복제 · <kbd>Ctrl</kbd>+<kbd>Z</kbd> 되돌리기 · 휠 확대 · <kbd>Space</kbd>+드래그 이동
+</footer>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const VB = 1000;
+const ACC = '#22d3ee';
+const LAYERS = ['A', 'B', 'G'];
+
+/* ---------------- 색 계산 ----------------
+   흑백 변환 = 상대 휘도 Y (선형 sRGB, Rec.709 가중치).
+   각 채널 색은 OKLCH 색상(hue)으로 고르고, 명도를 이분법으로 풀어서 Y가 정확히 같게 만든다.
+   8비트 양자화 뒤에도 Y가 목표값에 가장 가까운 정수 RGB를 다시 찾는다. */
+const toLin = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+const toEnc = c => c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+const clamp01 = v => Math.min(1, Math.max(0, v));
+const lum = ([r, g, b]) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
+const lin8 = c8 => c8.map(v => toLin(v / 255));
+const enc8 = lin => lin.map(v => Math.round(toEnc(clamp01(v)) * 255));
+const hex = c8 => '#' + c8.map(v => v.toString(16).padStart(2, '0')).join('');
+
+function oklch(L, C, h) {
+  const a = C * Math.cos(h * Math.PI / 180), b = C * Math.sin(h * Math.PI / 180);
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (L - 0.0894841775 * a - 1.2914855480 * b) ** 3;
+  return [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s,
+  ];
+}
+const inGamut = rgb => rgb.every(v => v >= -1e-7 && v <= 1 + 1e-7);
+function solveL(C, h, Yt) {
+  let lo = 0, hi = 1;
+  for (let i = 0; i < 40; i++) { const m = (lo + hi) / 2; if (lum(oklch(m, C, h)) < Yt) lo = m; else hi = m; }
+  return (lo + hi) / 2;
+}
+// 목표 휘도 Yt에서 해당 hue의 (거의) 최대 채도 색
+function isoLin(h, Yt, k = 0.94) {
+  let lo = 0, hi = 0.4;
+  for (let i = 0; i < 30; i++) { const m = (lo + hi) / 2; if (inGamut(oklch(solveL(m, h, Yt), m, h))) lo = m; else hi = m; }
+  const C = lo * k;
+  return oklch(solveL(C, h, Yt), C, h).map(clamp01);
+}
+function quantIso(lin, Yt) {
+  const base = enc8(lin); let best = base, err = Infinity;
+  for (let dr = -2; dr <= 2; dr++) for (let dg = -2; dg <= 2; dg++) for (let db = -2; db <= 2; db++) {
+    const c = [base[0] + dr, base[1] + dg, base[2] + db];
+    if (c.some(v => v < 0 || v > 255)) continue;
+    const e = Math.abs(lum(lin8(c)) - Yt) + 1e-7 * (dr * dr + dg * dg + db * db);
+    if (e < err) { err = e; best = c; }
+  }
+  return best;
+}
+function vivid(L, h, k = 0.9) {
+  let lo = 0, hi = 0.4;
+  for (let i = 0; i < 30; i++) { const m = (lo + hi) / 2; if (inGamut(oklch(L, m, h))) lo = m; else hi = m; }
+  return enc8(oklch(L, lo * k, h));
+}
+
+// 색각이상 시뮬레이션 (Machado 2009, severity 1.0, 선형 RGB)
+const CVD = {
+  protan: [[0.152286, 1.052583, -0.204868], [0.114503, 0.786281, 0.099216], [-0.003882, -0.048116, 1.051998]],
+  deutan: [[0.367322, 0.860646, -0.227968], [0.280085, 0.672501, 0.047413], [-0.011820, 0.042940, 0.968881]],
+  tritan: [[1.255528, -0.076749, -0.178779], [-0.078411, 0.930809, 0.147602], [0.004733, 0.691367, 0.303900]],
+};
+function simulate(v, kind) {
+  if (kind === 'achro') { const y = lum(v); return [y, y, y]; }
+  const M = CVD[kind]; if (!M) return v;
+  return M.map(r => clamp01(r[0] * v[0] + r[1] * v[1] + r[2] * v[2]));
+}
+
+const PALETTES = {
+  oyn: { hues: [55, 100, 265], names: ['주황', '노랑', '남색'] },
+  rgb: { hues: [29, 142, 264], names: ['빨강', '초록', '파랑'] },
+};
+
+/* ---------------- 상태 ----------------
+   도형: { id, t: rect|ellipse|poly, ...좌표, fixed?: 고정 여부, mask?: { src: 'A'|'B'|'G', inv: 바깥쪽 여부 } } */
+const EXAMPLE = () => ({
+  G: [{ id: 'g1', t: 'ellipse', cx: 500, cy: 520, rx: 350, ry: 350 }],
+  A: [{ id: 'a1', t: 'poly', pts: [[500, 215], [770, 665], [230, 665]] }],
+  B: [{ id: 'b1', t: 'ellipse', cx: 610, cy: 640, rx: 165, ry: 165 }],
+});
+const state = {
+  shapes: EXAMPLE(), palette: 'oyn', Y: 0.3, defMask: { A: null, B: null, G: null },
+  sel: '9', sat: 1, cvd: 'none',                                     // 뷰어
+  target: 'A', tool: 'select', selId: null, selMode: 'transform', selNode: null,
+  ghosts: true, edBg: 'layer', max: false,                           // 편집기
+};
+const KEY = 'isoluminance-grid.v1';
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify({ shapes: state.shapes, palette: state.palette, Y: state.Y, defMask: state.defMask })); } catch (e) {}
+}
+function validShapes(sh) {
+  return sh && LAYERS.every(k => Array.isArray(sh[k]));
+}
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(KEY));
+    if (d && validShapes(d.shapes)) state.shapes = d.shapes;
+    if (d && PALETTES[d.palette]) state.palette = d.palette;
+    if (d && typeof d.Y === 'number') state.Y = d.Y;
+    if (d && d.defMask) state.defMask = Object.assign({ A: null, B: null, G: null }, d.defMask);
+  } catch (e) {}
+  sanitizeMasks();
+}
+
+let COL;
+function computeColors() {
+  const pal = PALETTES[state.palette];
+  // 목표 휘도를 8비트 회색 단계의 정중앙에 맞춰 반올림 오차로 회색이 갈리지 않게 한다
+  const g = Math.round(toEnc(state.Y) * 255), Yt = toLin(g / 255);
+  const [la, lb, lc] = pal.hues.map(h => isoLin(h, Yt));
+  const lab = la.map((v, i) => (v + lb[i]) / 2); // 선형 평균 → 휘도 그대로
+  const c8 = { A: quantIso(la, Yt), B: quantIso(lb, Yt), AB: quantIso(lab, Yt), C: quantIso(lc, Yt), bg: [28, 28, 28] };
+  const out = { c8, hex: {}, Y: {}, gray: {}, plate: {} };
+  for (const k in c8) {
+    out.hex[k] = hex(c8[k]);
+    out.Y[k] = lum(lin8(c8[k]));
+    const v = Math.round(toEnc(out.Y[k]) * 255);
+    out.gray[k] = hex([v, v, v]);
+  }
+  ['A', 'B', 'C'].forEach((k, i) => {
+    out.plate[k] = { on: hex(vivid(0.8, pal.hues[i])), off: hex(enc8(oklch(0.19, 0.02, pal.hues[i]))) };
+  });
+  COL = out;
+}
+function fullMap(sat, cvd) {
+  if (sat === 1 && cvd === 'none') return COL.hex;
+  const m = {};
+  for (const k in COL.c8) {
+    const lin = lin8(COL.c8[k]), y = lum(lin);
+    m[k] = hex(enc8(simulate(lin.map(c => y + (c - y) * sat), cvd)));
+  }
+  return m;
+}
+const names = () => PALETTES[state.palette].names;
+const layerName = L => L === 'G' ? '흑백 도형' : names()[L === 'A' ? 0 : 1];
+const layerLabel = L => ({ A: '1 ', B: '2 ', G: '6 ' })[L] + layerName(L);
+const layerDot = L => L === 'G' ? COL.gray.A : COL.plate[L].on;
+
+/* ---------------- 도형 · 마스크 ---------------- */
+const r1 = v => Math.round(v * 10) / 10;
+const ptsStr = pts => pts.map(p => r1(p[0]) + ',' + r1(p[1])).join(' ');
+function shapeMarkup(s, extra = '') {
+  if (s.t === 'rect') return `<rect x="${r1(s.x)}" y="${r1(s.y)}" width="${r1(s.w)}" height="${r1(s.h)}"${extra}/>`;
+  if (s.t === 'ellipse') return `<ellipse cx="${r1(s.cx)}" cy="${r1(s.cy)}" rx="${r1(s.rx)}" ry="${r1(s.ry)}"${extra}/>`;
+  return `<polygon points="${ptsStr(s.pts)}"${extra}/>`;
+}
+const rawMarkup = L => state.shapes[L].map(s => shapeMarkup(s)).join('');
+
+// 레이어 L이 (마스크를 통해) 의존하는 레이어 집합
+function deps(L, seen = new Set()) {
+  for (const s of state.shapes[L]) if (s.mask && !seen.has(s.mask.src)) { seen.add(s.mask.src); deps(s.mask.src, seen); }
+  return seen;
+}
+const canMask = (L, src) => src !== L && LAYERS.includes(src) && !deps(src).has(L);
+function sanitizeMasks() {
+  for (const L of LAYERS) for (const s of state.shapes[L]) {
+    if (!s.mask) continue;
+    const m = s.mask; delete s.mask;
+    if (canMask(L, m.src)) s.mask = { src: m.src, inv: !!m.inv };
+  }
+  for (const L of LAYERS) if (state.defMask[L] && !canMask(L, state.defMask[L].src)) state.defMask[L] = null;
+}
+const maskId = (P, m) => `${P}k${m.src}${m.inv ? 1 : 0}`;
+// 마스크를 반영한 실제 보이는 레이어
+function effMarkup(L, P) {
+  return state.shapes[L].map(s => s.mask ? `<g mask="url(#${maskId(P, s.mask)})">${shapeMarkup(s)}</g>` : shapeMarkup(s)).join('');
+}
+function maskDefs(P) {
+  const used = new Map();
+  for (const L of LAYERS) for (const s of state.shapes[L]) if (s.mask) used.set(maskId(P, s.mask), s.mask);
+  let d = '';
+  for (const [id, m] of used) {
+    d += `<mask id="${id}" maskUnits="userSpaceOnUse" x="0" y="0" width="${VB}" height="${VB}">` +
+      `<rect width="${VB}" height="${VB}" fill="${m.inv ? '#fff' : '#000'}"/><g fill="${m.inv ? '#000' : '#fff'}">${effMarkup(m.src, P)}</g></mask>`;
+  }
+  return d;
+}
+
+function inShape(s, [x, y]) {
+  if (s.t === 'rect') return x >= s.x && x <= s.x + s.w && y >= s.y && y <= s.y + s.h;
+  if (s.t === 'ellipse') return s.rx > 0 && s.ry > 0 && ((x - s.cx) / s.rx) ** 2 + ((y - s.cy) / s.ry) ** 2 <= 1;
+  let wn = 0; const P = s.pts; // nonzero winding (SVG 기본 fill-rule)
+  for (let i = 0; i < P.length; i++) {
+    const [x1, y1] = P[i], [x2, y2] = P[(i + 1) % P.length];
+    const cross = (x2 - x1) * (y - y1) - (x - x1) * (y2 - y1);
+    if (y1 <= y) { if (y2 > y && cross > 0) wn++; } else if (y2 <= y && cross < 0) wn--;
+  }
+  return wn !== 0;
+}
+const inEff = (L, p) => state.shapes[L].some(s => inShape(s, p) && (!s.mask || inEff(s.mask.src, p) !== s.mask.inv));
+function regionAt(p) {
+  const a = inEff('A', p), b = inEff('B', p);
+  return a && b ? 'AB' : a ? 'A' : b ? 'B' : inEff('G', p) ? 'C' : 'bg';
+}
+
+/* ---------------- 장면 ----------------
+   풀컬러/흑백: 배경 → G(세 번째 색) → A → B → (A∩B 겹침색)
+   A·B가 G 위에 칠해지므로 세 번째 색 = G − (A ∪ B) 가 자연히 계산된다. */
+function scene(kind, P, map) {
+  const A = effMarkup('A', P), B = effMarkup('B', P), G = effMarkup('G', P);
+  const defs = `<clipPath id="${P}c"><rect width="${VB}" height="${VB}"/></clipPath>` + maskDefs(P);
+  if (kind === 'full' || kind === 'gray') {
+    return `<defs>${defs}<mask id="${P}m" maskUnits="userSpaceOnUse" x="0" y="0" width="${VB}" height="${VB}">` +
+      `<rect width="${VB}" height="${VB}" fill="#000"/><g fill="#fff">${A}</g></mask></defs>` +
+      `<g clip-path="url(#${P}c)"><rect width="${VB}" height="${VB}" fill="${map.bg}"/>` +
+      `<g fill="${map.C}">${G}</g><g fill="${map.A}">${A}</g><g fill="${map.B}">${B}</g>` +
+      `<g fill="${map.AB}" mask="url(#${P}m)">${B}</g></g>`;
+  }
+  const p = COL.plate[kind];
+  let body = `<rect width="${VB}" height="${VB}" fill="${p.off}"/>`;
+  if (kind === 'A') body += `<g fill="${p.on}">${A}</g>`;
+  else if (kind === 'B') body += `<g fill="${p.on}">${B}</g>`;
+  else body += `<g fill="${p.on}">${G}</g><g fill="${p.off}">${A}${B}</g>`;
+  return `<defs>${defs}</defs><g clip-path="url(#${P}c)">${body}</g>`;
+}
+
+const VIEW_KIND = { '9': 'full', '6': 'gray', '1': 'A', '2': 'B', '3': 'C' };
+const LAYER_KIND = { A: 'A', B: 'B', G: 'gray' };
+function mapFor(kind, big) {
+  if (kind === 'full') return big ? fullMap(state.sat, state.cvd) : COL.hex;
+  if (kind === 'gray') return COL.gray;
+  return null;
+}
+
+/* ---------------- 뷰어 ---------------- */
+const bigSvg = $('#bigSvg');
+function renderCells() {
+  $$('[data-k]').forEach(el => {
+    const k = el.dataset.k, kind = VIEW_KIND[k];
+    el.querySelector('svg').innerHTML = scene(kind, 'p' + k, mapFor(kind, false));
+    el.classList.toggle('on', k === state.sel);
+  });
+}
+function renderBig() {
+  const kind = VIEW_KIND[state.sel];
+  bigSvg.innerHTML = scene(kind, 'big', mapFor(kind, true));
+}
+function titleFor(k) {
+  const n = names();
+  return { '9': '풀컬러', '6': '흑백 (휘도)', '1': n[0] + ' 채널', '2': n[1] + ' 채널', '3': n[2] + ' 채널 (자동)' }[k];
+}
+function captionFor(k) {
+  const n = names();
+  return {
+    '9': '세 채널이 겹쳐진 원본. 각 색으로 볼 때의 도형이 모두 동시에 담겨 있습니다.',
+    '6': `휘도만 남긴 상. ${n[0]}·${n[1]}·${n[2]}의 휘도가 같아 경계가 사라지고 하나의 도형이 됩니다.`,
+    '1': `${n[0]} 성분만 분리. 이 색으로만 보면 이 도형이 또렷합니다.`,
+    '2': `${n[1]} 성분만 분리. 같은 그림인데 다른 도형이 보입니다.`,
+    '3': `${n[2]} = 흑백 도형 − (${n[0]} ∪ ${n[1]}). 흑백에서 그린 도형으로부터 자동 계산됩니다.`,
+  }[k];
+}
+const REGION = () => { const n = names(); return { A: n[0], B: n[1], AB: `${n[0]}+${n[1]} 겹침`, C: n[2], bg: '배경' }; };
+const DEFAULT_STATUS = '이미지 위에 커서를 올리면 그 지점의 색과 휘도가 표시됩니다.';
+function setStatus(p) {
+  const el = $('#status');
+  if (!p || p[0] < 0 || p[1] < 0 || p[0] > VB || p[1] > VB) { el.textContent = DEFAULT_STATUS; return; }
+  const r = regionAt(p);
+  el.innerHTML = `<i class="sw" style="background:${COL.hex[r]}"></i><b>${REGION()[r]}</b> ${COL.hex[r]} · 휘도 Y ${COL.Y[r].toFixed(4)} → 흑백 <i class="sw" style="background:${COL.gray[r]}"></i>${COL.gray[r]}`;
+}
+function renderLegend() {
+  const R = REGION();
+  const chips = ['A', 'B', 'AB', 'C'].map(k =>
+    `<span class="it"><i class="dot" style="background:${COL.hex[k]}"></i>${R[k]} <code>${COL.hex[k]}</code></span>`).join('');
+  const same = ['A', 'B', 'AB', 'C'].every(k => COL.gray[k] === COL.gray.A);
+  $('#legend').innerHTML = chips + `<span class="it arrow">→ 흑백</span><span class="it"><i class="dot" style="background:${COL.gray.A}"></i><code>${COL.gray.A}</code> ${same ? '네 색 모두 동일' : '(차이 있음)'}</span>`;
+}
+function renderViewerUI() {
+  const n = names();
+  $('#bigNum').textContent = state.sel;
+  $('#bigTitle').textContent = titleFor(state.sel);
+  $('#bigCap').textContent = captionFor(state.sel);
+  $('#viewCtl').hidden = state.sel !== '9';
+  $('#satOut').textContent = Math.round(state.sat * 100) + '%';
+  $$('.nm').forEach(el => el.textContent = n[+el.dataset.i]);
+  renderLegend();
+}
+function selectPanel(k) { state.sel = k; renderCells(); renderBig(); renderViewerUI(); }
+
+bigSvg.addEventListener('pointermove', e => setStatus(svgPt(bigSvg, e.clientX, e.clientY)));
+bigSvg.addEventListener('pointerleave', () => setStatus(null));
+$$('[data-k]').forEach(el => el.addEventListener('click', () => selectPanel(el.dataset.k)));
+$('#satSl').addEventListener('input', e => { state.sat = +e.target.value; renderBig(); renderViewerUI(); });
+$('#cvdSel').addEventListener('change', e => { state.cvd = e.target.value; renderBig(); });
+
+/* ---------------- 편집기: 화면(확대·이동) ---------------- */
+const edSvg = $('#edSvg'), edStage = $('#edStage'), editorEl = $('#editor');
+const FIT = { x: -30, y: -30, w: VB + 60 };
+const view = { ...FIT };
+let drag = null, draft = null, spaceDown = false;
+function svgPt(svg, cx, cy) {
+  const m = svg.getScreenCTM(); if (!m) return [0, 0];
+  const q = new DOMPoint(cx, cy).matrixTransform(m.inverse());
+  return [q.x, q.y];
+}
+function upp() { const m = edSvg.getScreenCTM(); return m && m.a ? 1 / m.a : 1; }
+function applyView() {
+  edSvg.setAttribute('viewBox', `${view.x} ${view.y} ${view.w} ${view.w}`);
+  $('#zoomPct').textContent = Math.round(FIT.w / view.w * 100) + '%';
+}
+function zoomAt(f, cx, cy) {
+  if (cx == null) { const r = edSvg.getBoundingClientRect(); cx = r.left + r.width / 2; cy = r.top + r.height / 2; }
+  const before = svgPt(edSvg, cx, cy);
+  view.w = Math.min(4000, Math.max(50, view.w / f)); applyView();
+  const after = svgPt(edSvg, cx, cy);
+  view.x += before[0] - after[0]; view.y += before[1] - after[1]; applyView();
+  renderEditor();
+}
+function fitView() { Object.assign(view, FIT); applyView(); renderEditor(); }
+
+/* ---------------- 편집기: 도형 기하 ---------------- */
+const uid = () => 's' + Math.random().toString(36).slice(2, 9);
+const clone = o => JSON.parse(JSON.stringify(o));
+const findSel = () => state.shapes[state.target].find(s => s.id === state.selId) || null;
+const layerOfId = id => LAYERS.find(L => state.shapes[L].some(s => s.id === id));
+const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+const TYPE_NAME = s => s.t === 'rect' ? '사각형' : s.t === 'ellipse' ? '타원' : s.pen ? '자유곡선' : '다각형';
+const objName = (s, i) => `${TYPE_NAME(s)} ${i + 1}`;
+function bbox(s) {
+  if (s.t === 'rect') return [s.x, s.y, s.x + s.w, s.y + s.h];
+  if (s.t === 'ellipse') return [s.cx - s.rx, s.cy - s.ry, s.cx + s.rx, s.cy + s.ry];
+  const xs = s.pts.map(p => p[0]), ys = s.pts.map(p => p[1]);
+  return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+}
+function setBox(s, x0, y0, x1, y1) {
+  const a = Math.min(x0, x1), b = Math.min(y0, y1), w = Math.abs(x1 - x0), h = Math.abs(y1 - y0);
+  if (s.t === 'rect') Object.assign(s, { x: a, y: b, w, h });
+  else Object.assign(s, { cx: a + w / 2, cy: b + h / 2, rx: w / 2, ry: h / 2 });
+}
+// 경계 상자 핸들: 0~3 꼭짓점(좌상·우상·우하·좌하), 4~7 변(상·우·하·좌)
+function boxHandles([x0, y0, x1, y1]) {
+  const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+  return [[x0, y0], [x1, y0], [x1, y1], [x0, y1], [mx, y0], [x1, my], [mx, y1], [x0, my]];
+}
+const BOX_CURSOR = ['nwse', 'nesw', 'nwse', 'nesw', 'ns', 'ew', 'ns', 'ew'];
+function boxFromHandle(i, ob, p, keepRatio) {
+  let [x0, y0, x1, y1] = ob;
+  if (i === 0) { x0 = p[0]; y0 = p[1]; } else if (i === 1) { x1 = p[0]; y0 = p[1]; }
+  else if (i === 2) { x1 = p[0]; y1 = p[1]; } else if (i === 3) { x0 = p[0]; y1 = p[1]; }
+  else if (i === 4) y0 = p[1]; else if (i === 5) x1 = p[0]; else if (i === 6) y1 = p[1]; else x0 = p[0];
+  if (keepRatio && i < 4) {
+    const ow = ob[2] - ob[0] || 1, oh = ob[3] - ob[1] || 1;
+    const ax = (i === 0 || i === 3) ? ob[2] : ob[0], ay = i < 2 ? ob[3] : ob[1];
+    const k = Math.max(Math.abs(p[0] - ax) / ow, Math.abs(p[1] - ay) / oh);
+    const nx = ax + Math.sign(p[0] - ax || 1) * ow * k, ny = ay + Math.sign(p[1] - ay || 1) * oh * k;
+    if (i === 0) { x0 = nx; y0 = ny; } else if (i === 1) { x1 = nx; y0 = ny; } else if (i === 2) { x1 = nx; y1 = ny; } else { x0 = nx; y1 = ny; }
+  }
+  return [x0, y0, x1, y1];
+}
+function applyBox(s, orig, ob, nb) {
+  if (s.t !== 'poly') { setBox(s, ...nb); return; }
+  const sx = (nb[2] - nb[0]) / ((ob[2] - ob[0]) || 1), sy = (nb[3] - nb[1]) / ((ob[3] - ob[1]) || 1);
+  s.pts = orig.pts.map(([x, y]) => [nb[0] + (x - ob[0]) * sx, nb[1] + (y - ob[1]) * sy]);
+}
+function translate(s, orig, dx, dy) {
+  if (s.t === 'rect') { s.x = orig.x + dx; s.y = orig.y + dy; }
+  else if (s.t === 'ellipse') { s.cx = orig.cx + dx; s.cy = orig.cy + dy; }
+  else s.pts = orig.pts.map(q => [q[0] + dx, q[1] + dy]);
+}
+function toPoly(s) {
+  if (s.t === 'rect') s.pts = [[s.x, s.y], [s.x + s.w, s.y], [s.x + s.w, s.y + s.h], [s.x, s.y + s.h]];
+  else if (s.t === 'ellipse') s.pts = Array.from({ length: 32 }, (_, i) => {
+    const a = i / 32 * Math.PI * 2; return [s.cx + s.rx * Math.cos(a), s.cy + s.ry * Math.sin(a)];
+  });
+  else return;
+  for (const k of ['x', 'y', 'w', 'h', 'cx', 'cy', 'rx', 'ry']) delete s[k];
+  s.t = 'poly';
+}
+function segDist(p, a, b) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], l2 = dx * dx + dy * dy;
+  const t = l2 ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l2)) : 0;
+  return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy);
+}
+function simplify(pts, eps) { // Ramer–Douglas–Peucker
+  if (pts.length < 3) return pts;
+  let dmax = 0, idx = 0;
+  for (let i = 1; i < pts.length - 1; i++) { const d = segDist(pts[i], pts[0], pts[pts.length - 1]); if (d > dmax) { dmax = d; idx = i; } }
+  if (dmax <= eps) return [pts[0], pts[pts.length - 1]];
+  return simplify(pts.slice(0, idx + 1), eps).slice(0, -1).concat(simplify(pts.slice(idx), eps));
+}
+function draftToShape(d, loose) {
+  let [ax, ay] = d.a, [bx, by] = d.b;
+  if (d.shift) { const m = Math.max(Math.abs(bx - ax), Math.abs(by - ay)); bx = ax + Math.sign(bx - ax || 1) * m; by = ay + Math.sign(by - ay || 1) * m; }
+  if (!loose && (Math.abs(bx - ax) < 4 || Math.abs(by - ay) < 4)) return null;
+  const s = { t: d.t }; setBox(s, ax, ay, bx, by); return s;
+}
+
+/* ---------------- 편집기: 렌더 ---------------- */
+function overlay() {
+  const u = upp(), T = state.target, n = v => (v * u).toFixed(2);
+  let o = `<rect x="0" y="0" width="${VB}" height="${VB}" fill="none" stroke="#5a5a5a" stroke-width="${n(1)}" pointer-events="none"/>`;
+  if (state.ghosts) for (const L of LAYERS) {
+    if (L === T || !state.shapes[L].length) continue;
+    o += `<g fill="none" stroke="${L === 'G' ? '#ffffff' : COL.plate[L].on}" stroke-width="${n(1.4)}" stroke-dasharray="${n(6)} ${n(5)}" opacity=".7" pointer-events="none">${rawMarkup(L)}</g>`;
+  }
+  const fixed = state.shapes[T].filter(s => s.fixed), live = state.shapes[T].filter(s => !s.fixed);
+  if (fixed.length) o += `<g fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="${n(1.2)}" stroke-dasharray="${n(2)} ${n(4)}" pointer-events="none">${fixed.map(s => shapeMarkup(s)).join('')}</g>`;
+  o += `<g fill="none" stroke="#000" stroke-opacity=".55" stroke-width="${n(3.5)}" pointer-events="none">${live.map(s => shapeMarkup(s)).join('')}</g>`;
+  o += `<g fill="transparent" stroke="#fff" stroke-width="${n(1.5)}" stroke-dasharray="${n(5)} ${n(4)}" style="cursor:${state.tool === 'select' ? 'move' : 'inherit'}">` +
+    live.map(s => shapeMarkup(s, ` data-id="${s.id}" pointer-events="${state.tool === 'select' ? 'all' : 'none'}"`)).join('') + '</g>';
+
+  const s = findSel();
+  if (s) {
+    o += `<g fill="none" stroke="${ACC}" stroke-width="${n(2.2)}" ${s.fixed ? `stroke-dasharray="${n(3)} ${n(4)}"` : ''} pointer-events="none">${shapeMarkup(s)}</g>`;
+    if (!s.fixed && state.tool === 'select') {
+      if (state.selMode === 'node' && s.t === 'poly') {
+        s.pts.forEach((p, i) => {
+          const q = s.pts[(i + 1) % s.pts.length];
+          o += `<circle data-h="m${i}" cx="${r1((p[0] + q[0]) / 2)}" cy="${r1((p[1] + q[1]) / 2)}" r="${n(4)}" fill="${ACC}" fill-opacity=".45" stroke="#000" stroke-width="${n(1)}" style="cursor:copy"/>`;
+        });
+        s.pts.forEach((p, i) => {
+          o += `<circle data-h="v${i}" cx="${r1(p[0])}" cy="${r1(p[1])}" r="${n(6)}" fill="${i === state.selNode ? ACC : '#fff'}" stroke="#000" stroke-width="${n(1.5)}" style="cursor:pointer"/>`;
+        });
+      } else {
+        const b = bbox(s);
+        o += `<rect x="${r1(b[0])}" y="${r1(b[1])}" width="${r1(b[2] - b[0])}" height="${r1(b[3] - b[1])}" fill="none" stroke="${ACC}" stroke-opacity=".6" stroke-width="${n(1)}" pointer-events="none"/>`;
+        boxHandles(b).forEach((p, i) => {
+          const h = (i < 4 ? 6 : 5) * u;
+          o += `<rect data-h="b${i}" x="${r1(p[0] - h)}" y="${r1(p[1] - h)}" width="${r1(2 * h)}" height="${r1(2 * h)}" fill="#fff" stroke="#000" stroke-width="${n(1.5)}" style="cursor:${BOX_CURSOR[i]}-resize"/>`;
+        });
+      }
+    }
+  }
+  if (draft) {
+    const st = `fill="${ACC}" fill-opacity=".2" stroke="${ACC}" stroke-width="${n(2)}"`;
+    if (draft.t === 'rect' || draft.t === 'ellipse') o += shapeMarkup(draftToShape(draft, true), ' ' + st + ' pointer-events="none"');
+    else if (draft.t === 'pen') o += `<polyline points="${ptsStr(draft.pts)}" fill="none" stroke="${ACC}" stroke-width="${n(2)}" pointer-events="none"/>`;
+    else if (draft.t === 'poly' && draft.pts.length) {
+      o += `<polyline points="${ptsStr([...draft.pts, draft.cur])}" ${st} pointer-events="none"/>`;
+      o += `<circle cx="${r1(draft.pts[0][0])}" cy="${r1(draft.pts[0][1])}" r="${n(7)}" fill="${ACC}" stroke="#000" stroke-width="${n(1.5)}" pointer-events="none"/>`;
+    }
+  }
+  return o;
+}
+function renderEditor() {
+  const kind = state.edBg === 'full' ? 'full' : state.edBg === 'gray' ? 'gray' : LAYER_KIND[state.target];
+  edSvg.innerHTML = scene(kind, 'ed', mapFor(kind, false)) + overlay();
+}
+function hintText() {
+  const s = findSel();
+  if (draft && draft.t === 'poly') return '클릭으로 점 추가 · 첫 점 클릭 / 더블클릭 / Enter로 닫기 · Esc 취소';
+  if (state.tool === 'hand') return '드래그해서 화면 이동 · 휠로 확대/축소';
+  if (state.tool === 'rect') return '드래그해서 사각형 · Shift 정사각형 · 그린 뒤 선택 도구로 돌아갑니다';
+  if (state.tool === 'ellipse') return '드래그해서 타원 · Shift 원 · 그린 뒤 선택 도구로 돌아갑니다';
+  if (state.tool === 'poly') return '클릭으로 점을 찍어 다각형을 그립니다';
+  if (state.tool === 'pen') return '드래그해서 자유롭게 그립니다 · 손을 떼면 닫힌 도형';
+  if (!s) return '개체 클릭: 선택 · 휠: 확대/축소 · Space+드래그: 화면 이동';
+  if (s.fixed) return '고정된 개체입니다. 편집하려면 오른쪽에서 ‘편집 가능’으로 바꾸세요 (L).';
+  if (state.selMode === 'node') return '점 드래그: 모양 변경 · 작은 점 드래그: 점 추가 · Alt+클릭 / Delete: 점 삭제 · Enter: 이동·크기로';
+  return '드래그: 이동 · 네모 핸들: 크기 (Shift 비율 유지) · 방향키: 미세 이동 · 더블클릭 / Enter: 점 편집';
+}
+function maskShort(m) { return `${m.src === 'G' ? '흑백' : layerName(m.src)} ${m.inv ? '밖' : '안'}`; }
+function renderObjList() {
+  $('#objList').innerHTML = LAYERS.map(L => {
+    const arr = state.shapes[L], allFixed = arr.length > 0 && arr.every(s => s.fixed);
+    return `<div class="lyr ${L === state.target ? 'on' : ''}">
+      <div class="lh"><button class="lname" data-act="target" data-l="${L}"><i class="dot" style="background:${layerDot(L)}"></i>${layerLabel(L)}<span class="cnt">${arr.length}</span></button>
+      ${arr.length ? `<button class="mini" data-act="lockAll" data-l="${L}">${allFixed ? '전체 해제' : '전체 고정'}</button>` : ''}</div>
+      <ul>${arr.map((s, i) => `<li class="obj ${s.id === state.selId ? 'sel' : ''} ${s.fixed ? 'fixed' : ''}">
+        <button class="oname" data-act="pick" data-id="${s.id}">${objName(s, i)}${s.mask ? `<span class="mk">${maskShort(s.mask)}</span>` : ''}</button>
+        <button class="pill ${s.fixed ? 'on' : ''}" data-act="lock" data-id="${s.id}" title="고정 / 편집 전환 (L)">${s.fixed ? '고정' : '편집'}</button></li>`).join('')}</ul>
+    </div>`;
+  }).join('');
+}
+function renderProps() {
+  const el = $('#props'), s = findSel();
+  if (!s) {
+    el.innerHTML = `<p class="muted">캔버스나 위 목록에서 개체를 고르면 편집 방식 · 고정 · 마스크를 정할 수 있습니다.</p>`;
+    return;
+  }
+  const T = state.target, i = state.shapes[T].indexOf(s), dis = s.fixed ? 'disabled' : '';
+  const opts = ['G', 'A', 'B'].filter(L => L !== T).flatMap(L => ['in', 'out'].map(d => {
+    const ok = canMask(T, L);
+    return `<option value="${L}:${d}" ${ok ? '' : 'disabled'}>${layerName(L)} ${d === 'in' ? '안쪽만' : '바깥만'}${ok ? '' : ' (순환 불가)'}</option>`;
+  })).join('');
+  el.innerHTML = `
+    <div class="pname"><i class="dot" style="background:${layerDot(T)}"></i>${layerName(T)} · ${objName(s, i)}</div>
+    <div class="prow"><span class="plbl">상태</span><div class="seg">
+      <button data-act="fix" data-v="0" class="${s.fixed ? '' : 'on'}">편집 가능</button>
+      <button data-act="fix" data-v="1" class="${s.fixed ? 'on' : ''}">고정</button></div></div>
+    <div class="prow"><span class="plbl">편집 방식</span><div class="seg">
+      <button data-act="mode" data-v="transform" ${dis} class="${state.selMode === 'transform' ? 'on' : ''}">이동 · 크기</button>
+      <button data-act="mode" data-v="node" ${dis} class="${state.selMode === 'node' ? 'on' : ''}">점 편집</button></div></div>
+    <div class="prow"><span class="plbl">마스크</span><select id="maskSel"><option value="">없음</option>${opts}</select></div>
+    <button class="btn" data-act="applyLayer" title="같은 레이어의 모든 개체와 앞으로 그릴 개체에 같은 마스크">이 마스크를 레이어 전체 · 새 도형에 적용</button>
+    <div class="row">
+      <button class="btn" data-act="dup" title="Ctrl+D">복제</button>
+      <button class="btn" data-act="del" ${dis} title="Delete">삭제</button>
+    </div>
+    <p class="note">고정한 개체는 캔버스에서 움직이지 않는 기준이 됩니다. 예: 흑백 도형을 고정하고 색 도형에 ‘흑백 도형 안쪽만’을 걸면, 흑백 윤곽은 그대로 둔 채 그 안에서 색만 편집할 수 있습니다. 반대로 색을 고정하고 흑백 도형을 편집할 수도 있습니다.</p>`;
+  $('#maskSel').value = s.mask ? `${s.mask.src}:${s.mask.inv ? 'out' : 'in'}` : '';
+  if (state.selMode === 'node' && s.t !== 'poly') {
+    el.querySelector('[data-v="node"]').title = '사각형·타원은 다각형으로 변환한 뒤 점 편집합니다';
+  }
+}
+function renderEditorUI() {
+  const n = names(), T = state.target;
+  $('#edCap').textContent = T === 'G'
+    ? `흑백에서 보일 도형을 그리는 중. ${n[0]}·${n[1]} 결과는 읽기 전용 바탕이고, ${n[2]} = 이 도형 − (${n[0]} ∪ ${n[1]}).`
+    : `${layerName(T)} 채널의 마스크를 그리는 중. 이 채널로 보면 이 도형만 선명하게 보입니다.`;
+  edStage.classList.toggle('drawing', ['rect', 'ellipse', 'poly', 'pen'].includes(state.tool));
+  edStage.classList.toggle('pan', (state.tool === 'hand' || spaceDown) && !(drag && drag.kind === 'pan'));
+  edStage.classList.toggle('panning', !!(drag && drag.kind === 'pan'));
+  $$('#tools .tool').forEach(b => b.classList.toggle('on', b.dataset.tool === state.tool));
+  $$('#bgSeg button').forEach(b => b.classList.toggle('on', b.dataset.bg === state.edBg));
+  $('#bgSeg [data-bg="layer"]').textContent = T === 'G' ? '흑백 레이어' : layerName(T) + ' 채널';
+  $('#edHint').textContent = hintText();
+  $('#btnUndo').disabled = !hist.length;
+  $('#btnMax').textContent = state.max ? '원래 크기' : '크게 보기';
+  $('#palSel').value = state.palette;
+  $('#ySl').value = state.Y; $('#yOut').textContent = state.Y.toFixed(2);
+  renderObjList(); renderProps();
+}
+function renderAll() { renderCells(); renderBig(); renderViewerUI(); renderEditor(); renderEditorUI(); }
+const renderShapesLive = () => { renderCells(); renderBig(); renderEditor(); };
+
+/* ---------------- 히스토리 ---------------- */
+const hist = [];
+let lastNudge = 0;
+function pushHist() { hist.push(JSON.stringify(state.shapes)); if (hist.length > 150) hist.shift(); }
+function undo() {
+  if (!hist.length) return;
+  state.shapes = JSON.parse(hist.pop()); sanitizeMasks();
+  if (!findSel()) state.selId = null;
+  state.selNode = null; draft = null; drag = null;
+  save(); renderAll();
+}
+function commit(fn) { pushHist(); fn(); sanitizeMasks(); save(); renderAll(); }
+
+/* ---------------- 편집기: 조작 ---------------- */
+function setTarget(t) { state.target = t; state.selId = null; state.selNode = null; draft = null; renderEditor(); renderEditorUI(); }
+function setTool(t) { state.tool = t; draft = null; renderEditor(); renderEditorUI(); }
+function pick(id) {
+  const L = layerOfId(id); if (!L) return;
+  if (state.selId !== id) { state.selMode = 'transform'; state.selNode = null; }
+  state.target = L; state.selId = id; draft = null;
+  renderEditor(); renderEditorUI();
+}
+function setSelMode(m) {
+  const s = findSel(); if (!s || s.fixed) return;
+  if (m === 'node' && s.t !== 'poly') { pushHist(); toPoly(s); save(); renderShapesLive(); }
+  state.selMode = m; state.selNode = null;
+  renderEditor(); renderEditorUI();
+}
+function addShape(s) {
+  const T = state.target, dm = state.defMask[T];
+  if (dm && canMask(T, dm.src)) s.mask = { ...dm };
+  commit(() => { s.id = uid(); state.shapes[T].push(s); state.selId = s.id; state.selMode = 'transform'; });
+}
+function finishPoly() {
+  if (!draft || draft.t !== 'poly') return;
+  const u = upp(), pts = [];
+  for (const p of draft.pts) if (!pts.length || dist(p, pts[pts.length - 1]) > 3 * u) pts.push(p);
+  draft = null;
+  if (pts.length >= 3) { addShape({ t: 'poly', pts }); state.tool = 'select'; }
+  renderAll();
+}
+function deleteSel() {
+  const s = findSel(); if (!s || s.fixed) return;
+  commit(() => { state.shapes[state.target] = state.shapes[state.target].filter(x => x !== s); state.selId = null; });
+}
+function deleteNode() {
+  const s = findSel();
+  if (!s || s.t !== 'poly' || state.selNode == null || s.pts.length <= 3) return false;
+  const i = state.selNode;
+  commit(() => { s.pts.splice(i, 1); state.selNode = null; });
+  return true;
+}
+function duplicateSel() {
+  const s = findSel(); if (!s) return;
+  const c = clone(s); c.id = uid(); delete c.fixed; translate(c, clone(c), 24, 24);
+  commit(() => { state.shapes[state.target].push(c); state.selId = c.id; state.selMode = 'transform'; });
+}
+function toggleFixed(id) {
+  const L = layerOfId(id), s = L && state.shapes[L].find(x => x.id === id); if (!s) return;
+  commit(() => { s.fixed = !s.fixed; if (!s.fixed) delete s.fixed; });
+}
+
+edSvg.addEventListener('pointerdown', e => {
+  const p = svgPt(edSvg, e.clientX, e.clientY);
+  if (e.button === 1 || (e.button === 0 && (spaceDown || state.tool === 'hand'))) {
+    drag = { kind: 'pan', c0: [e.clientX, e.clientY], v0: { ...view }, u0: upp() };
+  } else if (e.button !== 0) return;
+  else if (state.tool === 'select') {
+    const h = e.target.closest('[data-h]'), hit = e.target.closest('[data-id]'), s = findSel();
+    if (h && s) {
+      const code = h.dataset.h[0], i = +h.dataset.h.slice(1);
+      if (code === 'b') drag = { kind: 'scale', i, s, orig: clone(s), ob: bbox(s) };
+      else if (code === 'v') {
+        state.selNode = i;
+        if (e.altKey) { deleteNode(); return; }
+        drag = { kind: 'vertex', i, s };
+      } else if (code === 'm') {
+        pushHist();
+        const a = s.pts[i], b = s.pts[(i + 1) % s.pts.length];
+        s.pts.splice(i + 1, 0, [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]);
+        state.selNode = i + 1;
+        drag = { kind: 'vertex', i: i + 1, s, hist: true };
+      }
+    } else if (hit) {
+      if (state.selId !== hit.dataset.id) { state.selId = hit.dataset.id; state.selMode = 'transform'; state.selNode = null; }
+      const t = findSel();
+      drag = { kind: 'move', p0: p, s: t, orig: clone(t) };
+    } else { state.selId = null; state.selNode = null; }
+  } else if (state.tool === 'rect' || state.tool === 'ellipse') {
+    draft = { t: state.tool, a: p, b: p }; drag = { kind: 'draw' };
+  } else if (state.tool === 'pen') {
+    draft = { t: 'pen', pts: [p] }; drag = { kind: 'pen' };
+  } else if (state.tool === 'poly') {
+    if (!draft || draft.t !== 'poly') draft = { t: 'poly', pts: [], cur: p };
+    if (draft.pts.length >= 3 && dist(p, draft.pts[0]) < 10 * upp()) { finishPoly(); return; }
+    draft.pts.push(p); draft.cur = p;
+  }
+  if (drag) edSvg.setPointerCapture(e.pointerId);
+  e.preventDefault();
+  renderEditor(); renderEditorUI();
+});
+edSvg.addEventListener('pointermove', e => {
+  if (drag && drag.kind === 'pan') {
+    view.x = drag.v0.x - (e.clientX - drag.c0[0]) * drag.u0;
+    view.y = drag.v0.y - (e.clientY - drag.c0[1]) * drag.u0;
+    applyView(); return;
+  }
+  const p = svgPt(edSvg, e.clientX, e.clientY);
+  if (drag && ['move', 'scale', 'vertex'].includes(drag.kind)) {
+    if (!drag.hist) { pushHist(); drag.hist = true; }
+    const { s } = drag;
+    if (drag.kind === 'move') translate(s, drag.orig, p[0] - drag.p0[0], p[1] - drag.p0[1]);
+    else if (drag.kind === 'scale') applyBox(s, drag.orig, drag.ob, boxFromHandle(drag.i, drag.ob, p, e.shiftKey));
+    else s.pts[drag.i] = p;
+    renderShapesLive(); // 뷰어도 실시간 갱신
+  } else if (drag && drag.kind === 'draw') {
+    draft.b = p; draft.shift = e.shiftKey; renderEditor();
+  } else if (drag && drag.kind === 'pen') {
+    if (dist(p, draft.pts[draft.pts.length - 1]) > 3 * upp()) { draft.pts.push(p); renderEditor(); }
+  } else if (draft && draft.t === 'poly') {
+    draft.cur = p; renderEditor();
+  }
+});
+function endDrag() {
+  if (!drag) return;
+  const d = drag; drag = null;
+  if (d.kind === 'draw') {
+    const s = draftToShape(draft); draft = null;
+    if (s) { addShape(s); state.tool = 'select'; }
+  } else if (d.kind === 'pen') {
+    const pts = simplify(draft.pts, 1.5 * upp()); draft = null;
+    if (pts.length >= 3) { addShape({ t: 'poly', pen: true, pts }); state.tool = 'select'; }
+  } else if (d.hist) save();
+  renderAll();
+}
+edSvg.addEventListener('pointerup', endDrag);
+edSvg.addEventListener('pointercancel', endDrag);
+edSvg.addEventListener('dblclick', e => {
+  if (state.tool === 'poly') { finishPoly(); return; }
+  if (state.tool !== 'select') return;
+  const h = e.target.closest('[data-h]');
+  if (h && h.dataset.h[0] === 'v') { state.selNode = +h.dataset.h.slice(1); deleteNode(); return; }
+  if (e.target.closest('[data-id]') && findSel()) setSelMode(state.selMode === 'node' ? 'transform' : 'node');
+});
+edSvg.addEventListener('wheel', e => {
+  e.preventDefault();
+  zoomAt(Math.exp(-e.deltaY * (e.deltaMode === 1 ? 0.05 : 0.0015)), e.clientX, e.clientY);
+}, { passive: false });
+
+$$('#tools .tool').forEach(b => b.addEventListener('click', () => setTool(b.dataset.tool)));
+$$('#bgSeg button').forEach(b => b.addEventListener('click', () => { state.edBg = b.dataset.bg; renderEditor(); renderEditorUI(); }));
+$$('.zoombar button').forEach(b => b.addEventListener('click', () => {
+  if (b.dataset.z === 'fit') fitView(); else zoomAt(b.dataset.z === 'in' ? 1.25 : 0.8);
+}));
+$('#ghostChk').addEventListener('change', e => { state.ghosts = e.target.checked; renderEditor(); });
+$('#btnUndo').addEventListener('click', undo);
+function setMax(on) {
+  state.max = on; editorEl.classList.toggle('max', on); document.body.classList.toggle('locked', on);
+  requestAnimationFrame(() => { fitView(); renderEditorUI(); });
+}
+$('#btnMax').addEventListener('click', () => setMax(!state.max));
+
+$('#objList').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const act = b.dataset.act;
+  if (act === 'target') setTarget(b.dataset.l);
+  else if (act === 'pick') pick(b.dataset.id);
+  else if (act === 'lock') toggleFixed(b.dataset.id);
+  else if (act === 'lockAll') {
+    const arr = state.shapes[b.dataset.l], all = arr.every(s => s.fixed);
+    commit(() => arr.forEach(s => { if (all) delete s.fixed; else s.fixed = true; }));
+  }
+});
+$('#props').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+  const s = findSel(); if (!s) return;
+  const act = b.dataset.act;
+  if (act === 'fix') { if (!!s.fixed !== (b.dataset.v === '1')) toggleFixed(s.id); }
+  else if (act === 'mode') setSelMode(b.dataset.v);
+  else if (act === 'dup') duplicateSel();
+  else if (act === 'del') deleteSel();
+  else if (act === 'applyLayer') {
+    const T = state.target, m = s.mask ? { ...s.mask } : null;
+    commit(() => {
+      state.defMask[T] = m;
+      state.shapes[T].forEach(x => { if (m) x.mask = { ...m }; else delete x.mask; });
+    });
+  }
+});
+$('#props').addEventListener('change', e => {
+  if (e.target.id !== 'maskSel') return;
+  const s = findSel(); if (!s) return;
+  const v = e.target.value;
+  commit(() => {
+    if (!v) delete s.mask;
+    else { const [src, d] = v.split(':'); if (canMask(state.target, src)) s.mask = { src, inv: d === 'out' }; }
+  });
+});
+
+$('#btnClear').addEventListener('click', () => {
+  const T = state.target;
+  if (!state.shapes[T].some(s => !s.fixed)) return;
+  commit(() => { state.shapes[T] = state.shapes[T].filter(s => s.fixed); state.selId = null; });
+});
+$('#btnExample').addEventListener('click', () => commit(() => {
+  state.shapes = EXAMPLE(); state.defMask = { A: null, B: null, G: null }; state.selId = null;
+}));
+$('#btnExport').addEventListener('click', () => {
+  const data = { shapes: state.shapes, palette: state.palette, Y: state.Y, defMask: state.defMask };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'isoluminance.json'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+$('#btnImport').addEventListener('click', () => $('#fileIn').click());
+$('#fileIn').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    if (!validShapes(d.shapes)) throw new Error('shapes');
+    pushHist(); state.shapes = d.shapes; state.selId = null;
+    if (PALETTES[d.palette]) state.palette = d.palette;
+    if (typeof d.Y === 'number') state.Y = d.Y;
+    state.defMask = Object.assign({ A: null, B: null, G: null }, d.defMask || {});
+    sanitizeMasks(); computeColors(); save(); renderAll();
+  } catch (err) { $('#edHint').textContent = '불러오기 실패: 이 도구에서 저장한 JSON 파일이 아닙니다.'; }
+});
+$('#palSel').addEventListener('change', e => { state.palette = e.target.value; computeColors(); save(); renderAll(); });
+$('#ySl').addEventListener('input', e => { state.Y = +e.target.value; computeColors(); save(); renderAll(); });
+
+/* ---------------- 키보드 ---------------- */
+document.addEventListener('keydown', e => {
+  if (e.target.closest && e.target.closest('input, select, textarea')) return;
+  const k = e.key, mod = e.ctrlKey || e.metaKey;
+  if (k === ' ') { e.preventDefault(); if (!spaceDown) { spaceDown = true; renderEditorUI(); } return; }
+  if (mod && k.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
+  if (mod && k.toLowerCase() === 'd') { e.preventDefault(); duplicateSel(); return; }
+  if (mod && k === '0') { e.preventDefault(); fitView(); return; }
+  if (mod || e.altKey) return;
+  if (VIEW_KIND[k]) { selectPanel(k); return; }
+  if (k === '+' || k === '=') { zoomAt(1.25); return; }
+  if (k === '-' || k === '_') { zoomAt(0.8); return; }
+  const tool = { v: 'select', r: 'rect', e: 'ellipse', p: 'poly', f: 'pen', h: 'hand' }[k.toLowerCase()];
+  if (tool) { setTool(tool); return; }
+  const s = findSel();
+  if (k === 'l' || k === 'L') { if (s) toggleFixed(s.id); }
+  else if (k === 'Delete' || k === 'Backspace') {
+    if (!s) return;
+    e.preventDefault();
+    if (!(state.selMode === 'node' && deleteNode())) deleteSel();
+  } else if (k === 'Enter') {
+    if (draft && draft.t === 'poly') finishPoly();
+    else if (s && !s.fixed) setSelMode(state.selMode === 'node' ? 'transform' : 'node');
+  } else if (k === 'Escape') {
+    if (draft) draft = null;
+    else if (state.selId) { state.selId = null; state.selNode = null; }
+    else if (state.max) { setMax(false); return; }
+    renderEditor(); renderEditorUI();
+  } else if (k.startsWith('Arrow') && s && !s.fixed) {
+    e.preventDefault();
+    const d = e.shiftKey ? 10 : 1, dx = k === 'ArrowLeft' ? -d : k === 'ArrowRight' ? d : 0, dy = k === 'ArrowUp' ? -d : k === 'ArrowDown' ? d : 0;
+    if (Date.now() - lastNudge > 600) pushHist();
+    lastNudge = Date.now();
+    translate(s, clone(s), dx, dy); save(); renderShapesLive();
+  }
+});
+document.addEventListener('keyup', e => { if (e.key === ' ') { spaceDown = false; renderEditorUI(); } });
+window.addEventListener('blur', () => { spaceDown = false; });
+window.addEventListener('resize', renderEditor);
+
+load();
+computeColors();
+applyView();
+renderAll();
+setStatus(null);
+})();
+</script>
+</body>
+</html>

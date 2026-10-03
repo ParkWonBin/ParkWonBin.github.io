@@ -1,4 +1,14 @@
 # Demo
+- title : 같은 그림, 다른 도형
+  url : /webapps/isoluminance
+  url_app : /webapps/isoluminance/app.html
+  repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/isoluminance/index.html
+  thumbnail :
+  type : demo
+  desc : <strong> 같은 그림, 다른 도형 </strong>
+    <br> 한 장의 풀컬러 이미지가 흑백·색상 등
+    <br> 보는 방식에 따라 다른 도형으로 보이는 원리를 체험하는 도구입니다.
+
 - title : 3D Viewer Lab
   url : /webapps/glb_viewer
   url_app : /webapps/glb_viewer/app.html
