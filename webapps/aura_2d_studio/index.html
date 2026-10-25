@@ -331,6 +331,7 @@ layout: dev_apps
         <button data-v="aura">아우라</button>
         <button data-v="particles">불꽃 입자</button>
         <button data-v="ring">궤도 링</button>
+        <button data-v="fill">도형 내부</button>
       </div>
       <div class="muted small" id="slotHint" style="margin-top:6px"></div>
       <div class="notice" id="linkNotice" hidden>
@@ -400,7 +401,7 @@ layout: dev_apps
       </div>
       <div class="btns" style="margin-top:6px">
         <span class="muted small">다른 슬롯으로 복사</span>
-        <select id="gCopyTo" style="width:auto"><option value="aura">아우라</option><option value="particles">불꽃 입자</option><option value="ring">궤도 링</option></select>
+        <select id="gCopyTo" style="width:auto"><option value="aura">아우라</option><option value="particles">불꽃 입자</option><option value="ring">궤도 링</option><option value="fill">도형 내부</option></select>
         <button id="gCopy">복사</button>
       </div>
 
@@ -783,6 +784,14 @@ const DEFAULTS = {
   rim: { strength: 0.6, width: 0.06 },
   pulse: { alpha: 0.15, size: 0.05, speed: 0.8, flicker: 0.1, flickerSpeed: 8 },
   map: { distance: 1, angle: 0, noise: 0, height: 0, scale: 1, wrap: 'clamp', scroll: 0, offset: 0, reverse: false, useAlpha: true },
+  fill: {
+    gradient: 'own', mode: 'gradient', map: 'depth', angle: 90,
+    opacity: 1, brightness: 1, scale: 1, wrap: 'clamp', scroll: 0, offset: 0, reverse: false, followHue: false,
+  },
+  shimmer: {
+    warp: 0.2, speed: 0.3, scale: 2.5, flow: 0.15, swirl: 0.2, caustic: 0, causticScale: 3, causticWidth: 0.04,
+    sheen: 0, sheenSpeed: 0.35, sheenAngle: 35, sheenWidth: 0.12, pulse: 0,
+  },
 };
 const VIEW_DEFAULTS = { count: 60, size: 96, mode: 'presets', phase: true, cards: true, labels: true, dpr: '1.5' };
 
@@ -832,6 +841,21 @@ const PRESETS = {
     map: { distance: 0.3, angle: 0.7, scroll: 0.1, wrap: 'mirror' }, ring: { strength: 0.6, colorAngle: true, dashes: 16 },
   },
 };
+// 프리셋별 도형 내부 (채우기 + 일렁임)
+const PRESET_FILL = {
+  '성스러운 빛': { fill: { colorA: '#fffbe8', colorB: '#ffe08a', colorC: '#c9861a', map: 'radial' }, shimmer: { warp: 0.15, sheen: 0.5, sheenSpeed: 0.3 } },
+  '화염': { fill: { colorA: '#fff1a0', colorB: '#ff7a00', colorC: '#6a0d00', map: 'noise', scale: 1.4 }, shimmer: { warp: 0.5, speed: 0.8, flow: 1.2, caustic: 0.5, causticScale: 3, causticWidth: 0.05 } },
+  '냉기': { fill: { colorA: '#f0fcff', colorB: '#7fd3ff', colorC: '#1d4fa8', map: 'linear', angle: 60 }, shimmer: { warp: 0.12, caustic: 0.45, causticScale: 4.5, causticWidth: 0.02, sheen: 0.6, sheenAngle: 60 } },
+  '독': { fill: { colorA: '#d8ff7a', colorB: '#2f9e2f', colorC: '#0b3d12', map: 'noise' }, shimmer: { warp: 0.45, speed: 0.4, flow: 0.5, caustic: 0.35, causticScale: 2.5 } },
+  '공허': { fill: { colorA: '#000000', colorB: '#3b0a7a', colorC: '#c27bff', map: 'conic', wrap: 'mirror', scale: 2 }, shimmer: { warp: 0.4, swirl: 1.6, speed: 0.5 } },
+  '선택 하이라이트': { fill: { mode: 'solid' } },
+  '전기': { fill: { colorA: '#2a2f7a', colorB: '#141850', colorC: '#05061a', map: 'depth' }, shimmer: { warp: 0.2, speed: 2, caustic: 1.2, causticScale: 5, causticWidth: 0.025 } },
+  '치유': { fill: { colorA: '#f4fff8', colorB: '#7cf0b0', colorC: '#1a8f5a', map: 'radial' }, shimmer: { warp: 0.25, speed: 0.3, pulse: 0.4, sheen: 0.3 } },
+  '전설 등급': { fill: { colorA: '#fff6cf', colorB: '#ffc93a', colorC: '#8f4c00', map: 'linear', angle: 90 }, shimmer: { warp: 0.08, sheen: 0.9, sheenSpeed: 0.4, sheenAngle: 30 } },
+  '희귀 등급': { fill: { colorA: '#e3f0ff', colorB: '#5aa9ff', colorC: '#18307a', map: 'linear', angle: 90 }, shimmer: { warp: 0.1, sheen: 0.55, sheenSpeed: 0.3 } },
+  '무지개': { fill: { colorA: '#ff4d4d', colorB: '#4dff88', colorC: '#4d7cff', map: 'conic', wrap: 'mirror', followHue: true, brightness: 0.8 }, shimmer: { warp: 0.25, swirl: 0.6 } },
+};
+for (const k in PRESET_FILL) Object.assign(PRESETS[k], PRESET_FILL[k]);
 const presetSettings = (name) => deepMerge(clone(DEFAULTS), PRESETS[name]);
 
 // 2D 단독판과 같은 프리셋 — 색 2~3개를 그라데이션 슬롯(점·구간)으로 바꿔 쓴다
@@ -840,9 +864,14 @@ function colorsGrad(a = {}) {
   const c = { ...BASE_COLORS, ...a };
   return chainSlot(c.useMid === false ? [c.colorInner, c.colorOuter] : [c.colorInner, c.colorMid, c.colorOuter], [], 'ease');
 }
-const gradSet = (g) => ({ aura: g, particles: clone(g), ring: clone(g) });
+const BASE_FILL = { colorA: '#5d6a8c', useMid: true, colorB: '#2c3348', colorC: '#141824' };
+function fillGrad(f = {}) {
+  const c = { ...BASE_FILL, ...f };
+  return chainSlot(c.useMid === false ? [c.colorA, c.colorC] : [c.colorA, c.colorB, c.colorC], [], 'ease');
+}
+const gradSet = (g, fg) => ({ aura: g, particles: clone(g), ring: clone(g), fill: fg || fillGrad() });
 const defaultGradients = () => gradSet(colorsGrad());
-const presetState = (name) => ({ settings: presetSettings(name), gradients: gradSet(colorsGrad(PRESETS[name].aura)) });
+const presetState = (name) => ({ settings: presetSettings(name), gradients: gradSet(colorsGrad(PRESETS[name].aura), fillGrad(PRESETS[name].fill)) });
 
 const STORE_KEY = 'aura2dStudio.v1', VIEW_KEY = 'aura2dStudio.view.v1', LIB_KEY = 'aura2dStudio.library.v1';
 let P = clone(DEFAULTS);
@@ -896,12 +925,14 @@ function rowsFor(S, Gr) {
     aura: a,
     spark: S.sparks.gradient === 'own' ? slotRow(Gr.particles) : a,
     ring: S.ring.gradient === 'own' ? slotRow(Gr.ring) : a,
+    fill: S.fill.gradient === 'aura' ? a : slotRow(Gr.fill || (Gr.fill = fillGrad())),   // 예전 저장본엔 도형 내부 슬롯이 없다
   };
 }
 
 // ═════════════════════════ 패킹 (설정 → uniform vec4 배열) ═════════════════════════
 const SHAPE_ID = { circle: 0, roundbox: 1, hexagon: 2, star: 3, diamond: 4, heart: 5, shield: 6, image: 7 };
 const WRAP_ID = { clamp: 0, repeat: 1, mirror: 2 };
+const FILL_MAP = { depth: 0, linear: 1, radial: 2, conic: 3, noise: 4 };
 const FIELDS = [
   ['SHAPE', (S) => SHAPE_ID[S.icon.shape] ?? 0], ['ISIZE', (S) => S.icon.size], ['ION', (S) => +S.icon.visible], ['ISHADE', (S) => S.icon.shade],
   ['ICR', (S) => hexToRgb(S.icon.color)[0]], ['ICG', (S) => hexToRgb(S.icon.color)[1]], ['ICB', (S) => hexToRgb(S.icon.color)[2]], ['ITINT', (S) => S.icon.tint],
@@ -918,6 +949,13 @@ const FIELDS = [
   ['PFLSPD', (S) => S.pulse.flickerSpeed], ['MDIST', (S) => S.map.distance], ['MANG', (S) => S.map.angle], ['MNOISE', (S) => S.map.noise],
   ['MHEIGHT', (S) => S.map.height], ['MSCALE', (S) => S.map.scale], ['MOFF', (S) => S.map.offset], ['MSCROLL', (S) => S.map.scroll],
   ['MWRAP', (S) => WRAP_ID[S.map.wrap] ?? 0], ['MREV', (S) => +S.map.reverse], ['MALPHA', (S) => +S.map.useAlpha], ['HASIMG', (S) => +(S.icon.shape === 'image' && !!S.icon.image)],
+  ['FMODE', (S) => +(S.fill.mode === 'gradient')], ['FMAP', (S) => FILL_MAP[S.fill.map] ?? 0], ['FANG', (S) => S.fill.angle * Math.PI / 180], ['FSCALE', (S) => S.fill.scale],
+  ['FOFF', (S) => S.fill.offset], ['FSCROLL', (S) => S.fill.scroll], ['FWRAP', (S) => WRAP_ID[S.fill.wrap] ?? 0], ['FREV', (S) => +S.fill.reverse],
+  ['FOPA', (S) => S.fill.opacity], ['FBRIGHT', (S) => S.fill.brightness], ['FHUE', (S) => +S.fill.followHue], ['ROWF', (S, R) => R.fill],
+  ['FWARP', (S) => S.shimmer.warp], ['FWSCALE', (S) => S.shimmer.scale], ['FWSPD', (S) => S.shimmer.speed], ['FFLOW', (S) => S.shimmer.flow],
+  ['FSWIRL', (S) => S.shimmer.swirl], ['FCAUS', (S) => S.shimmer.caustic], ['FCSCALE', (S) => S.shimmer.causticScale], ['FCWIDTH', (S) => S.shimmer.causticWidth],
+  ['FSHEEN', (S) => S.shimmer.sheen], ['FSANG', (S) => S.shimmer.sheenAngle * Math.PI / 180], ['FSSPD', (S) => S.shimmer.sheenSpeed], ['FSW', (S) => S.shimmer.sheenWidth],
+  ['FPULSE', (S) => S.shimmer.pulse],
 ];
 const NVEC = Math.ceil(FIELDS.length / 4);
 const DEFINES = FIELDS.map(([n], i) => `#define ${n} uP[${i >> 2}].${'xyzw'[i & 3]}`).join('\n');
@@ -1052,10 +1090,40 @@ void main(){
   if(iconA>0.0){
     vec3 base=vec3(ICR,ICG,ICB);
     if(HASIMG>0.5){ vec2 q=clamp(ip/r,-1.0,1.0); base=mix(texture2D(uImg,vec2(q.x*0.5+0.5,0.5-q.y*0.5)).rgb, base, ITINT); }
+    // 도형 내부: 노이즈로 일렁이는 좌표 → 그라데이션 → 빛줄기 · 광택 띠
+    if(FMODE>0.5){
+      vec2 fp=ip/r;
+      vec2 wq=fp*FWSCALE+vec2(0.0,-t*FFLOW);
+      float wt=t*FWSPD;
+      vec2 warp=vec2(fbm(wq+vec2(wt,1.7)),fbm(wq+vec2(5.2,-wt)))-0.5;
+      vec2 q=rot(t*FSWIRL*(1.0-clamp(length(fp),0.0,1.0)))*fp+warp*FWARP*2.0;
+      float ft;
+      if(FMAP<0.5) ft=1.0-clamp(-d0/r,0.0,1.0)+warp.x*FWARP;
+      else if(FMAP<1.5) ft=dot(q,vec2(cos(FANG),sin(FANG)))*0.5+0.5;
+      else if(FMAP<2.5) ft=length(q);
+      else if(FMAP<3.5) ft=atan(q.y,q.x)/6.28318+0.5;
+      else ft=fbm(q*1.5+vec2(3.3,-t*FFLOW));
+      ft=wrapT(ft*FSCALE+FOFF+t*FSCROLL,FWRAP);
+      if(FREV>0.5) ft=1.0-ft;
+      vec4 fc=ramp(ft,ROWF);
+      vec3 fcol=hueShift(fc.rgb,hue*FHUE);
+      if(FCAUS>0.0){
+        float cn=fbm(q*FCSCALE+vec2(t*0.25,-t*FFLOW)+warp*3.0);
+        float vein=1.0-smoothstep(0.0,max(FCWIDTH,0.002),abs(cn-0.5));
+        fcol+=mix(fcol,vec3(1.0),0.6)*vein*FCAUS;
+      }
+      if(FSHEEN>0.0){
+        float sb=dot(fp,vec2(cos(FSANG),sin(FSANG)))*0.5+0.5;
+        float sc=fract(t*FSSPD)*(1.0+4.0*FSW)-2.0*FSW;
+        fcol+=smoothstep(FSW,0.0,abs(sb-sc))*FSHEEN;
+      }
+      fcol*=FBRIGHT*(1.0+FPULSE*(pulse-0.5)*2.0);
+      base=mix(base,fcol,clamp(FOPA*fc.a,0.0,1.0));
+    }
     float bevel=clamp(-d0/(r*0.3),0.0,1.0);
     float lit=dot(normalize(ip+1e-5),vec2(-0.55,0.75));
     float shade=mix(1.0, 0.78+0.22*bevel+0.3*(1.0-bevel)*lit, ISHADE);
-    vec3 ic=base*shade;
+    vec3 ic=clamp(base*shade,0.0,1.0);
     // 안쪽 테두리 빛
     float rim=smoothstep(-RIMW,0.0,d0)*RIMSTR*flick*AON;
     ic=1.0-(1.0-ic)*(1.0-hueShift(ramp(0.05,ROWA).rgb,hue)*rim);
@@ -1308,6 +1376,9 @@ function randomSettings(seed) {
   S.ring = { ...S.ring, strength: rnd() < 0.3 ? rnd(0.4, 0.9) : 0, dashes: pickOne([0, 6, 12]), speed: rnd(-0.6, 0.6) };
   Object.assign(S.pulse, { alpha: rnd(0, 0.4), size: rnd(0, 0.1), speed: rnd(0.2, 1.4), flicker: rnd(0, 0.3) });
   S.rim.strength = rnd(0, 1);
+  Object.assign(S.fill, { colorA: hsl(h, 0.6, 0.75), colorB: hsl(h2, 0.7, 0.4), colorC: hsl(h2, 0.6, 0.12),
+    map: pickOne(['depth', 'linear', 'radial', 'conic', 'noise']), angle: Math.round(rnd(-180, 180)) });
+  Object.assign(S.shimmer, { warp: rnd(0, 0.5), speed: rnd(0.1, 1), caustic: rnd() < 0.3 ? rnd(0.2, 1) : 0, sheen: rnd() < 0.3 ? rnd(0.3, 0.9) : 0 });
   return S;
 }
 function buildGallery() {
@@ -1355,6 +1426,7 @@ $('#gLabels').addEventListener('change', (e) => { VIEW.labels = e.target.checked
 $('#gDpr').addEventListener('change', (e) => { VIEW.dpr = e.target.value; save(); });
 
 // ═════════════════════════ 설정 패널 ═════════════════════════
+const FILL_MAPS = [['depth', '깊이 (중심→가장자리)'], ['linear', '선형'], ['radial', '원형'], ['conic', '회전 (각도)'], ['noise', '노이즈 (대리석)']];
 const SHAPES = [['circle', '원'], ['roundbox', '둥근 사각형'], ['hexagon', '육각형'], ['star', '별'], ['diamond', '마름모'],
   ['heart', '하트'], ['shield', '방패'], ['image', '이미지 (업로드)']];
 const R_ = (k, label, min, max, step) => ({ k, t: 'range', label, min, max, step });
@@ -1390,6 +1462,36 @@ const SCHEMA = [
     R_('aura.falloff', '감쇠 (부드러움)', 0.2, 6, 0.05),
     R_('aura.up', '위로 치솟음', 0, 3, 0.01),
     R_('aura.opacity', '불투명도', 0, 1, 0.01),
+  ] },
+  { title: '도형 내부 · 채우기', items: [
+    S_('fill.mode', '채우기', [['gradient', '그라데이션'], ['solid', '단색 (아이콘 색)']]),
+    B_('그라데이션', '도형 내부 그라데이션 편집', () => { setTab('grad'); setSlot('fill'); }),
+    S_('fill.gradient', '그라데이션 출처', [['own', '전용 그라데이션'], ['aura', '아우라 그라데이션 공유']]),
+    S_('fill.map', '그라데이션 모양', FILL_MAPS),
+    R_('fill.angle', '선형 각도 (°)', -180, 180, 1),
+    R_('fill.opacity', '채우기 세기', 0, 1, 0.01),
+    R_('fill.brightness', '밝기', 0, 3, 0.01),
+    R_('fill.scale', '반복 배율', 0.1, 8, 0.01),
+    S_('fill.wrap', '범위 밖 처리', [['clamp', '고정'], ['repeat', '반복'], ['mirror', '왕복']]),
+    R_('fill.scroll', '스크롤 속도', -2, 2, 0.01),
+    R_('fill.offset', '오프셋', -1, 1, 0.01),
+    T_('fill.reverse', '뒤집기'),
+    T_('fill.followHue', '아우라 색상 순환 따라가기'),
+  ] },
+  { title: '도형 내부 · 일렁임', items: [
+    R_('shimmer.warp', '일렁임 세기', 0, 1, 0.01),
+    R_('shimmer.speed', '일렁임 속도', 0, 4, 0.01),
+    R_('shimmer.scale', '일렁임 크기 (주파수)', 0.3, 10, 0.05),
+    R_('shimmer.flow', '흐름 (위로)', -3, 3, 0.01),
+    R_('shimmer.swirl', '소용돌이', -4, 4, 0.01),
+    R_('shimmer.caustic', '물결 빛줄기', 0, 2, 0.01),
+    R_('shimmer.causticScale', '빛줄기 촘촘함', 0.5, 12, 0.05),
+    R_('shimmer.causticWidth', '빛줄기 두께', 0.005, 0.2, 0.001),
+    R_('shimmer.sheen', '광택 띠', 0, 2, 0.01),
+    R_('shimmer.sheenSpeed', '광택 속도', 0, 3, 0.01),
+    R_('shimmer.sheenAngle', '광택 각도 (°)', -180, 180, 1),
+    R_('shimmer.sheenWidth', '광택 폭', 0.02, 0.6, 0.005),
+    R_('shimmer.pulse', '밝기 맥동 (펄스 연동)', 0, 1, 0.01),
   ] },
   { title: '노이즈 · 흐름', items: [
     R_('noise.strength', '노이즈 강도', 0, 1, 0.01),
@@ -1551,7 +1653,7 @@ function applyState(state, keepIcon = false) {
   if (keepIcon || !state.settings?.icon) P.icon = icon;
   const d = defaultGradients();
   const fallback = state.gradients?.aura ? normSlot(state.gradients.aura, d.aura) : null;
-  for (const k in d) G[k] = normSlot(state.gradients?.[k], fallback || d[k]);
+  for (const k in d) G[k] = normSlot(state.gradients?.[k], k === 'fill' ? d.fill : fallback || d[k]);
   sel = { type: null, id: null };
   compiled = null; fieldDirty = true;
   refreshUI(); renderEdgeList(); renderInspector(); invalidate();
@@ -1561,13 +1663,13 @@ function applyState(state, keepIcon = false) {
 function parseImported(obj) {
   if (obj && obj.settings && obj.gradients) return obj;
   const s = obj && obj.settings ? obj.settings : obj;
-  if (s && s.aura && s.icon) return { settings: s, gradients: gradSet(colorsGrad(s.aura)) };
+  if (s && s.aura && s.icon) return { settings: s, gradients: gradSet(colorsGrad(s.aura), fillGrad(s.fill)) };
   throw new Error('알 수 없는 형식');
 }
 const currentState = () => ({ type: 'aura-2d-studio', version: 1, settings: clone(P), gradients: clone(G) });
 function randomState(seed) {
   const S = randomSettings(seed);
-  return { settings: deepMerge(clone(DEFAULTS), S), gradients: gradSet(colorsGrad(S.aura)) };
+  return { settings: deepMerge(clone(DEFAULTS), S), gradients: gradSet(colorsGrad(S.aura), fillGrad(S.fill)) };
 }
 
 // ═════════════════════════ 탭 ═════════════════════════
@@ -1587,8 +1689,9 @@ const SLOT_HINT = {
   aura: '막대 왼쪽(t=0) = 아이콘 쪽, 오른쪽(t=1) = 아우라 바깥 (매핑은 아우라 설정 › 그라데이션 매핑)',
   particles: '불꽃 입자마다 막대 위 임의 위치의 색을 뽑아 써요 (광선은 아우라 그라데이션 25% 지점 색)',
   ring: '궤도 링: “둘레 따라 그라데이션”을 켜면 한 바퀴에 막대 전체, 끄면 60% 지점 색',
+  fill: '도형 내부: 막대 왼쪽(t=0) → 오른쪽(t=1)이 아우라 설정 › 도형 내부 · 채우기의 “그라데이션 모양”을 따라 칠해지고, 일렁임이 그 위에서 흔들어요',
 };
-const SLOT_P = { aura: 'aura', particles: 'sparks', ring: 'ring' };   // 그라데이션 슬롯 → 설정 키
+const SLOT_P = { aura: 'aura', particles: 'sparks', ring: 'ring', fill: 'fill' };   // 그라데이션 슬롯 → 설정 키
 let slotKey = 'aura';
 let editMode = 'point';           // 'point' | 'line'
 let pickModel = 'oklch';
