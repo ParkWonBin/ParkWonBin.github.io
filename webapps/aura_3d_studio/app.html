@@ -168,6 +168,7 @@
         <button data-v="aura">아우라</button>
         <button data-v="particles">파티클</button>
         <button data-v="ring">바닥 링</button>
+        <button data-v="fill">표면</button>
       </div>
       <div class="muted small" id="slotHint" style="margin-top:6px"></div>
       <div class="notice" id="linkNotice" hidden>
@@ -237,7 +238,7 @@
       </div>
       <div class="btns" style="margin-top:6px">
         <span class="muted small">다른 슬롯으로 복사</span>
-        <select id="gCopyTo" style="width:auto"><option value="aura">아우라</option><option value="particles">파티클</option><option value="ring">바닥 링</option></select>
+        <select id="gCopyTo" style="width:auto"><option value="aura">아우라</option><option value="particles">파티클</option><option value="ring">바닥 링</option><option value="fill">오브젝트 표면</option></select>
         <button id="gCopy">복사</button>
       </div>
 
@@ -639,9 +640,18 @@ const DEFAULTS = {
   light: { ambient: 0.5, key: 1.8, auraLight: 1.5 },
   post: { bloom: true, strength: 0.6, radius: 0.45, threshold: 0.25, toneMapping: true, exposure: 1 },
   scene: { background: '#07080c', grid: true, autoRotate: false, timeScale: 1, paused: false },
+  fill: {
+    gradient: 'own', mode: 'gradient', map: 'depth', angle: 90,
+    opacity: 1, emissive: 0.2, brightness: 1, scale: 1, wrap: 'clamp', scroll: 0, offset: 0, reverse: false, followHue: false,
+  },
+  shimmer: {
+    warp: 0.2, speed: 0.3, scale: 2, flow: 0.15, swirl: 0.2, caustic: 0, causticScale: 3, causticWidth: 0.04,
+    sheen: 0, sheenSpeed: 0.35, sheenAngle: 35, sheenWidth: 0.12, pulse: 0,
+  },
 };
 const DEFAULT_GRAD = chainSlot(['#ffffff', '#fff1a8', '#ffb300', '#ff6a00'], [1, 1, 0.9, 0.5], 'ease');
-const defaultGradients = () => ({ aura: clone(DEFAULT_GRAD), particles: clone(DEFAULT_GRAD), ring: clone(DEFAULT_GRAD) });
+const fillGrad = (f = {}) => chainSlot(f.useMid === false ? [f.colorA ?? '#5d6a8c', f.colorC ?? '#141824'] : [f.colorA ?? '#5d6a8c', f.colorB ?? '#2c3348', f.colorC ?? '#141824'], [], 'ease');
+const defaultGradients = () => ({ aura: clone(DEFAULT_GRAD), particles: clone(DEFAULT_GRAD), ring: clone(DEFAULT_GRAD), fill: fillGrad() });
 
 // 프리셋: 설정 일부 + 아우라 그라데이션 색 목록
 const PRESETS = {
@@ -741,10 +751,24 @@ const PRESETS = {
     },
   },
 };
+// 프리셋별 오브젝트 표면 (채우기 + 일렁임)
+const PRESET_FILL = {
+  '성스러운 빛': { fill: { colorA: '#fffbe8', colorB: '#ffe08a', colorC: '#c9861a', map: 'depth', emissive: 0.4 }, shimmer: { warp: 0.15, sheen: 0.5, sheenSpeed: 0.3 } },
+  '화염': { fill: { colorA: '#fff1a0', colorB: '#ff7a00', colorC: '#6a0d00', map: 'noise', scale: 1.4, emissive: 0.8 }, shimmer: { warp: 0.5, speed: 0.8, flow: 1.2, caustic: 0.5, causticScale: 3, causticWidth: 0.05 } },
+  '냉기': { fill: { colorA: '#f0fcff', colorB: '#7fd3ff', colorC: '#1d4fa8', map: 'linear', angle: 60, emissive: 0.3 }, shimmer: { warp: 0.12, caustic: 0.45, causticScale: 4.5, causticWidth: 0.02, sheen: 0.6, sheenAngle: 60 } },
+  '독': { fill: { colorA: '#d8ff7a', colorB: '#2f9e2f', colorC: '#0b3d12', map: 'noise', emissive: 0.4 }, shimmer: { warp: 0.45, speed: 0.4, flow: 0.5, caustic: 0.35, causticScale: 2.5 } },
+  '공허': { fill: { colorA: '#000000', colorB: '#3b0a7a', colorC: '#c27bff', map: 'conic', wrap: 'mirror', scale: 2, emissive: 0.6 }, shimmer: { warp: 0.4, swirl: 1.6, speed: 0.5 } },
+  '선택 하이라이트': { fill: { mode: 'solid' } },
+  '전기': { fill: { colorA: '#2a2f7a', colorB: '#141850', colorC: '#05061a', map: 'depth', emissive: 0.2 }, shimmer: { warp: 0.2, speed: 2, caustic: 1.2, causticScale: 5, causticWidth: 0.025 } },
+  '치유': { fill: { colorA: '#f4fff8', colorB: '#7cf0b0', colorC: '#1a8f5a', map: 'depth', emissive: 0.4 }, shimmer: { warp: 0.25, speed: 0.3, pulse: 0.4, sheen: 0.3 } },
+  '무지개': { fill: { colorA: '#ff4d4d', colorB: '#4dff88', colorC: '#4d7cff', map: 'conic', wrap: 'mirror', followHue: true, emissive: 0.5 }, shimmer: { warp: 0.25, swirl: 0.6 } },
+  '오로라': { fill: { colorA: '#3dffb0', colorB: '#2ad4ff', colorC: '#7a5cff', map: 'linear', angle: 90, wrap: 'mirror', scroll: 0.1, emissive: 0.5 }, shimmer: { warp: 0.4, speed: 0.4, flow: 0.3, sheen: 0.3 } },
+};
+for (const k in PRESET_FILL) if (PRESETS[k]) Object.assign(PRESETS[k].s, PRESET_FILL[k]);
 function presetState(name) {
   const pr = PRESETS[name];
   const g = chainSlot(...pr.grad);
-  return { settings: deepMerge(clone(DEFAULTS), pr.s), gradients: { aura: g, particles: clone(g), ring: clone(g) } };
+  return { settings: deepMerge(clone(DEFAULTS), pr.s), gradients: { aura: g, particles: clone(g), ring: clone(g), fill: fillGrad(PRESET_FILL[name]?.fill) } };
 }
 
 const STORE_KEY = 'auraStudio.v1';
@@ -798,7 +822,7 @@ scene.add(grid);
 
 // 그라데이션 LUT 텍스처 (슬롯마다 256×1 RGBA)
 const rampData = {}, rampTex = {};
-for (const k of ['aura', 'particles', 'ring']) {
+for (const k of ['aura', 'particles', 'ring', 'fill']) {
   rampData[k] = new Uint8Array(LUT_N * 4);
   const t = new THREE.DataTexture(rampData[k], LUT_N, 1, THREE.RGBAFormat);
   t.colorSpace = THREE.SRGBColorSpace;
@@ -1042,11 +1066,79 @@ ringMesh.renderOrder = 1;
 scene.add(ringMesh);
 
 // ═════════════════════════ 오브젝트 ═════════════════════════
+// 오브젝트 표면: MeshStandardMaterial 셰이더에 그라데이션 채우기 + 일렁임을 끼워 넣는다 (조명은 그대로)
+const SURF_MAP = { depth: 0, linear: 1, radial: 2, conic: 3, noise: 4 };
+const SU = {
+  uFillRamp: { value: null }, uHolderInv: { value: new THREE.Matrix4() },
+  uFOn: { value: 1 }, uFMap: { value: 0 }, uFAng: { value: 0 }, uFScale: { value: 1 }, uFOff: { value: 0 }, uFWrap: { value: 0 }, uFRev: { value: 0 },
+  uFOpa: { value: 1 }, uFBright: { value: 1 }, uFEmis: { value: 0 }, uFHue: { value: 0 }, uHueS: { value: 0 },
+  uSWarp: { value: 0 }, uSScale: { value: 2 }, uSSpeed: { value: 0 }, uSFlow: { value: 0 }, uSSwirl: { value: 0 },
+  uSCaus: { value: 0 }, uSCScale: { value: 3 }, uSCWidth: { value: 0.04 }, uSSheen: { value: 0 }, uSSAng: { value: 0 },
+  uSSSpd: { value: 0 }, uSSW: { value: 0.1 }, uSPulse: { value: 0 }, uSTime: { value: 0 }, uSPulseV: { value: 0 },
+};
+const SURF_HEAD = /* glsl */`
+uniform sampler2D uFillRamp;
+uniform float uFOn, uFMap, uFAng, uFScale, uFOff, uFWrap, uFRev, uFOpa, uFBright, uFEmis, uFHue, uHueS;
+uniform float uSWarp, uSScale, uSSpeed, uSFlow, uSSwirl, uSCaus, uSCScale, uSCWidth, uSSheen, uSSAng, uSSSpd, uSSW, uSPulse, uSTime, uSPulseV;
+varying vec3 vSurfL;
+${NOISE}
+vec3 sHue(vec3 c, float a){ const vec3 k=vec3(0.57735); float ca=cos(a); return max(c*ca+cross(k,c)*sin(a)+k*dot(k,c)*(1.0-ca),0.0); }
+float sWrap(float t, float m){ if(m<0.5) return clamp(t,0.0,1.0); if(m<1.5) return fract(t); float f=mod(t,2.0); return f>1.0?2.0-f:f; }`;
+const SURF_BODY = /* glsl */`
+if(uFOn>0.5){
+  float st=uSTime;
+  vec3 lp=vSurfL;
+  float sa=st*uSSwirl*(1.0-clamp(length(lp),0.0,1.0));
+  lp.xz=mat2(cos(sa),-sin(sa),sin(sa),cos(sa))*lp.xz;
+  vec3 wq=lp*uSScale+vec3(0.0,-st*uSFlow,0.0);
+  vec2 warp=vec2(snoise(wq+vec3(st*uSSpeed,1.7,0.0)),snoise(wq+vec3(5.2,-st*uSSpeed,3.1)))*0.5;
+  vec3 q=lp+vec3(warp.x,warp.y,warp.x)*uSWarp*2.0;
+  float fres=1.0-abs(dot(normalize(normal),normalize(vViewPosition)));
+  float ft;
+  if(uFMap<0.5) ft=fres+warp.x*uSWarp;
+  else if(uFMap<1.5) ft=dot(q.xy,vec2(cos(uFAng),sin(uFAng)))*0.5+0.5;
+  else if(uFMap<2.5) ft=length(q);
+  else if(uFMap<3.5) ft=atan(q.z,q.x)/6.28318+0.5;
+  else ft=snoise(q*1.5+vec3(3.3,-st*uSFlow,0.0))*0.5+0.5;
+  ft=sWrap(ft*uFScale+uFOff,uFWrap);
+  if(uFRev>0.5) ft=1.0-ft;
+  vec4 fc=texture2D(uFillRamp,vec2(ft*0.996+0.002,0.5));
+  vec3 fcol=sHue(fc.rgb,uHueS*uFHue);
+  vec3 sGlow=vec3(0.0);
+  if(uSCaus>0.0){
+    float cn=snoise(q*uSCScale+vec3(st*0.25,-st*uSFlow,0.0)+vec3(warp,0.0)*3.0)*0.5+0.5;
+    sGlow+=mix(fcol,vec3(1.0),0.6)*(1.0-smoothstep(0.0,max(uSCWidth,0.002),abs(cn-0.5)))*uSCaus;
+  }
+  if(uSSheen>0.0){
+    float sb=dot(vSurfL.xy,vec2(cos(uSSAng),sin(uSSAng)))*0.5+0.5;
+    float sp=fract(st*uSSSpd)*(1.0+4.0*uSSW)-2.0*uSSW;
+    sGlow+=smoothstep(uSSW,0.0,abs(sb-sp))*uSSheen;
+  }
+  float pm=1.0+uSPulse*(uSPulseV-0.5)*2.0;
+  float fa=clamp(uFOpa*fc.a,0.0,1.0);
+  fcol*=uFBright*pm;
+  diffuseColor.rgb=mix(diffuseColor.rgb,fcol,fa);
+  totalEmissiveRadiance+=fcol*uFEmis*fa+sGlow*pm;
+}`;
+function patchSurface(mat) {
+  mat.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, SU);
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\nuniform mat4 uHolderInv;\nvarying vec3 vSurfL;')
+      .replace('#include <project_vertex>', '#include <project_vertex>\nvSurfL = (uHolderInv * modelMatrix * vec4(transformed, 1.0)).xyz;');
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', '#include <common>\n' + SURF_HEAD)
+      .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n' + SURF_BODY);
+  };
+  mat.customProgramCacheKey = () => 'aura-surface';
+}
+
 const holder = new THREE.Group();      // 회전 / 스케일 / 둥실
 const normRoot = new THREE.Group();    // 반지름 1로 정규화
 holder.add(normRoot);
 scene.add(holder);
 const objMat = new THREE.MeshStandardMaterial();
+patchSurface(objMat);
 let model = null, modelSource = null, modelBottom = -1;
 let modelMeshes = [], auraMeshes = [], auraMats = [];
 let particles = null;
@@ -1151,7 +1243,7 @@ function buildParticles() {
 
 // ═════════════════════════ 프레임 업데이트 ═════════════════════════
 const pending = { object: true, aura: false, particles: true };
-const ph = { flow: 0, swirl: 0, pulse: 0, flicker: 0, hue: 0, mapScroll: 0, partPhase: 0, partSwirl: 0, ring: 0, bob: 0 };
+const ph = { flow: 0, swirl: 0, pulse: 0, flicker: 0, hue: 0, mapScroll: 0, partPhase: 0, partSwirl: 0, ring: 0, bob: 0, surf: 0, fillScroll: 0 };
 const cA = new THREE.Color(), cB = new THREE.Color();
 const WRAP = { clamp: 0, repeat: 1, mirror: 2 };
 function rampColor(key, t, target) {
@@ -1192,6 +1284,21 @@ function update(dt) {
       for (const mat of [m.material].flat()) { mat.visible = O.visible; mat.wireframe = O.wireframe; }
     }
   }
+
+  // 오브젝트 표면 (불러온 모델은 “재질 덮어쓰기”를 켜면 적용)
+  const F = P.fill, Sh = P.shimmer;
+  ph.surf += dt; ph.fillScroll += dt * F.scroll;
+  holder.updateMatrixWorld();
+  SU.uHolderInv.value.copy(holder.matrixWorld).invert();
+  SU.uFillRamp.value = F.gradient === 'aura' ? rampTex.aura : rampTex.fill;
+  SU.uFOn.value = F.mode === 'gradient' ? 1 : 0; SU.uFMap.value = SURF_MAP[F.map] ?? 0; SU.uFAng.value = F.angle * Math.PI / 180;
+  SU.uFScale.value = F.scale; SU.uFOff.value = F.offset + ph.fillScroll; SU.uFWrap.value = { clamp: 0, repeat: 1, mirror: 2 }[F.wrap] ?? 0;
+  SU.uFRev.value = F.reverse ? 1 : 0; SU.uFOpa.value = F.opacity; SU.uFBright.value = F.brightness; SU.uFEmis.value = F.emissive;
+  SU.uFHue.value = F.followHue ? 1 : 0; SU.uHueS.value = ph.hue * Math.PI * 2;
+  SU.uSWarp.value = Sh.warp; SU.uSScale.value = Sh.scale; SU.uSSpeed.value = Sh.speed; SU.uSFlow.value = Sh.flow; SU.uSSwirl.value = Sh.swirl;
+  SU.uSCaus.value = Sh.caustic; SU.uSCScale.value = Sh.causticScale; SU.uSCWidth.value = Sh.causticWidth;
+  SU.uSSheen.value = Sh.sheen; SU.uSSAng.value = Sh.sheenAngle * Math.PI / 180; SU.uSSSpd.value = Sh.sheenSpeed; SU.uSSW.value = Sh.sheenWidth;
+  SU.uSPulse.value = Sh.pulse; SU.uSTime.value = ph.surf; SU.uSPulseV.value = pulse;
 
   // 아우라
   AU.uHue.value = hueRad;
@@ -1258,6 +1365,7 @@ function update(dt) {
 }
 
 // ═════════════════════════ 설정 탭 UI ═════════════════════════
+const SURF_MAPS = [['depth', '프레넬 (정면→가장자리)'], ['linear', '선형 (각도)'], ['radial', '중심 거리'], ['conic', '둘레 (회전)'], ['noise', '노이즈 (대리석)']];
 const SHAPES = [['sphere', '구'], ['figure', '미니어처 피규어'], ['box', '큐브'], ['torusKnot', '토러스 매듭'], ['torus', '토러스'],
   ['ico', '정이십면체'], ['capsule', '캡슐'], ['cone', '원뿔'], ['custom', '불러온 모델 (GLB)']];
 const GRAD_SRC = [['aura', '아우라 그라데이션 공유'], ['own', '전용 그라데이션']];
@@ -1311,6 +1419,37 @@ const SCHEMA = [
     R_('map.offset', '오프셋', -1, 1, 0.01),
     T_('map.reverse', '그라데이션 뒤집기'),
     T_('map.useAlpha', '그라데이션 알파 사용'),
+  ] },
+  { title: '오브젝트 표면 · 채우기', items: [
+    S_('fill.mode', '채우기', [['gradient', '그라데이션'], ['solid', '단색 (오브젝트 색)']]),
+    B_('그라데이션', '표면 그라데이션 편집', () => { setTab('grad'); setSlot('fill'); }),
+    S_('fill.gradient', '그라데이션 출처', [['own', '전용 그라데이션'], ['aura', '아우라 그라데이션 공유']]),
+    S_('fill.map', '그라데이션 모양', SURF_MAPS),
+    R_('fill.angle', '선형 각도 (°)', -180, 180, 1),
+    R_('fill.opacity', '채우기 세기', 0, 1, 0.01),
+    R_('fill.emissive', '자체 발광', 0, 3, 0.01),
+    R_('fill.brightness', '밝기', 0, 3, 0.01),
+    R_('fill.scale', '반복 배율', 0.1, 8, 0.01),
+    S_('fill.wrap', '범위 밖 처리', [['clamp', '고정'], ['repeat', '반복'], ['mirror', '왕복']]),
+    R_('fill.scroll', '스크롤 속도', -2, 2, 0.01),
+    R_('fill.offset', '오프셋', -1, 1, 0.01),
+    T_('fill.reverse', '뒤집기'),
+    T_('fill.followHue', '아우라 색상 순환 따라가기'),
+  ] },
+  { title: '오브젝트 표면 · 일렁임', items: [
+    R_('shimmer.warp', '일렁임 세기', 0, 1, 0.01),
+    R_('shimmer.speed', '일렁임 속도', 0, 4, 0.01),
+    R_('shimmer.scale', '일렁임 크기 (주파수)', 0.3, 10, 0.05),
+    R_('shimmer.flow', '흐름 (위로)', -3, 3, 0.01),
+    R_('shimmer.swirl', '소용돌이', -4, 4, 0.01),
+    R_('shimmer.caustic', '물결 빛줄기', 0, 2, 0.01),
+    R_('shimmer.causticScale', '빛줄기 촘촘함', 0.5, 12, 0.05),
+    R_('shimmer.causticWidth', '빛줄기 두께', 0.005, 0.2, 0.001),
+    R_('shimmer.sheen', '광택 띠', 0, 2, 0.01),
+    R_('shimmer.sheenSpeed', '광택 속도', 0, 3, 0.01),
+    R_('shimmer.sheenAngle', '광택 각도 (°)', -180, 180, 1),
+    R_('shimmer.sheenWidth', '광택 폭', 0.02, 0.6, 0.005),
+    R_('shimmer.pulse', '밝기 맥동 (펄스 연동)', 0, 1, 0.01),
   ] },
   { title: '노이즈 · 흐름', items: [
     R_('noise.strength', '노이즈 강도', 0, 1, 0.01),
@@ -1488,6 +1627,7 @@ const SLOT_HINT = {
   aura: '막대 왼쪽(t=0) = 오브젝트 쪽, 오른쪽(t=1) = 아우라 바깥 (매핑은 아우라 설정 › 그라데이션 매핑)',
   particles: '막대 왼쪽 = 파티클이 생길 때, 오른쪽 = 사라질 때',
   ring: '반경 모드: 왼쪽 = 링 중심, 오른쪽 = 링 테두리 · 둘레 모드: 한 바퀴',
+  fill: '오브젝트 표면: 막대 왼쪽(t=0) → 오른쪽(t=1)이 아우라 설정 › 오브젝트 표면의 “그라데이션 모양”을 따라 칠해지고, 일렁임이 그 위에서 흔들어요',
 };
 let slotKey = 'aura';
 let editMode = 'point';           // 'point' | 'line'
@@ -2134,7 +2274,7 @@ function applyState(state) {
   if (!settings.object || !('shape' in settings.object)) P.object.shape = keepShape;
   if (P.object.shape === 'custom' && !modelSource) P.object.shape = 'sphere';
   const d = defaultGradients();
-  for (const k in d) G[k] = normSlot(state.gradients?.[k], state.gradients?.aura ? normSlot(state.gradients.aura, d[k]) : d[k]);
+  for (const k in d) G[k] = normSlot(state.gradients?.[k], k !== 'fill' && state.gradients?.aura ? normSlot(state.gradients.aura, d[k]) : d[k]);
   pending.object = pending.particles = true;
   sel = { type: null, id: null };
   compiled = null; fieldDirty = true; rampDirty = true;
@@ -2155,6 +2295,7 @@ function parseImported(obj) {
         aura: g,
         particles: obj.particles?.colorMode === 'custom' ? chainSlot([obj.particles.color, obj.particles.color]) : clone(g),
         ring: obj.ring?.useAura === false ? chainSlot([obj.ring.color, obj.ring.color]) : clone(g),
+        fill: fillGrad(obj.fill),
       },
     };
   }
@@ -2281,7 +2422,10 @@ function randomize() {
   Object.assign(s.pulse, { speed: rnd(0, 1.5), alpha: rnd(0, 0.4), size: rnd(0, 0.05), flicker: rnd(0, 0.3) });
   Object.assign(s.particles, { gradient: 'aura', count: Math.round(rnd(5, 50)) * 10, speed: rnd(0.2, 1.5), size: rnd(2, 8), taper: rnd(-0.3, 0.8), swirl: rnd(-1, 1) });
   Object.assign(s.ring, { gradient: 'aura', radius: rnd(1.1, 1.8), segments: pickOne([0, 0, 4, 8, 16]), rotSpeed: rnd(-1, 1), fill: rnd(0, 0.6) });
-  applyState({ settings: s, gradients: { aura: g, particles: clone(g), ring: clone(g) } });
+  Object.assign(s.fill, { gradient: 'own', map: pickOne(['depth', 'linear', 'radial', 'conic', 'noise']), emissive: rnd(0.1, 0.6) });
+  Object.assign(s.shimmer, { warp: rnd(0, 0.5), speed: rnd(0.1, 1), caustic: Math.random() < 0.3 ? rnd(0.2, 1) : 0, sheen: Math.random() < 0.3 ? rnd(0.3, 0.9) : 0 });
+  const fg = chainSlot(harmony(base, pickOne(['mono', 'analog']), 3).reverse(), [], 'ease');
+  applyState({ settings: s, gradients: { aura: g, particles: clone(g), ring: clone(g), fill: fg } });
   toast('랜덤 아우라');
 }
 
