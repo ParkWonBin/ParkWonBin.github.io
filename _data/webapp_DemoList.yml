@@ -1,4 +1,24 @@
 # Demo
+- title : Aura 3D Studio
+  url : /webapps/aura_3d_studio
+  url_app : /webapps/aura_3d_studio/app.html
+  repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/aura_3d_studio/index.html
+  thumbnail :
+  type : demo
+  desc : <strong> Aura 3D Studio </strong>
+    <br> 3D 오브젝트에 아우라를 씌우고 모든 수치를 조절하며
+    <br> 컬러피커 그라데이션 · 라이브러리 · GIF/JSON 내보내기를 지원하는 도구입니다.
+
+- title : Aura 2D Studio
+  url : /webapps/aura_2d_studio
+  url_app : /webapps/aura_2d_studio/app.html
+  repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/aura_2d_studio/index.html
+  thumbnail :
+  type : demo
+  desc : <strong> Aura 2D Studio </strong>
+    <br> 아이콘용 2D 아우라를 캔버스 하나로 수백 개 띄워 보고
+    <br> 컬러피커 그라데이션 · 라이브러리 · GIF/스프라이트시트로 내보내는 도구입니다.
+
 - title : String Art Threading
   url : /webapps/art_threading
   url_app : /webapps/art_threading/app.html

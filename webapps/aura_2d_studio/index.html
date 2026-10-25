@@ -1,0 +1,2526 @@
+---
+layout: dev_apps
+---
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aura 2D Studio</title>
+<style>
+  :root {
+    --bg: #07080c; --panel: rgba(14, 16, 23, .95); --panel-2: #1a1e29; --line: #252a37; --text: #e6e8ef;
+    --muted: #8a90a2; --accent: #ffb02e; --danger: #ff6b7d; --field: #0b0d13; --card: #11141c;
+    --panel-w: 384px;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); overflow: hidden;
+    font: 13px/1.4 system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif; }
+  code { font: 11.5px/1.3 ui-monospace, "Cascadia Mono", Consolas, monospace; color: var(--muted); }
+
+  /* 하나의 WebGL 캔버스가 화면 전체를 덮고, 각 셀 위치에 아우라를 찍는다 */
+  #gl { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 6; }   /* 패널 안 라이브러리 아이콘도 같은 캔버스로 그린다 */
+  #stage { position: fixed; top: 0; left: 0; bottom: 0; right: var(--panel-w); overflow-y: auto; padding: 16px 20px 40px; z-index: 1; }
+  body.panel-hidden #stage { right: 0; }
+  .hero { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+  #preview { width: min(400px, calc(100vw - var(--panel-w) - 60px)); aspect-ratio: 1; border-radius: 14px; background: var(--card); border: 1px solid var(--line); flex: none; cursor: default; }
+  .info { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 10px; }
+  .info h1 { font-size: 16px; margin: 0; }
+  .stats { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 12px; }
+  .stats span:nth-child(odd) { color: var(--muted); }
+  .note { color: var(--muted); font-size: 12px; line-height: 1.55; }
+  .note b { color: var(--text); font-weight: 500; }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin: 22px 0 12px; padding: 10px 12px;
+    background: rgba(255,255,255,.025); border: 1px solid var(--line); border-radius: 10px; }
+  .toolbar label { color: var(--muted); font-size: 12px; display: flex; gap: 6px; align-items: center; }
+  .toolbar input[type=range] { width: 110px; }
+  .toolbar code { min-width: 30px; }
+  #gallery { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(var(--cell), 1fr)); }
+  .gcell { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+  .gcell .cell { width: var(--cell); aspect-ratio: 1; border-radius: 10px; cursor: pointer; }
+  #gallery.cards .cell { background: var(--card); border: 1px solid var(--line); }
+  .gcell .cell:hover { outline: 1px solid var(--accent); }
+  .gcell .lbl { font-size: 11px; color: var(--muted); max-width: var(--cell); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #gallery.nolabel .lbl { display: none; }
+
+  #panel { position: fixed; top: 0; right: 0; bottom: 0; width: var(--panel-w); z-index: 5; display: flex; flex-direction: column;
+    background: var(--panel); border-left: 1px solid var(--line); transition: transform .2s; }
+  body.panel-hidden #panel { transform: translateX(100%); }
+  #panel header { padding: 12px 14px 10px; border-bottom: 1px solid var(--line); }
+  #panel h2 { font-size: 15px; margin: 0 0 9px; display: flex; justify-content: space-between; align-items: baseline; }
+  .btns { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  button { background: var(--panel-2); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 5px 9px;
+    font: inherit; font-size: 12px; cursor: pointer; }
+  button:hover { background: #232a3a; border-color: #39415a; }
+  button:disabled { opacity: .4; cursor: default; }
+  #sections { overflow-y: auto; flex: 1; padding-bottom: 28px; }
+  details { border-bottom: 1px solid var(--line); }
+  summary { cursor: pointer; padding: 9px 14px; font-weight: 600; font-size: 12.5px; list-style: none; user-select: none; display: flex; justify-content: space-between; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "▸"; color: var(--muted); transition: transform .15s; }
+  details[open] > summary::after { transform: rotate(90deg); }
+  .body { padding: 0 14px 10px; }
+  .row { display: grid; grid-template-columns: 104px 1fr 54px; align-items: center; gap: 8px; min-height: 28px; }
+  .row.wide { grid-template-columns: 104px 1fr; }
+  .row label { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row.changed > label { color: var(--text); }
+  input[type=range] { width: 100%; accent-color: var(--accent); margin: 0; }
+  input[type=number], input[type=text], select, textarea { background: var(--field); color: var(--text); border: 1px solid var(--line);
+    border-radius: 5px; font: inherit; font-size: 12px; padding: 3px 5px; width: 100%; }
+  input[type=number] { text-align: right; -moz-appearance: textfield; }
+  input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=checkbox] { accent-color: var(--accent); width: 15px; height: 15px; margin: 0; }
+  input[type=color] { width: 34px; height: 24px; border: 1px solid var(--line); border-radius: 5px; background: var(--field); padding: 1px; cursor: pointer; flex: none; }
+  .flex { display: flex; gap: 6px; align-items: center; }
+  .presets { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .presets button { display: flex; align-items: center; gap: 8px; text-align: left; }
+  .pdot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+
+  .tabs { display: flex; gap: 2px; margin-top: 10px; }
+  .tabs button { background: none; border: 0; border-bottom: 2px solid transparent; border-radius: 0; padding: 7px 10px; color: var(--muted); }
+  .tabs button.on { color: var(--text); border-bottom-color: var(--accent); }
+
+  .page { overflow-y: auto; flex: 1; padding-bottom: 28px; }
+  details { border-bottom: 1px solid var(--line); }
+  summary { cursor: pointer; padding: 9px 14px; font-weight: 600; font-size: 12.5px; list-style: none; user-select: none;
+    display: flex; justify-content: space-between; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "▸"; color: var(--muted); transition: transform .15s; }
+  details[open] > summary::after { transform: rotate(90deg); }
+  .body { padding: 0 14px 10px; }
+  .pad { padding: 10px 14px; }
+  .row { display: grid; grid-template-columns: 112px 1fr 56px; align-items: center; gap: 8px; min-height: 28px; }
+  .row.wide { grid-template-columns: 112px 1fr; }
+  .row label { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row.changed > label { color: var(--text); }
+  input[type=range] { width: 100%; accent-color: var(--accent); margin: 0; }
+  input[type=number], input[type=text], select, textarea { background: var(--field); color: var(--text); border: 1px solid var(--line);
+    border-radius: 5px; font: inherit; font-size: 12px; padding: 3px 5px; width: 100%; }
+  input[type=number] { text-align: right; -moz-appearance: textfield; }
+  input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=checkbox] { accent-color: var(--accent); width: 15px; height: 15px; margin: 0; }
+  input[type=color] { width: 34px; height: 26px; border: 1px solid var(--line); border-radius: 5px; background: var(--field); padding: 1px; cursor: pointer; flex: none; }
+  .muted { color: var(--muted); }
+  .small { font-size: 11.5px; }
+  .grow { flex: 1; }
+  h3 { font-size: 12px; margin: 14px 0 6px; color: var(--muted); font-weight: 600; letter-spacing: .02em; }
+
+  .seg { display: inline-flex; gap: 2px; padding: 2px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 7px; }
+  .seg button { background: none; border: 0; border-radius: 5px; padding: 4px 10px; color: var(--muted); }
+  .seg button:hover { color: var(--text); background: none; }
+  .seg button.on { background: var(--accent); color: #18120a; font-weight: 600; }
+  .seg.full { display: flex; }
+  .seg.full button { flex: 1; }
+
+  /* 그라데이션 편집기 */
+  #disc { display: block; width: 100%; max-width: 356px; aspect-ratio: 1; margin: 8px auto 0; touch-action: none; cursor: crosshair; }
+  #disc.line { cursor: cell; }
+  #bar { display: block; width: 100%; height: 46px; cursor: pointer; margin-top: 6px; }
+  .hover { display: flex; gap: 8px; align-items: center; min-height: 24px; }
+  .sw { display: inline-block; width: 18px; height: 18px; border-radius: 4px; border: 1px solid rgba(255,255,255,.25); flex: none; }
+  .card { background: rgba(255,255,255,.025); border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin-top: 8px; }
+  .sliders { display: grid; grid-template-columns: 52px 1fr 46px auto; gap: 6px 8px; align-items: center; margin-top: 8px; }
+  .sliders label { color: var(--muted); font-size: 12px; white-space: nowrap; }
+  .sliders code { text-align: right; }
+  input.track[type=range] { -webkit-appearance: none; appearance: none; height: 14px; border-radius: 7px; border: 1px solid rgba(255,255,255,.15); background: #444; }
+  input.track::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: transparent;
+    border: 3px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.6), inset 0 0 0 1px rgba(0,0,0,.6); }
+  input.track::-moz-range-thumb { width: 10px; height: 10px; border-radius: 50%; background: transparent; border: 3px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.6); }
+  input.track::-moz-range-track { background: transparent; }
+  .flex { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .bez { display: block; width: 100%; max-width: 240px; margin: 8px auto 0; touch-action: none; }
+  .bez .plot { fill: #12141b; stroke: var(--line); }
+  .bez .grid { stroke: #232733; }
+  .bez .diag { stroke: #3a3f4d; stroke-dasharray: 4 4; }
+  .bez .arm { stroke: #8a8a96; stroke-width: 1; }
+  .bez .curve { fill: none; stroke: var(--text); stroke-width: 2.5; }
+  .bez .handle { fill: var(--accent-2); stroke: #fff; stroke-width: 2; cursor: grab; }
+  .bez .hit { fill: transparent; cursor: grab; }
+  .edge-row { display: grid; grid-template-columns: 22px 1fr 82px; gap: 8px; align-items: center; padding: 4px 6px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; }
+  .edge-row:hover { background: rgba(255,255,255,.03); }
+  .edge-row.sel { border-color: var(--accent-2); }
+  .edge-row canvas { width: 100%; height: 14px; border-radius: 3px; display: block; }
+  .edge-row span { color: var(--muted); font-size: 11.5px; }
+  .notice { background: rgba(122,162,255,.08); border: 1px solid rgba(122,162,255,.35); border-radius: 8px; padding: 8px 10px; margin-top: 8px; font-size: 12px; }
+  ul.help { margin: 6px 0 0; padding-left: 18px; color: var(--muted); font-size: 11.5px; }
+  ul.help b { color: var(--text); font-weight: 500; }
+
+
+  .pstrip { width: 34px; height: 12px; border-radius: 3px; flex: none; }
+  .libgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .litem { background: rgba(255,255,255,.025); border: 1px solid var(--line); border-radius: 8px; padding: 6px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .litem .cell { width: 100%; aspect-ratio: 1; border-radius: 6px; background: var(--card); cursor: pointer; }
+  .litem .cell:hover { outline: 1px solid var(--accent); }
+  .litem .name { font-size: 11.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .litem .ops { display: flex; flex-wrap: wrap; gap: 3px; }
+  .litem .ops button { padding: 1px 5px; font-size: 10.5px; }
+  .empty { color: var(--muted); padding: 14px; border: 1px dashed var(--line); border-radius: 8px; text-align: center; font-size: 12px; }
+  #toggle { position: fixed; top: 12px; right: calc(var(--panel-w) + 12px); z-index: 7; }
+  body.panel-hidden #toggle { right: 12px; }
+  #toast { position: fixed; left: 50%; top: 14px; transform: translateX(-50%); background: #1d2230; border: 1px solid var(--line);
+    padding: 7px 14px; border-radius: 8px; font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 20; }
+  #toast.show { opacity: 1; }
+  dialog { background: #12151d; color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 14px; width: min(560px, 92vw); }
+  dialog::backdrop { background: rgba(0, 0, 0, .55); }
+  dialog h3 { margin: 0 0 8px; font-size: 14px; }
+  dialog textarea { height: 44vh; font: 11.5px/1.45 ui-monospace, Consolas, monospace; resize: vertical; }
+  dialog .btns { margin-top: 10px; justify-content: flex-end; }
+  .form { display: grid; grid-template-columns: 120px 1fr; gap: 8px; align-items: center; }
+  .form > label { color: var(--muted); font-size: 12px; }
+  .form .chk { color: var(--text); display: flex; gap: 6px; align-items: center; }
+  progress { width: 100%; margin-top: 10px; accent-color: var(--accent); }
+  .ginfo { color: var(--muted); font-size: 12px; margin-top: 6px; min-height: 1.4em; white-space: pre-wrap; }
+
+  @media (max-width: 760px) {
+    :root { --panel-w: 0px; }
+    #panel { top: auto; width: 100%; height: 55vh; border-left: 0; border-top: 1px solid var(--line); }
+    body.panel-hidden #panel { transform: translateY(100%); }
+    #stage { bottom: 55vh; }
+    body.panel-hidden #stage { bottom: 0; }
+    .tabs { display: flex; gap: 2px; margin-top: 10px; }
+  .tabs button { background: none; border: 0; border-bottom: 2px solid transparent; border-radius: 0; padding: 7px 10px; color: var(--muted); }
+  .tabs button.on { color: var(--text); border-bottom-color: var(--accent); }
+
+  .page { overflow-y: auto; flex: 1; padding-bottom: 28px; }
+  details { border-bottom: 1px solid var(--line); }
+  summary { cursor: pointer; padding: 9px 14px; font-weight: 600; font-size: 12.5px; list-style: none; user-select: none;
+    display: flex; justify-content: space-between; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "▸"; color: var(--muted); transition: transform .15s; }
+  details[open] > summary::after { transform: rotate(90deg); }
+  .body { padding: 0 14px 10px; }
+  .pad { padding: 10px 14px; }
+  .row { display: grid; grid-template-columns: 112px 1fr 56px; align-items: center; gap: 8px; min-height: 28px; }
+  .row.wide { grid-template-columns: 112px 1fr; }
+  .row label { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row.changed > label { color: var(--text); }
+  input[type=range] { width: 100%; accent-color: var(--accent); margin: 0; }
+  input[type=number], input[type=text], select, textarea { background: var(--field); color: var(--text); border: 1px solid var(--line);
+    border-radius: 5px; font: inherit; font-size: 12px; padding: 3px 5px; width: 100%; }
+  input[type=number] { text-align: right; -moz-appearance: textfield; }
+  input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=checkbox] { accent-color: var(--accent); width: 15px; height: 15px; margin: 0; }
+  input[type=color] { width: 34px; height: 26px; border: 1px solid var(--line); border-radius: 5px; background: var(--field); padding: 1px; cursor: pointer; flex: none; }
+  .muted { color: var(--muted); }
+  .small { font-size: 11.5px; }
+  .grow { flex: 1; }
+  h3 { font-size: 12px; margin: 14px 0 6px; color: var(--muted); font-weight: 600; letter-spacing: .02em; }
+
+  .seg { display: inline-flex; gap: 2px; padding: 2px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 7px; }
+  .seg button { background: none; border: 0; border-radius: 5px; padding: 4px 10px; color: var(--muted); }
+  .seg button:hover { color: var(--text); background: none; }
+  .seg button.on { background: var(--accent); color: #18120a; font-weight: 600; }
+  .seg.full { display: flex; }
+  .seg.full button { flex: 1; }
+
+  /* 그라데이션 편집기 */
+  #disc { display: block; width: 100%; max-width: 356px; aspect-ratio: 1; margin: 8px auto 0; touch-action: none; cursor: crosshair; }
+  #disc.line { cursor: cell; }
+  #bar { display: block; width: 100%; height: 46px; cursor: pointer; margin-top: 6px; }
+  .hover { display: flex; gap: 8px; align-items: center; min-height: 24px; }
+  .sw { display: inline-block; width: 18px; height: 18px; border-radius: 4px; border: 1px solid rgba(255,255,255,.25); flex: none; }
+  .card { background: rgba(255,255,255,.025); border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin-top: 8px; }
+  .sliders { display: grid; grid-template-columns: 52px 1fr 46px auto; gap: 6px 8px; align-items: center; margin-top: 8px; }
+  .sliders label { color: var(--muted); font-size: 12px; white-space: nowrap; }
+  .sliders code { text-align: right; }
+  input.track[type=range] { -webkit-appearance: none; appearance: none; height: 14px; border-radius: 7px; border: 1px solid rgba(255,255,255,.15); background: #444; }
+  input.track::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: transparent;
+    border: 3px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.6), inset 0 0 0 1px rgba(0,0,0,.6); }
+  input.track::-moz-range-thumb { width: 10px; height: 10px; border-radius: 50%; background: transparent; border: 3px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.6); }
+  input.track::-moz-range-track { background: transparent; }
+  .flex { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .bez { display: block; width: 100%; max-width: 240px; margin: 8px auto 0; touch-action: none; }
+  .bez .plot { fill: #12141b; stroke: var(--line); }
+  .bez .grid { stroke: #232733; }
+  .bez .diag { stroke: #3a3f4d; stroke-dasharray: 4 4; }
+  .bez .arm { stroke: #8a8a96; stroke-width: 1; }
+  .bez .curve { fill: none; stroke: var(--text); stroke-width: 2.5; }
+  .bez .handle { fill: var(--accent-2); stroke: #fff; stroke-width: 2; cursor: grab; }
+  .bez .hit { fill: transparent; cursor: grab; }
+  .edge-row { display: grid; grid-template-columns: 22px 1fr 82px; gap: 8px; align-items: center; padding: 4px 6px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; }
+  .edge-row:hover { background: rgba(255,255,255,.03); }
+  .edge-row.sel { border-color: var(--accent-2); }
+  .edge-row canvas { width: 100%; height: 14px; border-radius: 3px; display: block; }
+  .edge-row span { color: var(--muted); font-size: 11.5px; }
+  .notice { background: rgba(122,162,255,.08); border: 1px solid rgba(122,162,255,.35); border-radius: 8px; padding: 8px 10px; margin-top: 8px; font-size: 12px; }
+  ul.help { margin: 6px 0 0; padding-left: 18px; color: var(--muted); font-size: 11.5px; }
+  ul.help b { color: var(--text); font-weight: 500; }
+
+
+  .pstrip { width: 34px; height: 12px; border-radius: 3px; flex: none; }
+  .libgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .litem { background: rgba(255,255,255,.025); border: 1px solid var(--line); border-radius: 8px; padding: 6px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .litem .cell { width: 100%; aspect-ratio: 1; border-radius: 6px; background: var(--card); cursor: pointer; }
+  .litem .cell:hover { outline: 1px solid var(--accent); }
+  .litem .name { font-size: 11.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .litem .ops { display: flex; flex-wrap: wrap; gap: 3px; }
+  .litem .ops button { padding: 1px 5px; font-size: 10.5px; }
+  .empty { color: var(--muted); padding: 14px; border: 1px dashed var(--line); border-radius: 8px; text-align: center; font-size: 12px; }
+  #toggle { right: 12px; }
+    #preview { width: calc(100vw - 40px); max-width: 360px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<button id="toggle" title="패널 표시/숨기기 (H)">☰ 패널</button>
+<div id="toast"></div>
+
+<main id="stage">
+  <section class="hero">
+    <div id="preview" title="현재 편집 중인 아우라"></div>
+    <div class="info">
+      <h1>Aura 2D Studio</h1>
+      <div class="stats">
+        <span>FPS</span><span id="sFps">--</span>
+        <span>화면에 그린 아우라</span><span id="sDrawn">--</span>
+        <span>전체 아우라 수</span><span id="sTotal">--</span>
+        <span>GPU 제출 시간</span><span id="sMs">--</span>
+        <span>WebGL 컨텍스트</span><span>1개 (공유)</span>
+      </div>
+      <div class="note">
+        캔버스 <b>1개</b>가 화면 전체를 덮고, 아래 목록의 셀 위치마다 아우라를 하나씩 찍어요.
+        셀은 평범한 DOM이라 어떤 웹앱 목록에도 끼워 넣을 수 있고, 화면 밖 셀은 그리지 않아요.
+        런타임 비용 0이 필요하면 <b>스프라이트시트</b>(PNG + CSS)로 구워서 쓰세요.
+      </div>
+    </div>
+  </section>
+
+  <div class="toolbar">
+    <label>개수 <input type="range" id="gCount" min="0" max="500" step="1"><code id="gCountVal"></code></label>
+    <label>셀 크기 <input type="range" id="gSize" min="32" max="220" step="2"><code id="gSizeVal"></code></label>
+    <label>목록 내용 <select id="gMode" style="width:auto">
+      <option value="same">현재 설정 복제</option>
+      <option value="presets">프리셋 순환</option>
+      <option value="random">랜덤 생성</option>
+      <option value="library">내 라이브러리</option>
+    </select></label>
+    <label><input type="checkbox" id="gPhase"> 위상 어긋나게</label>
+    <label><input type="checkbox" id="gCards"> 카드 배경</label>
+    <label><input type="checkbox" id="gLabels"> 이름</label>
+    <label>해상도 <select id="gDpr" style="width:auto"><option value="1">1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
+  </div>
+  <div id="gallery"></div>
+</main>
+
+<aside id="panel">
+  <header>
+    <h2>Aura 2D Studio</h2>
+    <div class="btns">
+      <button id="btnReset">초기화</button>
+      <button id="btnRandom">랜덤</button>
+      <button id="btnJson">JSON</button>
+      <button id="btnPng">PNG</button>
+      <button id="btnGif">GIF</button>
+      <button id="btnSprite">스프라이트시트</button>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button data-tab="settings" class="on">아우라 설정</button>
+      <button data-tab="grad">그라데이션 · 컬러</button>
+      <button data-tab="lib">프리셋 · 라이브러리</button>
+    </nav>
+  </header>
+  <div class="page" data-page="settings" id="sections"></div>
+
+  <div class="page" data-page="grad" hidden>
+    <div class="pad">
+      <div class="seg full" id="slotSeg">
+        <button data-v="aura">아우라</button>
+        <button data-v="particles">불꽃 입자</button>
+        <button data-v="ring">궤도 링</button>
+      </div>
+      <div class="muted small" id="slotHint" style="margin-top:6px"></div>
+      <div class="notice" id="linkNotice" hidden>
+        이 효과는 지금 <b>아우라 그라데이션</b>을 같이 쓰고 있어요.
+        <div class="btns" style="margin-top:6px"><button id="btnUnlink">이 효과 전용 그라데이션 사용</button></div>
+      </div>
+      <div class="flex" style="margin-top:10px">
+        <div class="seg" id="modeSeg">
+          <button data-v="point">점 편집</button>
+          <button data-v="line">선 편집</button>
+        </div>
+        <span class="muted small">PC: Shift = 선 편집</span>
+      </div>
+      <canvas id="disc"></canvas>
+      <canvas id="bar"></canvas>
+      <div class="hover"><span class="sw" id="hSw"></span><code id="hHex">—</code><span class="muted small" id="hPos"></span></div>
+
+      <div class="card">
+        <div id="insEmpty" class="muted small">원판에서 점(색)이나 선(그라데이션 구간)을 선택하세요.</div>
+        <div id="insVertex" hidden>
+          <div class="flex">
+            <input type="color" id="vColor">
+            <input type="text" id="vHex" maxlength="7" spellcheck="false" style="width:86px">
+            <span class="grow"></span>
+            <div class="seg" id="pickSeg">
+              <button data-v="oklch" title="지각 밝기 기준 — 밝기 통일에 적합">OKLCH</button>
+              <button data-v="hsl">HSL</button>
+            </div>
+          </div>
+          <div class="sliders" id="pickSliders"></div>
+          <div class="sliders">
+            <label>알파 A</label><input type="range" id="vAlpha" min="0" max="1" step="0.01"><code id="vAlphaVal"></code>
+            <button class="mini" id="vAlphaAll" title="모든 점에 적용">전체</button>
+          </div>
+          <div class="muted small" style="margin-top:6px">전체: 이 값을 슬롯의 모든 점에 적용 (예: 밝기만 통일)</div>
+          <div class="flex" style="margin-top:6px"><span class="muted small" id="vInfo"></span><span class="grow"></span><button class="danger" id="vDel">점 삭제</button></div>
+        </div>
+        <div id="insEdge" hidden>
+          <div class="flex"><span class="sw" id="eA"></span><span class="muted">→</span><span class="sw" id="eB"></span><b id="eName"></b>
+            <span class="grow"></span><button class="danger" id="eDel">구간 삭제</button></div>
+          <svg class="bez" id="bezSvg" viewBox="-14 -14 228 228"></svg>
+          <div class="flex" style="margin-top:6px">
+            <select id="bezPreset" style="width:auto"></select>
+            <button id="bezReverse" title="같은 곡선을 거꾸로">곡선 뒤집기</button>
+            <button id="edgeFlip" title="구간 방향(시작↔끝) 바꾸기">방향 바꾸기</button>
+          </div>
+          <div style="margin-top:6px"><code id="bezCode"></code></div>
+        </div>
+      </div>
+
+      <h3>그라데이션 구간 <span id="edgeCount"></span></h3>
+      <div id="edgeEmpty" class="empty">구간이 없어요. 선 편집 모드에서 점을 차례로 눌러 이어 보세요.</div>
+      <div id="edgeList"></div>
+
+      <h3>팔레트 생성</h3>
+      <div class="row wide"><label>기준 색</label><div class="flex"><input type="color" id="hBase" value="#ff8a00"><select id="hType" style="flex:1">
+        <option value="mono">단색 (밝기 단계)</option><option value="analog" selected>유사색</option><option value="comp">보색</option>
+        <option value="split">분할 보색</option><option value="triad">삼각 배색</option><option value="tetrad">사각 배색</option><option value="fire">흑체 (온도)</option>
+      </select></div></div>
+      <div class="row"><label>색 개수</label><input type="range" id="hCount" min="2" max="8" step="1" value="4"><code id="hCountVal">4</code></div>
+      <div class="row wide"><label>바깥쪽 투명</label><input type="checkbox" id="hFade" checked></div>
+      <div class="row wide"><label>구간 곡선</label><select id="hBez"></select></div>
+      <div class="btns" style="margin-top:6px">
+        <button id="hMake">이 슬롯에 생성</button>
+        <button id="gReverse">순서 뒤집기</button>
+        <button id="gCss">CSS 복사</button>
+      </div>
+      <div class="btns" style="margin-top:6px">
+        <span class="muted small">다른 슬롯으로 복사</span>
+        <select id="gCopyTo" style="width:auto"><option value="aura">아우라</option><option value="particles">불꽃 입자</option><option value="ring">궤도 링</option></select>
+        <button id="gCopy">복사</button>
+      </div>
+
+      <h3>보간 설정</h3>
+      <div class="row wide"><label>보간 색공간</label><select id="gSpace"><option value="oklab">OKLab (지각 균일)</option><option value="srgb">sRGB</option></select></div>
+      <div class="row"><label>원판 경계 선명도</label><input type="range" id="gSpread" min="0.5" max="4" step="0.1"><code id="gSpreadVal"></code></div>
+      <div class="row wide"><label>구간 길이</label><select id="gEqual"><option value="0">원판 위 길이에 비례</option><option value="1">균등 분할</option></select></div>
+      <div class="row wide"><label>점·선 가이드</label><input type="checkbox" id="gGuides"></div>
+
+      <h3>조작법</h3>
+      <ul class="help">
+        <li><b>점 편집</b> — 빈 곳 클릭: 그 위치 색으로 점 추가 · 드래그: 이동 · 선 클릭: 구간 선택 · 더블클릭: 색 선택</li>
+        <li><b>선 편집</b> — 점을 차례로 클릭: 구간 연결/해제 · 빈 곳 클릭: 새 점 추가 후 연결</li>
+        <li><b>Delete</b>: 선택 삭제 · <b>Esc</b>: 선택 해제</li>
+        <li>아래 막대 = 효과에 실제로 들어가는 그라데이션 (구간을 만든 순서대로 펼침). 체크무늬는 알파</li>
+        <li>아우라: 막대 왼쪽(t=0)이 아이콘 쪽, 오른쪽(t=1)이 바깥 — <b>아우라 설정 › 그라데이션 매핑</b>에서 높이·노이즈·각도로 바꿀 수 있어요</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="page" data-page="lib" id="libPage" hidden>
+    <div class="pad">
+      <h3 style="margin-top:2px">기본 프리셋</h3>
+      <div id="presetGrid"></div>
+      <h3>내 라이브러리 <span id="libCount" class="muted"></span></h3>
+      <div class="flex">
+        <input type="text" id="libName" placeholder="이름 (예: 전설 무기 아이콘)" style="flex:1">
+        <button id="libSave">현재 아우라 저장</button>
+      </div>
+      <div class="btns" style="margin-top:6px">
+        <button id="libExport">라이브러리 내보내기</button>
+        <button id="libImport">라이브러리 가져오기</button>
+        <button id="libShow">왼쪽 목록에 펼치기</button>
+      </div>
+      <div class="muted small" style="margin:6px 0 10px">아래 아이콘은 모두 같은 캔버스 하나로 실시간 렌더링돼요. 클릭하면 편집기로 불러와요.</div>
+      <div id="libList"></div>
+    </div>
+  </div>
+</aside>
+
+<dialog id="jsonDlg">
+  <h3>설정 JSON</h3>
+  <textarea id="jsonText" spellcheck="false"></textarea>
+  <div class="btns">
+    <button id="jsonCopy">복사</button>
+    <button id="jsonDownload">파일로 저장</button>
+    <button id="jsonOpen">파일 열기…</button>
+    <button id="jsonApply">붙여넣은 값 적용</button>
+    <button id="jsonClose">닫기</button>
+  </div>
+</dialog>
+
+<dialog id="expDlg">
+  <h3 id="expTitle">내보내기</h3>
+  <div class="form">
+    <label>크기 (px, 정사각)</label><input type="number" id="eSize" value="256" min="16" max="1024" step="8">
+    <label>길이 (초)</label><input type="number" id="eDur" value="2" min="0.2" max="20" step="0.1">
+    <label>FPS</label><select id="eFps"><option>10</option><option>12</option><option>15</option><option selected>20</option><option>24</option><option>30</option></select>
+    <label>매끄러운 루프</label><label class="chk"><input type="checkbox" id="eLoop" checked> 끝과 처음을 크로스페이드</label>
+    <label>배경</label><div class="flex"><select id="eBg" style="flex:1"><option value="transparent">투명</option><option value="color">색 채우기</option></select><input type="color" id="eBgColor" value="#0b0d12"></div>
+    <label id="eColorsLbl">GIF 색상 수</label><select id="eColors"><option>256</option><option>128</option><option>64</option></select>
+  </div>
+  <div class="btns" style="justify-content:space-between">
+    <button id="eFitPulse" title="펄스 한 주기 길이로 맞춤">펄스 주기에 맞추기</button>
+    <span><button id="eStart">생성</button> <button id="eClose">닫기</button></span>
+  </div>
+  <progress id="eProg" value="0" max="1" hidden></progress>
+  <div id="eInfo" class="ginfo"></div>
+  <div id="eCssWrap" hidden>
+    <textarea id="eCss" spellcheck="false" style="height:120px;margin-top:8px"></textarea>
+    <div class="btns"><button id="eCssCopy">CSS 복사</button></div>
+  </div>
+</dialog>
+
+<input type="file" id="imgFile" accept="image/*" hidden>
+<input type="file" id="jsonFile" accept=".json,application/json" hidden>
+<input type="file" id="libFile" accept=".json,application/json" hidden>
+
+<script type="module">
+import { GIFEncoder, quantize, applyPalette } from 'https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.esm.js';
+
+const $ = (s, root = document) => root.querySelector(s);
+const TAU = Math.PI * 2;
+const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+const clone = (o) => JSON.parse(JSON.stringify(o));
+function deepMerge(target, src) {
+  for (const k in src) {
+    if (!(k in target)) continue;
+    if (src[k] && typeof src[k] === 'object' && !Array.isArray(src[k]) && typeof target[k] === 'object') deepMerge(target[k], src[k]);
+    else target[k] = src[k];
+  }
+  return target;
+}
+
+const uid = () => Math.random().toString(36).slice(2, 9);
+const round3 = (v) => Math.round(v * 1000) / 1000;
+
+// ═════════════════════════ 색 공간 (Color Picker Lab 포팅) ═════════════════════════
+function hexToRgb(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255];
+}
+function rgbToHex(r, g, b) {
+  const c = (v) => Math.round(clamp01(v) * 255).toString(16).padStart(2, '0');
+  return '#' + c(r) + c(g) + c(b);
+}
+function hslToHex(h, s, l) {
+  const f = (n) => {
+    const k = (n + h / 30) % 12;
+    return l - s * Math.min(l, 1 - l) * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+  };
+  return rgbToHex(f(0), f(8), f(4));
+}
+function hexToHsl(hex) {
+  const [r, g, b] = hexToRgb(hex);
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min, l = (max + min) / 2;
+  let h = 0, s = 0;
+  if (d > 1e-9) {
+    s = d / (1 - Math.abs(2 * l - 1));
+    h = 60 * (max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4);
+    if (h < 0) h += 360;
+  }
+  return [h, s, l];
+}
+const toLinear = (v) => (v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+const GAMMA_N = 8192;
+const GAMMA = new Float32Array(GAMMA_N + 1);
+for (let i = 0; i <= GAMMA_N; i++) {
+  const v = i / GAMMA_N;
+  GAMMA[i] = v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055;
+}
+const toGamma = (v) => (v <= 0 ? 0 : v >= 1 ? 1 : GAMMA[(v * GAMMA_N + 0.5) | 0]);
+function srgbToOklab([r, g, b]) {
+  r = toLinear(r); g = toLinear(g); b = toLinear(b);
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [
+    0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s,
+  ];
+}
+function oklabToLinear(L, a, b, out) {
+  let l = L + 0.3963377774 * a + 0.2158037573 * b;
+  let m = L - 0.1055613458 * a - 0.0638541728 * b;
+  let s = L - 0.0894841775 * a - 1.2914855480 * b;
+  l = l * l * l; m = m * m * m; s = s * s * s;
+  out[0] = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+  out[1] = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+  out[2] = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+  return out;
+}
+// OKLCH는 [hue°, chroma, lightness] — HSL과 같은 순서라 슬라이더를 공유한다
+function hexToOklch(hex) {
+  const [L, a, b] = srgbToOklab(hexToRgb(hex));
+  const h = Math.atan2(b, a) * 180 / Math.PI;
+  return [h < 0 ? h + 360 : h, Math.hypot(a, b), L];
+}
+// sRGB 범위를 벗어나면 밝기·색상은 유지하고 채도만 줄인다
+function oklchToHex(h, c, l) {
+  const hr = h * Math.PI / 180, ca = Math.cos(hr), sa = Math.sin(hr), rgb = [0, 0, 0];
+  const fits = (C) => {
+    oklabToLinear(l, C * ca, C * sa, rgb);
+    return rgb.every((v) => v >= -1e-4 && v <= 1 + 1e-4);
+  };
+  if (!fits(c)) {
+    let lo = 0, hi = c;
+    for (let i = 0; i < 20; i++) {
+      const mid = (lo + hi) / 2;
+      if (fits(mid)) lo = mid; else hi = mid;
+    }
+    oklabToLinear(l, lo * ca, lo * sa, rgb);
+  }
+  return rgbToHex(toGamma(rgb[0]), toGamma(rgb[1]), toGamma(rgb[2]));
+}
+const pct = (v) => (v * 100).toFixed(0) + '%';
+const PICK_MODELS = {
+  oklch: {
+    from: hexToOklch, to: oklchToHex,
+    comps: [
+      { label: '색상 H', min: 0, max: 360, step: 1, fmt: (v) => v.toFixed(0) + '°' },
+      { label: '채도 C', min: 0, max: 0.37, step: 0.001, fmt: (v) => v.toFixed(3) },
+      { label: '밝기 L', min: 0, max: 1, step: 0.001, fmt: (v) => (v * 100).toFixed(1) },
+    ],
+  },
+  hsl: {
+    from: hexToHsl, to: hslToHex,
+    comps: [
+      { label: '색상 H', min: 0, max: 360, step: 1, fmt: (v) => v.toFixed(0) + '°' },
+      { label: '채도 S', min: 0, max: 1, step: 0.001, fmt: pct },
+      { label: '밝기 L', min: 0, max: 1, step: 0.001, fmt: pct },
+    ],
+  },
+};
+const toSpace = (hex, space) => (space === 'oklab' ? srgbToOklab(hexToRgb(hex)) : hexToRgb(hex));
+function fromSpace(c0, c1, c2, space, out) {
+  if (space !== 'oklab') { out[0] = clamp01(c0); out[1] = clamp01(c1); out[2] = clamp01(c2); return out; }
+  let l = c0 + 0.3963377774 * c1 + 0.2158037573 * c2;
+  let m = c0 - 0.1055613458 * c1 - 0.0638541728 * c2;
+  let s = c0 - 0.0894841775 * c1 - 1.2914855480 * c2;
+  l = l * l * l; m = m * m * m; s = s * s * s;
+  out[0] = toGamma(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s);
+  out[1] = toGamma(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s);
+  out[2] = toGamma(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s);
+  return out;
+}
+
+// ═════════════════════════ 그라데이션 모델 ═════════════════════════
+// 슬롯 = Color Picker Lab의 상태 { vertices(점=색), edges(구간, 베지어 easing) } + 점별 알파
+const LUT_N = 256;
+const EASES = {
+  linear: [0, 0, 1, 1],
+  ease: [0.25, 0.1, 0.25, 1],
+  'ease-in': [0.42, 0, 1, 1],
+  'ease-out': [0, 0, 0.58, 1],
+  'ease-in-out': [0.42, 0, 0.58, 1],
+  snap: [0.9, 0, 0.1, 1],
+  hold: [1, 0, 1, 0],
+};
+function makeEase([x1, y1, x2, y2]) {
+  const bx = (t) => t * (3 * (1 - t) * (1 - t) * x1 + 3 * (1 - t) * t * x2 + t * t);
+  const by = (t) => t * (3 * (1 - t) * (1 - t) * y1 + 3 * (1 - t) * t * y2 + t * t);
+  return (x) => {
+    let lo = 0, hi = 1;
+    for (let i = 0; i < 26; i++) {
+      const mid = (lo + hi) / 2;
+      if (bx(mid) < x) lo = mid; else hi = mid;
+    }
+    return by((lo + hi) / 2);
+  };
+}
+
+// 색 목록을 원판 위 호(arc)에 늘어놓고 차례로 잇는다
+function chainSlot(colors, alphas = [], bez = 'linear') {
+  const n = colors.length;
+  const vertices = colors.map((color, i) => {
+    const a = (n > 1 ? -130 + 260 * i / (n - 1) : 0) * Math.PI / 180;
+    return { id: uid(), x: round3(Math.sin(a) * 0.62), y: round3(-Math.cos(a) * 0.62 + 0.12), color, alpha: alphas[i] ?? 1 };
+  });
+  const edges = [];
+  for (let i = 1; i < n; i++) edges.push({ id: uid(), a: vertices[i - 1].id, b: vertices[i].id, bez: [...EASES[bez]] });
+  return { space: 'oklab', spread: 2, equal: false, guides: true, vertices, edges };
+}
+function normSlot(s, fallback) {
+  if (!s || !Array.isArray(s.vertices) || !Array.isArray(s.edges)) return clone(fallback);
+  const out = { space: s.space === 'srgb' ? 'srgb' : 'oklab', spread: +s.spread || 2, equal: !!s.equal, guides: s.guides !== false };
+  out.vertices = s.vertices
+    .filter((v) => v && /^#[0-9a-f]{6}$/i.test(v.color))
+    .map((v) => ({ id: String(v.id ?? uid()), x: +v.x || 0, y: +v.y || 0, color: v.color.toLowerCase(), alpha: v.alpha == null ? 1 : clamp01(+v.alpha) }));
+  const ids = new Set(out.vertices.map((v) => v.id));
+  out.edges = s.edges
+    .filter((e) => e && ids.has(String(e.a)) && ids.has(String(e.b)))
+    .map((e) => ({ id: String(e.id ?? uid()), a: String(e.a), b: String(e.b), bez: Array.isArray(e.bez) && e.bez.length === 4 ? e.bez.map(Number) : [...EASES.linear] }));
+  return out;
+}
+
+function compileSlot(slot) {
+  const byId = new Map(slot.vertices.map((v) => [v.id, v]));
+  const used = new Set(), edges = [];
+  for (const ed of slot.edges) {
+    const A = byId.get(ed.a), B = byId.get(ed.b);
+    if (!A || !B) continue;
+    used.add(A.id); used.add(B.id);
+    const ex = B.x - A.x, ey = B.y - A.y, l2 = ex * ex + ey * ey;
+    edges.push({ id: ed.id, ax: A.x, ay: A.y, ex, ey, inv: l2 > 1e-12 ? 1 / l2 : 0, len: Math.sqrt(l2), lut: buildEdgeLut(A, B, ed.bez, slot.space) });
+  }
+  const iso = slot.vertices.filter((v) => !used.has(v.id)).map((v) => ({ x: v.x, y: v.y, c: toSpace(v.color, slot.space) }));
+  return { edges, iso, any: edges.length + iso.length > 0, space: slot.space, spread: slot.spread, equal: slot.equal };
+}
+function buildEdgeLut(A, B, bez, space) {
+  const a = toSpace(A.color, space), b = toSpace(B.color, space), ease = makeEase(bez);
+  const aa = A.alpha ?? 1, ba = B.alpha ?? 1;
+  const lut = new Float32Array(LUT_N * 4);
+  for (let i = 0; i < LUT_N; i++) {
+    const t = ease(i / (LUT_N - 1));
+    for (let k = 0; k < 3; k++) lut[i * 4 + k] = a[k] + (b[k] - a[k]) * t;
+    lut[i * 4 + 3] = aa + (ba - aa) * t;
+  }
+  return lut;
+}
+// 원판 색: 모든 구간의 가장 가까운 점 + 연결 안 된 점을 역거리 가중으로 섞는다
+function sampleField(m, nx, ny, out) {
+  const p = m.spread;
+  let sw = 0, c0 = 0, c1 = 0, c2 = 0;
+  for (const e of m.edges) {
+    let s = ((nx - e.ax) * e.ex + (ny - e.ay) * e.ey) * e.inv;
+    s = s < 0 ? 0 : s > 1 ? 1 : s;
+    const dx = e.ax + e.ex * s - nx, dy = e.ay + e.ey * s - ny;
+    const w = 1 / Math.pow(dx * dx + dy * dy + 1e-7, p);
+    const i = ((s * (LUT_N - 1) + 0.5) | 0) * 4;
+    sw += w; c0 += w * e.lut[i]; c1 += w * e.lut[i + 1]; c2 += w * e.lut[i + 2];
+  }
+  for (const v of m.iso) {
+    const dx = v.x - nx, dy = v.y - ny;
+    const w = 1 / Math.pow(dx * dx + dy * dy + 1e-7, p);
+    sw += w; c0 += w * v.c[0]; c1 += w * v.c[1]; c2 += w * v.c[2];
+  }
+  if (!sw) return null;
+  return fromSpace(c0 / sw, c1 / sw, c2 / sw, m.space, out);
+}
+// 구간을 만든 순서대로 이어 붙인 막대 = 효과에 들어가는 그라데이션
+function barSegments(m) {
+  const total = m.edges.reduce((sum, e) => sum + e.len, 0);
+  const equal = m.equal || total < 1e-9;
+  let at = 0;
+  return m.edges.map((e) => {
+    const w = equal ? 1 / m.edges.length : e.len / total;
+    const seg = { e, start: at, end: at + w };
+    at += w;
+    return seg;
+  });
+}
+function sampleBar(segs, u, space, out) {
+  let seg = segs[segs.length - 1];
+  for (const sg of segs) if (u < sg.end) { seg = sg; break; }
+  const span = seg.end - seg.start;
+  const s = span > 0 ? clamp01((u - seg.start) / span) : 0;
+  const i = ((s * (LUT_N - 1) + 0.5) | 0) * 4;
+  fromSpace(seg.e.lut[i], seg.e.lut[i + 1], seg.e.lut[i + 2], space, out);
+  out[3] = seg.e.lut[i + 3];
+  return seg;
+}
+function rampBytes(slot, target) {
+  const m = compileSlot(slot), out = [0, 0, 0, 1];
+  if (!m.edges.length) {
+    const v = slot.vertices[0];
+    const rgb = v ? hexToRgb(v.color) : [1, 1, 1], a = v ? v.alpha ?? 1 : 1;
+    for (let i = 0; i < LUT_N; i++) target.set([rgb[0] * 255, rgb[1] * 255, rgb[2] * 255, a * 255], i * 4);
+    return target;
+  }
+  const segs = barSegments(m);
+  for (let i = 0; i < LUT_N; i++) {
+    sampleBar(segs, i / (LUT_N - 1), m.space, out);
+    target[i * 4] = out[0] * 255; target[i * 4 + 1] = out[1] * 255; target[i * 4 + 2] = out[2] * 255; target[i * 4 + 3] = clamp01(out[3]) * 255;
+  }
+  return target;
+}
+function slotCss(slot, withAlpha = true) {
+  const bytes = rampBytes(slot, new Uint8Array(LUT_N * 4)), stops = [];
+  for (let i = 0; i <= 16; i++) {
+    const k = Math.round(i / 16 * (LUT_N - 1)) * 4;
+    const a = withAlpha ? (bytes[k + 3] / 255).toFixed(2) : 1;
+    stops.push(`rgba(${bytes[k]},${bytes[k + 1]},${bytes[k + 2]},${a}) ${(i / 16 * 100).toFixed(1)}%`);
+  }
+  return `linear-gradient(90deg, ${stops.join(', ')})`;
+}
+
+// 팔레트(하모니) 생성 — OKLCH 기준
+function harmony(baseHex, type, n) {
+  const [h, c, l] = hexToOklch(baseHex);
+  const C = Math.max(c, 0.08);
+  const list = [];
+  const lerp = (a, b, t) => a + (b - a) * t;
+  for (let i = 0; i < n; i++) {
+    const t = n > 1 ? i / (n - 1) : 0;
+    let hh = h, cc = C, ll = l;
+    switch (type) {
+      case 'mono': ll = lerp(Math.min(0.97, l + 0.3), Math.max(0.25, l - 0.3), t); cc = C * (0.5 + 0.5 * Math.sin(Math.PI * t)); break;
+      case 'analog': hh = h + lerp(-35, 35, t); ll = lerp(Math.min(0.95, l + 0.2), Math.max(0.3, l - 0.15), t); break;
+      case 'comp': hh = t < 0.5 ? h : h + 180; ll = lerp(Math.min(0.95, l + 0.2), Math.max(0.35, l - 0.1), t); break;
+      case 'split': hh = h + [0, 150, 210][Math.min(2, Math.round(t * 2))]; ll = lerp(Math.min(0.95, l + 0.15), l, t); break;
+      case 'triad': hh = h + 120 * Math.round(t * 2); ll = lerp(Math.min(0.95, l + 0.15), l, t); break;
+      case 'tetrad': hh = h + 90 * Math.round(t * 3); ll = lerp(Math.min(0.95, l + 0.15), l, t); break;
+      case 'fire': hh = lerp(100, 25, t); ll = lerp(0.98, 0.4, t); cc = lerp(0.05, 0.2, Math.min(1, t * 1.6)); break;
+    }
+    list.push(oklchToHex(((hh % 360) + 360) % 360, cc, clamp01(ll)));
+  }
+  return list;
+}
+
+// ═════════════════════════ 파라미터 ═════════════════════════
+const DEFAULTS = {
+  icon: { shape: 'circle', image: '', size: 0.4, visible: true, color: '#3a4052', tint: 0, shade: 0.6, rotate: 0, spin: 0 },
+  aura: { enabled: true, size: 0.42, intensity: 1.8, falloff: 1.4, opacity: 1, up: 0, core: 0.2, hueSpeed: 0 },
+  noise: { strength: 0.5, displace: 0.06, scale: 3, flow: 0.8, swirl: 0.2, sharpness: 1.5 },
+  rays: { count: 0, length: 0.5, strength: 0.6, sharpness: 6, speed: 0.3 },
+  sparks: { gradient: 'aura', density: 0, size: 0.14, speed: 0.6, strength: 1 },
+  ring: { gradient: 'aura', strength: 0, radius: 0.82, width: 0.02, dashes: 0, speed: 0.3, colorAngle: false },
+  rim: { strength: 0.6, width: 0.06 },
+  pulse: { alpha: 0.15, size: 0.05, speed: 0.8, flicker: 0.1, flickerSpeed: 8 },
+  map: { distance: 1, angle: 0, noise: 0, height: 0, scale: 1, wrap: 'clamp', scroll: 0, offset: 0, reverse: false, useAlpha: true },
+};
+const VIEW_DEFAULTS = { count: 60, size: 96, mode: 'presets', phase: true, cards: true, labels: true, dpr: '1.5' };
+
+const PRESETS = {
+  '성스러운 빛': { aura: { colorInner: '#ffffff', colorMid: '#ffe27a', colorOuter: '#ff9d00' }, rays: { count: 12, length: 0.45, strength: 0.5 }, sparks: { density: 4 } },
+  '화염': {
+    aura: { colorInner: '#fff3b0', colorMid: '#ff8c1a', colorOuter: '#d91a00', size: 0.5, up: 0.9, falloff: 1.3, core: 0.2 },
+    noise: { strength: 0.9, displace: 0.14, scale: 3.5, flow: 1.6, swirl: 0, sharpness: 2.5 },
+    sparks: { density: 6, speed: 1.2, size: 0.1 }, pulse: { alpha: 0, size: 0, flicker: 0.25, flickerSpeed: 12 },
+  },
+  '냉기': {
+    aura: { colorInner: '#ffffff', colorMid: '#9be8ff', colorOuter: '#1f6bff', size: 0.36 },
+    noise: { strength: 0.4, swirl: 0.4, flow: -0.1, scale: 4, sharpness: 3 },
+    rays: { count: 6, sharpness: 14, length: 0.5, speed: 0.1 }, ring: { strength: 0.8, dashes: 6, radius: 0.85 },
+  },
+  '독': {
+    aura: { colorInner: '#f0ffa0', colorMid: '#7dff3a', colorOuter: '#0c8a2a', size: 0.45 },
+    noise: { strength: 0.8, scale: 2.5, flow: 0.5, displace: 0.12 }, sparks: { density: 5, speed: 0.4, size: 0.2 }, pulse: { alpha: 0.3, speed: 0.6 },
+  },
+  '공허': {
+    aura: { colorInner: '#f0d9ff', colorMid: '#9b4dff', colorOuter: '#2a0066', size: 0.48, intensity: 1.7 },
+    noise: { strength: 0.85, swirl: 1.2, flow: -0.5, displace: 0.1 }, ring: { strength: 0.9, dashes: 12, speed: -0.4, radius: 0.88 },
+  },
+  '선택 하이라이트': {
+    aura: { colorInner: '#e6fdff', colorMid: '#5ce1ff', colorOuter: '#00a2ff', size: 0.12, falloff: 2.2, core: 0.2 },
+    noise: { strength: 0, displace: 0 }, rim: { strength: 1, width: 0.05 }, pulse: { alpha: 0.35, speed: 1.2, size: 0.15, flicker: 0 },
+  },
+  '전기': {
+    aura: { colorInner: '#ffffff', colorMid: '#a8c4ff', colorOuter: '#4d4dff', size: 0.4 },
+    noise: { strength: 1, scale: 6, flow: 3, swirl: 2, sharpness: 6, displace: 0.05 },
+    rays: { count: 16, sharpness: 18, speed: 2, strength: 0.9, length: 0.6 }, pulse: { alpha: 0, size: 0, flicker: 0.6, flickerSpeed: 22 },
+  },
+  '치유': {
+    aura: { colorInner: '#ffffff', colorMid: '#b6ffd0', colorOuter: '#1fd47a', size: 0.4 },
+    noise: { strength: 0.3 }, sparks: { density: 4, speed: 0.5, size: 0.2 }, pulse: { alpha: 0.45, size: 0.08, speed: 0.5, flicker: 0 },
+  },
+  '전설 등급': {
+    aura: { colorInner: '#fffbe6', colorMid: '#ffd24d', colorOuter: '#ff7a00', size: 0.38 },
+    rays: { count: 8, speed: 0.15, length: 0.8, strength: 0.8, sharpness: 8 }, ring: { strength: 0.6, radius: 0.86 }, sparks: { density: 3 }, rim: { strength: 0.9 },
+  },
+  '희귀 등급': {
+    aura: { colorInner: '#e0f0ff', colorMid: '#5aa9ff', colorOuter: '#2c4dff', size: 0.3 },
+    noise: { strength: 0.3 }, rim: { strength: 0.6 },
+  },
+  '무지개': {
+    aura: { colorInner: '#ff4d4d', colorMid: '#4dff88', colorOuter: '#4d7cff', hueSpeed: 0.2, size: 0.42 },
+    map: { distance: 0.3, angle: 0.7, scroll: 0.1, wrap: 'mirror' }, ring: { strength: 0.6, colorAngle: true, dashes: 16 },
+  },
+};
+const presetSettings = (name) => deepMerge(clone(DEFAULTS), PRESETS[name]);
+
+// 2D 단독판과 같은 프리셋 — 색 2~3개를 그라데이션 슬롯(점·구간)으로 바꿔 쓴다
+const BASE_COLORS = { colorInner: '#fff4c2', useMid: true, colorMid: '#ffb52e', colorOuter: '#ff5a00' };
+function colorsGrad(a = {}) {
+  const c = { ...BASE_COLORS, ...a };
+  return chainSlot(c.useMid === false ? [c.colorInner, c.colorOuter] : [c.colorInner, c.colorMid, c.colorOuter], [], 'ease');
+}
+const gradSet = (g) => ({ aura: g, particles: clone(g), ring: clone(g) });
+const defaultGradients = () => gradSet(colorsGrad());
+const presetState = (name) => ({ settings: presetSettings(name), gradients: gradSet(colorsGrad(PRESETS[name].aura)) });
+
+const STORE_KEY = 'aura2dStudio.v1', VIEW_KEY = 'aura2dStudio.view.v1', LIB_KEY = 'aura2dStudio.library.v1';
+let P = clone(DEFAULTS);
+let G = defaultGradients();
+let VIEW = clone(VIEW_DEFAULTS);
+try {
+  const s = JSON.parse(localStorage.getItem(STORE_KEY));
+  if (s && s.settings) {
+    deepMerge(P, s.settings);
+    const d = defaultGradients();
+    for (const k in d) G[k] = normSlot(s.gradients?.[k], d[k]);
+  }
+} catch (e) {}
+try { const s = JSON.parse(localStorage.getItem(VIEW_KEY)); if (s) deepMerge(VIEW, s); } catch (e) {}
+P.icon.shape = P.icon.shape === 'image' && P.icon.image ? 'image' : 'circle';   // 시작 도형은 항상 원 (이미지를 올렸으면 유지)
+let Pver = 1;   // 설정·그라데이션이 바뀔 때마다 증가 → 복제 셀들이 다시 패킹
+let saveTimer = 0;
+function save() {
+  Pver++;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify({ settings: P, gradients: G }));
+      localStorage.setItem(VIEW_KEY, JSON.stringify(VIEW));
+    } catch (e) {}
+  }, 300);
+}
+
+// ═════════════════════════ 램프 아틀라스 ═════════════════════════
+// 모든 아우라의 그라데이션을 256×ROWS 텍스처 한 장에 모아 두고 행 번호로 꺼내 쓴다
+const RAMP_ROWS = 128;
+const atlas = { data: new Uint8Array(256 * RAMP_ROWS * 4), rows: new Map(), next: 0, version: 0 };
+function rampRow(key, fill) {
+  let r = atlas.rows.get(key);
+  if (r != null) return r;
+  if (atlas.next >= RAMP_ROWS) { atlas.rows.clear(); atlas.next = 0; for (const c of packCache) c.ver = -1; }
+  r = atlas.next++;
+  fill(atlas.data.subarray(r * 1024, r * 1024 + 1024));
+  atlas.rows.set(key, r);
+  atlas.version++;
+  return r;
+}
+// 슬롯 내용이 같으면 같은 행을 재사용한다
+function slotRow(slot) {
+  const key = JSON.stringify([slot.space, slot.equal, slot.vertices, slot.edges]);
+  return rampRow(key, (buf) => rampBytes(slot, buf));
+}
+function rowsFor(S, Gr) {
+  const a = slotRow(Gr.aura);
+  return {
+    aura: a,
+    spark: S.sparks.gradient === 'own' ? slotRow(Gr.particles) : a,
+    ring: S.ring.gradient === 'own' ? slotRow(Gr.ring) : a,
+  };
+}
+
+// ═════════════════════════ 패킹 (설정 → uniform vec4 배열) ═════════════════════════
+const SHAPE_ID = { circle: 0, roundbox: 1, hexagon: 2, star: 3, diamond: 4, heart: 5, shield: 6, image: 7 };
+const WRAP_ID = { clamp: 0, repeat: 1, mirror: 2 };
+const FIELDS = [
+  ['SHAPE', (S) => SHAPE_ID[S.icon.shape] ?? 0], ['ISIZE', (S) => S.icon.size], ['ION', (S) => +S.icon.visible], ['ISHADE', (S) => S.icon.shade],
+  ['ICR', (S) => hexToRgb(S.icon.color)[0]], ['ICG', (S) => hexToRgb(S.icon.color)[1]], ['ICB', (S) => hexToRgb(S.icon.color)[2]], ['ITINT', (S) => S.icon.tint],
+  ['IROT', (S) => S.icon.rotate * Math.PI / 180], ['ISPIN', (S) => S.icon.spin], ['AON', (S) => +S.aura.enabled], ['ASIZE', (S) => S.aura.size],
+  ['AINT', (S) => S.aura.intensity], ['AOPA', (S) => S.aura.opacity], ['AFALL', (S) => S.aura.falloff], ['ACORE', (S) => S.aura.core],
+  ['AUP', (S) => S.aura.up], ['AHUE', (S) => S.aura.hueSpeed], ['ROWA', (S, R) => R.aura], ['ROWS', (S, R) => R.spark],
+  ['ROWR', (S, R) => R.ring], ['NSTR', (S) => S.noise.strength], ['NSCALE', (S) => S.noise.scale], ['NFLOW', (S) => S.noise.flow],
+  ['NSWIRL', (S) => S.noise.swirl], ['NDISP', (S) => S.noise.displace], ['NSHARP', (S) => S.noise.sharpness], ['RIMSTR', (S) => S.rim.strength],
+  ['RIMW', (S) => S.rim.width], ['RAYN', (S) => Math.round(S.rays.count)], ['RAYLEN', (S) => S.rays.length], ['RAYSHARP', (S) => S.rays.sharpness],
+  ['RAYSPD', (S) => S.rays.speed], ['RAYSTR', (S) => S.rays.strength], ['SPDENS', (S) => S.sparks.density], ['SPSPD', (S) => S.sparks.speed],
+  ['SPSIZE', (S) => S.sparks.size], ['SPSTR', (S) => S.sparks.strength], ['RINGSTR', (S) => S.ring.strength], ['RINGR', (S) => S.ring.radius],
+  ['RINGW', (S) => S.ring.width], ['RINGDASH', (S) => Math.round(S.ring.dashes)], ['RINGSPD', (S) => S.ring.speed], ['RINGANG', (S) => +S.ring.colorAngle],
+  ['PSPD', (S) => S.pulse.speed], ['PSIZE', (S) => S.pulse.size], ['PALPHA', (S) => S.pulse.alpha], ['PFLICK', (S) => S.pulse.flicker],
+  ['PFLSPD', (S) => S.pulse.flickerSpeed], ['MDIST', (S) => S.map.distance], ['MANG', (S) => S.map.angle], ['MNOISE', (S) => S.map.noise],
+  ['MHEIGHT', (S) => S.map.height], ['MSCALE', (S) => S.map.scale], ['MOFF', (S) => S.map.offset], ['MSCROLL', (S) => S.map.scroll],
+  ['MWRAP', (S) => WRAP_ID[S.map.wrap] ?? 0], ['MREV', (S) => +S.map.reverse], ['MALPHA', (S) => +S.map.useAlpha], ['HASIMG', (S) => +(S.icon.shape === 'image' && !!S.icon.image)],
+];
+const NVEC = Math.ceil(FIELDS.length / 4);
+const DEFINES = FIELDS.map(([n], i) => `#define ${n} uP[${i >> 2}].${'xyzw'[i & 3]}`).join('\n');
+const packCache = new Set();
+function pack(S, Gr, cache) {
+  // cache: { ver, buf } — 같은 설정 객체를 매 프레임 다시 계산하지 않게
+  const R = rowsFor(S, Gr);
+  const buf = cache?.buf || new Float32Array(NVEC * 4);
+  FIELDS.forEach(([, f], i) => { buf[i] = f(S, R); });
+  return buf;
+}
+
+// ═════════════════════════ 셰이더 ═════════════════════════
+const VERT = `attribute vec2 aPos; varying vec2 vUv; void main(){ vUv=aPos*0.5+0.5; gl_Position=vec4(aPos,0.0,1.0); }`;
+const FRAG = `precision highp float;
+varying vec2 vUv;
+uniform vec4 uP[${NVEC}];
+uniform float uTime, uPx, uRampRows;
+uniform sampler2D uRamp, uImg, uSdf;
+${DEFINES}
+float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+float vnoise(vec2 p){ vec2 i=floor(p), f=fract(p); vec2 u=f*f*(3.0-2.0*f);
+  return mix(mix(hash(i),hash(i+vec2(1.0,0.0)),u.x), mix(hash(i+vec2(0.0,1.0)),hash(i+vec2(1.0,1.0)),u.x), u.y); }
+float fbm(vec2 p){ float s=0.0, a=0.5; const mat2 m=mat2(1.6,1.2,-1.2,1.6); for(int i=0;i<4;i++){ s+=a*vnoise(p); p=m*p+17.1; a*=0.5; } return s/0.9375; }
+vec3 hueShift(vec3 c, float a){ const vec3 k=vec3(0.57735); float ca=cos(a); return max(c*ca+cross(k,c)*sin(a)+k*dot(k,c)*(1.0-ca),0.0); }
+mat2 rot(float a){ float c=cos(a), s=sin(a); return mat2(c,-s,s,c); }
+float wrapT(float t, float m){ if(m<0.5) return clamp(t,0.0,1.0); if(m<1.5) return fract(t); float f=mod(t,2.0); return f>1.0?2.0-f:f; }
+vec4 ramp(float t, float row){ return texture2D(uRamp, vec2(clamp(t,0.0,1.0)*0.996+0.002, (row+0.5)/uRampRows)); }
+float ndot(vec2 a, vec2 b){ return a.x*b.x-a.y*b.y; }
+
+// 도형 SDF (iq) — p는 셀 좌표(-1..1, y 위), r은 아이콘 반지름
+float sdShape(vec2 p, float r){
+  float s=SHAPE;
+  if(s<0.5) return length(p)-r;
+  if(s<1.5){ vec2 b=vec2(r*0.86); float rr=r*0.28; vec2 q=abs(p)-b+rr; return length(max(q,0.0))+min(max(q.x,q.y),0.0)-rr; }
+  if(s<2.5){ const vec3 k=vec3(-0.866025404,0.5,0.577350269); vec2 q=abs(p.yx); float h=r*0.92;
+    q-=2.0*min(dot(k.xy,q),0.0)*k.xy; q-=vec2(clamp(q.x,-k.z*h,k.z*h),h); return length(q)*sign(q.y); }
+  if(s<3.5){ const vec2 k1=vec2(0.809016994375,-0.587785252292); const vec2 k2=vec2(-0.809016994375,-0.587785252292);
+    vec2 q=p; q.x=abs(q.x); q-=2.0*max(dot(k1,q),0.0)*k1; q-=2.0*max(dot(k2,q),0.0)*k2; q.x=abs(q.x); q.y-=r*1.05;
+    vec2 ba=0.45*vec2(-k1.y,k1.x)-vec2(0.0,1.0); float h=clamp(dot(q,ba)/dot(ba,ba),0.0,r*1.05);
+    return length(q-ba*h)*sign(q.y*ba.x-q.x*ba.y); }
+  if(s<4.5){ vec2 b=vec2(r*0.95,r*1.15); vec2 q=abs(p); float h=clamp(ndot(b-2.0*q,b)/dot(b,b),-1.0,1.0);
+    float d=length(q-0.5*b*vec2(1.0-h,1.0+h)); return d*sign(q.x*b.y+q.y*b.x-b.x*b.y); }
+  if(s<5.5){ vec2 q=p/(r*1.15); q.y+=0.55; q.x=abs(q.x); float d;
+    if(q.y+q.x>1.0) d=length(q-vec2(0.25,0.75))-0.35355339;
+    else d=sqrt(min(dot(q-vec2(0.0,1.0),q-vec2(0.0,1.0)), dot(q-0.5*max(q.x+q.y,0.0),q-0.5*max(q.x+q.y,0.0))))*sign(q.x-q.y);
+    return d*r*1.15; }
+  if(s<6.5){ vec2 q=vec2(abs(p.x),p.y);   // 방패: 위는 사각, 아래는 뾰족
+    return max(max(q.x-r*0.8, q.y-r*0.8), (q.x*0.9-q.y-r*0.95)*0.743); }
+  // 이미지: 128² SDF 텍스처 (단위 정사각형 밖은 상자 거리로 이어 붙인다)
+  vec2 q=p/r; vec2 qc=clamp(q,-1.0,1.0);
+  float du=(texture2D(uSdf, vec2(qc.x*0.5+0.5, 0.5-qc.y*0.5)).r-0.5)*2.0+length(q-qc);
+  return du*r;
+}
+
+void main(){
+  vec2 p=vUv*2.0-1.0;
+  float t=uTime;
+  float pulse=0.5+0.5*sin(t*PSPD*6.28318);
+  float fl=t*PFLSPD;
+  float flick=1.0-PFLICK*(0.5+0.5*(sin(fl)+sin(fl*2.31+1.3)+sin(fl*4.37+2.1))/3.0);
+  float hue=t*AHUE*6.28318;
+  float r=ISIZE;
+  mat2 R=rot(IROT+t*ISPIN);
+  vec2 ip=R*p;
+  float d0=sdShape(ip,r);
+
+  // 노이즈 (소용돌이 회전 + 위로 흐름)
+  vec2 np=rot(t*NSWIRL)*p;
+  float n=fbm(np*NSCALE+vec2(0.0,-t*NFLOW));
+  float kk=0.5/max(NSHARP,0.01);
+  float nc=smoothstep(0.5-kk,0.5+kk,n);
+
+  // 아우라 거리: 위쪽으로 늘이고(치솟음) 노이즈로 일그러뜨린다
+  vec2 sp=p; if(sp.y>0.0) sp.y/=1.0+AUP;
+  float da=sdShape(R*sp,r)+(n-0.5)*2.0*NDISP;
+  float size=max(ASIZE*(1.0+PSIZE*pulse),1e-3);
+  float x=clamp(max(da,0.0)/size,0.0,1.0);
+  float glow=pow(1.0-x,AFALL);
+  glow*=mix(1.0,nc*2.0,NSTR)*(1.0-PALPHA*pulse)*flick*AON;
+
+  // 그라데이션 매핑
+  float ang=atan(p.y,p.x)/6.28318+0.5;
+  float hgt=clamp(p.y*0.5+0.5,0.0,1.0);
+  float ws=MDIST+MANG+MNOISE+MHEIGHT;
+  float xd=pow(x,0.6);   // 안쪽 색이 너무 넓게 퍼지지 않도록
+  float tt=ws>1e-4?(MDIST*xd+MANG*ang+MNOISE*nc+MHEIGHT*hgt)/ws:xd;
+  tt=wrapT(tt*MSCALE+MOFF+t*MSCROLL,MWRAP);
+  if(MREV>0.5) tt=1.0-tt;
+  vec4 rc=ramp(tt,ROWA);
+  vec3 ac=hueShift(rc.rgb,hue);
+  ac=mix(ac,vec3(1.0),ACORE*pow(1.0-x,4.0));
+  vec3 light=ac*glow*AOPA*mix(1.0,rc.a,MALPHA)*AINT;
+
+  // 광선
+  if(RAYN>0.5){
+    float ra=atan(ip.y,ip.x);
+    float ray=pow(0.5+0.5*cos(ra*RAYN+t*RAYSPD*6.28318+(n-0.5)*2.0),RAYSHARP);
+    float rl=smoothstep(RAYLEN*(0.75+0.25*pulse),0.0,max(d0,0.0))*step(0.0,d0);
+    light+=hueShift(ramp(0.25,ROWA).rgb,hue)*ray*rl*RAYSTR*flick*AON;
+  }
+  // 궤도 링
+  if(RINGSTR>0.0){
+    float rr=abs(length(p)-RINGR);
+    float ring=smoothstep(RINGW*1.5,0.0,rr)+0.35*smoothstep(RINGW*7.0,0.0,rr);
+    float ra=fract(ang+t*RINGSPD);
+    if(RINGDASH>0.5){ float s=fract(ra*RINGDASH); ring*=smoothstep(0.0,0.05,s)*smoothstep(0.6,0.55,s); }
+    light+=hueShift(ramp(RINGANG>0.5?ra:0.6,ROWR).rgb,hue)*ring*RINGSTR*flick*(1.0-0.5*PALPHA*pulse);
+  }
+  // 불꽃 입자 (격자 셀마다 해시로 점을 뿌리고 위로 흘린다)
+  if(SPDENS>0.0){
+    float mask=smoothstep(size*1.8+0.1,0.0,max(d0,0.0));
+    for(int L=0;L<2;L++){
+      float fL=float(L);
+      vec2 g=vec2(p.x, p.y-t*SPSPD*(0.7+0.4*fL))*SPDENS*(1.0+0.5*fL)+fL*7.3;
+      vec2 id=floor(g); vec2 f=fract(g)-0.5;
+      float h=hash(id+fL*13.1);
+      if(h>0.55){
+        vec2 off=(vec2(hash(id+3.1),hash(id+7.7))-0.5)*0.6;
+        float s=smoothstep(1.0,0.0,length(f-off)/(SPSIZE*(0.6+h)));
+        float tw=0.5+0.5*sin(t*6.0+h*40.0);
+        light+=hueShift(ramp(h,ROWS).rgb,hue)*s*s*tw*SPSTR*mask*AON;
+      }
+    }
+  }
+  light=1.0-exp(-light);   // 부드러운 포화 (빛이 겹쳐도 하얗게 수렴)
+  vec4 o=vec4(light,max(max(light.r,light.g),light.b));
+
+  // 아이콘 본체
+  float aaw=uPx*1.25;
+  float iconA=smoothstep(aaw,-aaw,d0)*ION;
+  if(iconA>0.0){
+    vec3 base=vec3(ICR,ICG,ICB);
+    if(HASIMG>0.5){ vec2 q=clamp(ip/r,-1.0,1.0); base=mix(texture2D(uImg,vec2(q.x*0.5+0.5,0.5-q.y*0.5)).rgb, base, ITINT); }
+    float bevel=clamp(-d0/(r*0.3),0.0,1.0);
+    float lit=dot(normalize(ip+1e-5),vec2(-0.55,0.75));
+    float shade=mix(1.0, 0.78+0.22*bevel+0.3*(1.0-bevel)*lit, ISHADE);
+    vec3 ic=base*shade;
+    // 안쪽 테두리 빛
+    float rim=smoothstep(-RIMW,0.0,d0)*RIMSTR*flick*AON;
+    ic=1.0-(1.0-ic)*(1.0-hueShift(ramp(0.05,ROWA).rgb,hue)*rim);
+    o=vec4(ic*iconA,iconA)+o*(1.0-iconA);
+  }
+  gl_FragColor=o;
+}`;
+
+// ═════════════════════════ 렌더러 (컨텍스트 1개로 여러 사각형) ═════════════════════════
+const imageCache = new Map();   // dataURL → { img: HTMLImageElement, sdf: Uint8Array, ready }
+function imageEntry(url) {
+  let e = imageCache.get(url);
+  if (e) return e;
+  e = { ready: false, canvas: null, sdf: null, tex: new Map() };
+  imageCache.set(url, e);
+  const img = new Image();
+  img.onload = () => {
+    const N = 128, c = document.createElement('canvas');
+    c.width = c.height = N;
+    const cx = c.getContext('2d', { willReadFrequently: true });
+    cx.drawImage(img, 0, 0, N, N);
+    e.canvas = c;
+    e.sdf = buildSdf(cx.getImageData(0, 0, N, N).data, N);
+    e.ready = true;
+  };
+  img.src = url;
+  return e;
+}
+// 알파 마스크 → 부호 있는 거리장 (Felzenszwalb EDT), 단위: 이미지 반폭 = 1
+function buildSdf(rgba, N) {
+  const INF = 1e20, inside = new Uint8Array(N * N);
+  for (let i = 0; i < N * N; i++) inside[i] = rgba[i * 4 + 3] > 127 ? 1 : 0;
+  const edt = (featureIsInside) => {
+    const g = new Float64Array(N * N);
+    for (let i = 0; i < N * N; i++) g[i] = inside[i] === featureIsInside ? 0 : INF;
+    const f = new Float64Array(N), d = new Float64Array(N), v = new Int32Array(N), z = new Float64Array(N + 1);
+    const pass = (get, set) => {
+      for (let q = 0; q < N; q++) f[q] = get(q);
+      let k = 0; v[0] = 0; z[0] = -INF; z[1] = INF;
+      for (let q = 1; q < N; q++) {
+        let s = ((f[q] + q * q) - (f[v[k]] + v[k] * v[k])) / (2 * q - 2 * v[k]);
+        while (s <= z[k]) { k--; s = ((f[q] + q * q) - (f[v[k]] + v[k] * v[k])) / (2 * q - 2 * v[k]); }
+        k++; v[k] = q; z[k] = s; z[k + 1] = INF;
+      }
+      k = 0;
+      for (let q = 0; q < N; q++) { while (z[k + 1] < q) k++; d[q] = (q - v[k]) * (q - v[k]) + f[v[k]]; }
+      for (let q = 0; q < N; q++) set(q, d[q]);
+    };
+    for (let x = 0; x < N; x++) pass((y) => g[y * N + x], (y, val) => { g[y * N + x] = val; });
+    for (let y = 0; y < N; y++) pass((x) => g[y * N + x], (x, val) => { g[y * N + x] = val; });
+    return g;
+  };
+  const dOut = edt(1), dIn = edt(0), out = new Uint8Array(N * N * 4);
+  for (let i = 0; i < N * N; i++) {
+    const sd = (Math.sqrt(dOut[i]) - Math.sqrt(dIn[i])) * (2 / N);
+    const v = clamp01(sd * 0.5 + 0.5) * 255;
+    out[i * 4] = out[i * 4 + 1] = out[i * 4 + 2] = v; out[i * 4 + 3] = 255;
+  }
+  return out;
+}
+
+class AuraRenderer {
+  constructor(canvas, { preserve = false } = {}) {
+    this.canvas = canvas;
+    const gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: false, preserveDrawingBuffer: preserve });
+    if (!gl) throw new Error('WebGL을 사용할 수 없어요');
+    this.gl = gl;
+    const sh = (type, src) => {
+      const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+      return s;
+    };
+    const prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, VERT));
+    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FRAG));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+    gl.useProgram(prog);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'aPos');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    this.u = {};
+    for (const n of ['uP', 'uTime', 'uPx', 'uRampRows', 'uRamp', 'uImg', 'uSdf']) this.u[n] = gl.getUniformLocation(prog, n);
+    gl.uniform1i(this.u.uRamp, 0); gl.uniform1i(this.u.uImg, 1); gl.uniform1i(this.u.uSdf, 2);
+    gl.uniform1f(this.u.uRampRows, RAMP_ROWS);
+    const mkTex = (unit) => {
+      const t = gl.createTexture();
+      gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([128, 128, 128, 255]));
+      return t;
+    };
+    this.rampTex = mkTex(0);
+    this.blankImg = mkTex(1);
+    this.blankSdf = mkTex(2);
+    this.rampVer = -1;
+    this.boundImg = null;
+    this.images = new Map();
+    gl.disable(gl.BLEND);
+    gl.enable(gl.SCISSOR_TEST);
+  }
+  syncRamp() {
+    if (this.rampVer === atlas.version) return;
+    const gl = this.gl;
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.rampTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 256, RAMP_ROWS, 0, gl.RGBA, gl.UNSIGNED_BYTE, atlas.data);
+    this.rampVer = atlas.version;
+  }
+  bindImage(url) {
+    const gl = this.gl;
+    let pair = null;
+    if (url) {
+      const e = imageEntry(url);
+      if (e.ready) {
+        pair = this.images.get(url);
+        if (!pair) {
+          const mk = (src) => {
+            const t = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, t);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            if (src instanceof Uint8Array) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 128, 128, 0, gl.RGBA, gl.UNSIGNED_BYTE, src);
+            else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+            return t;
+          };
+          gl.activeTexture(gl.TEXTURE1);
+          const img = mk(e.canvas);
+          gl.activeTexture(gl.TEXTURE2);
+          pair = { img, sdf: mk(e.sdf) };
+          this.images.set(url, pair);
+        }
+      }
+    }
+    if (this.boundImg === (pair || null)) return !!pair;
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, pair ? pair.img : this.blankImg);
+    gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, pair ? pair.sdf : this.blankSdf);
+    this.boundImg = pair || null;
+    return !!pair;
+  }
+  begin(w, h) {
+    const gl = this.gl;
+    if (this.canvas.width !== w || this.canvas.height !== h) { this.canvas.width = w; this.canvas.height = h; }
+    gl.scissor(0, 0, w, h);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    this.syncRamp();
+  }
+  // x, y, w, h: 그릴 사각형 (캔버스 픽셀, 왼쪽 아래 원점) / clip: 잘라낼 영역
+  draw(buf, time, x, y, w, h, clip, imageUrl) {
+    const gl = this.gl;
+    const hasImg = this.bindImage(imageUrl);
+    if (imageUrl && !hasImg) buf[FIELDS.findIndex((f) => f[0] === 'HASIMG')] = 0;
+    gl.viewport(x, y, w, h);
+    if (clip) gl.scissor(clip[0], clip[1], clip[2], clip[3]); else gl.scissor(x, y, w, h);
+    gl.uniform4fv(this.u.uP, buf);
+    gl.uniform1f(this.u.uTime, time);
+    gl.uniform1f(this.u.uPx, 2 / w);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+}
+
+// ═════════════════════════ 화면 렌더링 ═════════════════════════
+const glCanvas = $('#gl');
+const R = new AuraRenderer(glCanvas);
+const stage = $('#stage'), gallery = $('#gallery');
+const previewInst = { el: $('#preview'), S: null, G: null, phase: 0, cache: { ver: -1, buf: null } };
+let instances = [previewInst];
+const pendingImageHasimg = FIELDS.findIndex((f) => f[0] === 'HASIMG');
+
+function instSettings(inst) { return inst.S || P; }
+function instGrad(inst) { return inst.G || G; }
+function instBuf(inst) {
+  const S = instSettings(inst), ver = inst.S ? 1 : Pver;
+  const c = inst.cache;
+  if (c.ver !== ver || !c.buf) {
+    c.buf = pack(S, instGrad(inst), c);
+    c.ver = ver;
+    packCache.add(c);
+  }
+  return c.buf;
+}
+
+let simTime = 0, last = performance.now(), fpsAcc = 0, fpsN = 0, msAcc = 0, drawnLast = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  if (exporting) return;
+  simTime += dt;
+  const dpr = Math.min(devicePixelRatio || 1, +VIEW.dpr);
+  const W = Math.round(innerWidth * dpr), H = Math.round(innerHeight * dpr);
+  const t0 = performance.now();
+  R.begin(W, H);
+  const clipRects = new Map();   // 스크롤 영역(무대 / 라이브러리 탭)마다 한 번만 잰다
+  let drawn = 0;
+  for (const inst of instances) {
+    const ce = inst.clip || stage;
+    let sr = clipRects.get(ce);
+    if (!sr) { sr = ce.getBoundingClientRect(); clipRects.set(ce, sr); }
+    const r = inst.el.getBoundingClientRect();
+    // 무대(스크롤 영역) 밖이면 건너뛴다
+    const cl = Math.max(r.left, sr.left), ct = Math.max(r.top, sr.top);
+    const cr = Math.min(r.right, sr.right), cb = Math.min(r.bottom, sr.bottom);
+    if (cr <= cl || cb <= ct) continue;
+    const x = Math.round(r.left * dpr), y = Math.round(H - r.bottom * dpr), w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+    const clip = [Math.round(cl * dpr), Math.round(H - cb * dpr), Math.round((cr - cl) * dpr), Math.round((cb - ct) * dpr)];
+    const S = instSettings(inst);
+    const buf = instBuf(inst);
+    R.draw(buf, simTime + inst.phase, x, y, w, h, clip, S.icon.shape === 'image' ? S.icon.image : null);
+    if (S.icon.shape === 'image' && buf[pendingImageHasimg] === 0 && imageEntry(S.icon.image).ready) inst.cache.ver = -1;
+    drawn++;
+  }
+  msAcc += performance.now() - t0;
+  drawnLast = drawn;
+  fpsAcc += dt; fpsN++;
+  if (fpsAcc > 0.5) {
+    $('#sFps').textContent = Math.round(fpsN / fpsAcc);
+    $('#sMs').textContent = (msAcc / fpsN).toFixed(2) + ' ms / 프레임 (CPU 측)';
+    $('#sDrawn').textContent = drawnLast;
+    $('#sTotal').textContent = instances.length;
+    fpsAcc = 0; fpsN = 0; msAcc = 0;
+  }
+}
+
+// ═════════════════════════ 갤러리 (목록) ═════════════════════════
+function randomSettings(seed) {
+  let s = seed || Math.random() * 1e9;
+  const rnd = (a = 0, b = 1) => { s = (s * 16807) % 2147483647; return a + (s / 2147483647) * (b - a); };
+  const pickOne = (arr) => arr[Math.floor(rnd() * arr.length) % arr.length];
+  const hsl = (h, sat, l) => {
+    const f = (n) => { const k = (n + h * 12) % 12; return l - sat * Math.min(l, 1 - l) * Math.max(-1, Math.min(k - 3, 9 - k, 1)); };
+    return '#' + [f(0), f(8), f(4)].map((v) => Math.round(clamp01(v) * 255).toString(16).padStart(2, '0')).join('');
+  };
+  const h = rnd(), h2 = (h + rnd(-0.12, 0.12) + 1) % 1;
+  const S = clone(DEFAULTS);
+  S.icon.shape = pickOne(['circle', 'circle', 'roundbox', 'hexagon', 'star', 'diamond', 'heart', 'shield']);
+  S.icon.color = hsl(h, 0.25, 0.22);
+  Object.assign(S.aura, { colorInner: hsl(h, 1, 0.92), colorMid: hsl((h + h2) / 2, 1, 0.65), colorOuter: hsl(h2, 1, 0.48),
+    size: rnd(0.15, 0.5), intensity: rnd(0.9, 1.8), falloff: rnd(1.1, 2.4), up: rnd() < 0.3 ? rnd(0.3, 1) : 0, core: rnd(0, 0.5) });
+  Object.assign(S.noise, { strength: rnd(0, 1), displace: rnd(0, 0.14), scale: rnd(2, 6), flow: rnd(-0.5, 2), swirl: rnd(-1, 1), sharpness: rnd(1, 4) });
+  S.rays = { ...S.rays, count: rnd() < 0.35 ? Math.round(rnd(4, 16)) : 0, strength: rnd(0.3, 0.9), length: rnd(0.3, 0.8), sharpness: rnd(4, 16), speed: rnd(-0.5, 0.5) };
+  S.sparks = { ...S.sparks, density: rnd() < 0.4 ? rnd(2, 7) : 0, speed: rnd(0.3, 1.4) };
+  S.ring = { ...S.ring, strength: rnd() < 0.3 ? rnd(0.4, 0.9) : 0, dashes: pickOne([0, 6, 12]), speed: rnd(-0.6, 0.6) };
+  Object.assign(S.pulse, { alpha: rnd(0, 0.4), size: rnd(0, 0.1), speed: rnd(0.2, 1.4), flicker: rnd(0, 0.3) });
+  S.rim.strength = rnd(0, 1);
+  return S;
+}
+function buildGallery() {
+  gallery.innerHTML = '';
+  gallery.style.setProperty('--cell', VIEW.size + 'px');
+  gallery.classList.toggle('cards', VIEW.cards);
+  gallery.classList.toggle('nolabel', !VIEW.labels);
+  instances = [previewInst, ...libInstances];
+  const names = Object.keys(PRESETS);
+  for (let i = 0; i < VIEW.count; i++) {
+    let st = null, label = `#${i + 1}`;
+    if (VIEW.mode === 'presets') { label = names[i % names.length]; st = presetState(label); }
+    else if (VIEW.mode === 'random') { st = randomState(i * 7919 + 13); label = `랜덤 ${i + 1}`; }
+    else if (VIEW.mode === 'library') {
+      if (!library.length) break;
+      st = library[i % library.length]; label = st.name;
+    }
+    const S = st ? st.settings : null;
+    const wrap = document.createElement('div');
+    wrap.className = 'gcell';
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.title = S ? '클릭: 이 설정을 편집기로 불러오기' : '현재 설정 복제';
+    const lbl = document.createElement('div');
+    lbl.className = 'lbl'; lbl.textContent = label;
+    wrap.append(cell, lbl);
+    gallery.append(wrap);
+    const inst = { el: cell, S, G: st ? st.gradients : null, phase: VIEW.phase ? (i * 0.6180339) % 1 * 10 : 0, cache: { ver: -1, buf: null } };
+    if (st) cell.addEventListener('click', () => { applyState(clone(st)); toast(`불러옴: ${label}`); });
+    instances.push(inst);
+  }
+}
+function syncToolbar() {
+  $('#gCount').value = VIEW.count; $('#gCountVal').textContent = VIEW.count;
+  $('#gSize').value = VIEW.size; $('#gSizeVal').textContent = VIEW.size;
+  $('#gMode').value = VIEW.mode; $('#gPhase').checked = VIEW.phase; $('#gCards').checked = VIEW.cards;
+  $('#gLabels').checked = VIEW.labels; $('#gDpr').value = VIEW.dpr;
+}
+$('#gCount').addEventListener('input', (e) => { VIEW.count = +e.target.value; $('#gCountVal').textContent = VIEW.count; buildGallery(); save(); });
+$('#gSize').addEventListener('input', (e) => { VIEW.size = +e.target.value; $('#gSizeVal').textContent = VIEW.size; gallery.style.setProperty('--cell', VIEW.size + 'px'); save(); });
+$('#gMode').addEventListener('change', (e) => { VIEW.mode = e.target.value; buildGallery(); save(); });
+$('#gPhase').addEventListener('change', (e) => { VIEW.phase = e.target.checked; buildGallery(); save(); });
+$('#gCards').addEventListener('change', (e) => { VIEW.cards = e.target.checked; gallery.classList.toggle('cards', VIEW.cards); save(); });
+$('#gLabels').addEventListener('change', (e) => { VIEW.labels = e.target.checked; gallery.classList.toggle('nolabel', !VIEW.labels); save(); });
+$('#gDpr').addEventListener('change', (e) => { VIEW.dpr = e.target.value; save(); });
+
+// ═════════════════════════ 설정 패널 ═════════════════════════
+const SHAPES = [['circle', '원'], ['roundbox', '둥근 사각형'], ['hexagon', '육각형'], ['star', '별'], ['diamond', '마름모'],
+  ['heart', '하트'], ['shield', '방패'], ['image', '이미지 (업로드)']];
+const R_ = (k, label, min, max, step) => ({ k, t: 'range', label, min, max, step });
+const T_ = (k, label) => ({ k, t: 'toggle', label });
+const C_ = (k, label) => ({ k, t: 'color', label });
+const S_ = (k, label, opts) => ({ k, t: 'select', label, opts });
+const B_ = (label, text, onClick) => ({ t: 'button', label, text, onClick });
+const GRAD_SRC = [['aura', '아우라 그라데이션 공유'], ['own', '전용 그라데이션']];
+
+// 위에서 아래로: 화면에서 크게 바뀌는 것 → 미세한 것
+const SCHEMA = [
+  { title: '아이콘 (오브젝트)', items: [
+    S_('icon.shape', '형태', SHAPES),
+    B_('이미지', '이미지 업로드 (PNG·SVG)…', () => $('#imgFile').click()),
+    R_('icon.size', '크기', 0.05, 0.9, 0.005),
+    T_('icon.visible', '아이콘 표시'),
+    C_('icon.color', '색'),
+    R_('icon.tint', '이미지에 색 입히기', 0, 1, 0.01),
+    R_('icon.shade', '입체감', 0, 1, 0.01),
+    R_('icon.rotate', '회전 (°)', -180, 180, 1),
+    R_('icon.spin', '자전 속도', -3, 3, 0.01),
+  ] },
+  { title: '프리셋', custom: 'presets' },
+  { title: '아우라 · 색상', items: [
+    T_('aura.enabled', '아우라 표시'),
+    B_('그라데이션', '그라데이션 편집기 열기', () => { setTab('grad'); setSlot('aura'); }),
+    R_('aura.core', '코어 하이라이트', 0, 1, 0.01),
+    R_('aura.hueSpeed', '색상 순환 속도', -1, 1, 0.01),
+  ] },
+  { title: '아우라 · 형태', items: [
+    R_('aura.size', '아우라 크기', 0, 1, 0.005),
+    R_('aura.intensity', '강도', 0, 5, 0.01),
+    R_('aura.falloff', '감쇠 (부드러움)', 0.2, 6, 0.05),
+    R_('aura.up', '위로 치솟음', 0, 3, 0.01),
+    R_('aura.opacity', '불투명도', 0, 1, 0.01),
+  ] },
+  { title: '노이즈 · 흐름', items: [
+    R_('noise.strength', '노이즈 강도', 0, 1, 0.01),
+    R_('noise.displace', '형태 왜곡', 0, 0.4, 0.005),
+    R_('noise.scale', '노이즈 주파수', 0.5, 12, 0.05),
+    R_('noise.flow', '상승 흐름 속도', -4, 4, 0.01),
+    R_('noise.swirl', '소용돌이 속도', -3, 3, 0.01),
+    R_('noise.sharpness', '노이즈 대비', 0.5, 8, 0.05),
+  ] },
+  { title: '광선', items: [
+    R_('rays.count', '광선 개수', 0, 32, 1),
+    R_('rays.length', '길이', 0, 1.2, 0.01),
+    R_('rays.strength', '밝기', 0, 2, 0.01),
+    R_('rays.sharpness', '선명도', 1, 40, 0.5),
+    R_('rays.speed', '회전 속도', -2, 2, 0.01),
+  ] },
+  { title: '불꽃 입자', items: [
+    R_('sparks.density', '밀도', 0, 16, 0.1),
+    S_('sparks.gradient', '그라데이션', GRAD_SRC),
+    B_('', '불꽃 입자 그라데이션 편집', () => { setTab('grad'); setSlot('particles'); }),
+    R_('sparks.size', '크기', 0.02, 0.5, 0.005),
+    R_('sparks.speed', '상승 속도', -2, 4, 0.01),
+    R_('sparks.strength', '밝기', 0, 3, 0.01),
+  ] },
+  { title: '궤도 링', items: [
+    R_('ring.strength', '밝기', 0, 2, 0.01),
+    R_('ring.radius', '반지름', 0.1, 1, 0.005),
+    R_('ring.width', '두께', 0.002, 0.15, 0.001),
+    R_('ring.dashes', '대시 개수', 0, 48, 1),
+    R_('ring.speed', '회전 속도', -2, 2, 0.01),
+    T_('ring.colorAngle', '둘레 따라 그라데이션'),
+    S_('ring.gradient', '그라데이션', GRAD_SRC),
+    B_('', '궤도 링 그라데이션 편집', () => { setTab('grad'); setSlot('ring'); }),
+  ] },
+  { title: '테두리 림', items: [
+    R_('rim.strength', '밝기', 0, 1.5, 0.01),
+    R_('rim.width', '두께', 0, 0.3, 0.002),
+  ] },
+  { title: '펄스 · 깜빡임', items: [
+    R_('pulse.alpha', '밝기 펄스', 0, 1, 0.01),
+    R_('pulse.size', '크기 펄스', 0, 0.6, 0.005),
+    R_('pulse.speed', '펄스 속도 (Hz)', 0, 4, 0.01),
+    R_('pulse.flicker', '깜빡임 강도', 0, 1, 0.01),
+    R_('pulse.flickerSpeed', '깜빡임 속도', 0, 40, 0.1),
+  ] },
+  { title: '그라데이션 매핑', items: [
+    R_('map.distance', '거리 (안→밖)', 0, 1, 0.01),
+    R_('map.angle', '둘레 각도', 0, 1, 0.01),
+    R_('map.height', '높이 (아래→위)', 0, 1, 0.01),
+    R_('map.noise', '노이즈', 0, 1, 0.01),
+    R_('map.scale', '반복 배율', 0.1, 8, 0.01),
+    S_('map.wrap', '범위 밖 처리', [['clamp', '고정'], ['repeat', '반복'], ['mirror', '왕복']]),
+    R_('map.scroll', '스크롤 속도', -2, 2, 0.01),
+    R_('map.offset', '오프셋', -1, 1, 0.01),
+    T_('map.reverse', '뒤집기'),
+    T_('map.useAlpha', '그라데이션 알파 사용'),
+  ] },
+];
+
+const getP = (path) => path.split('.').reduce((o, k) => o[k], P);
+const setP = (path, v) => { const ks = path.split('.'), last = ks.pop(); ks.reduce((o, k) => o[k], P)[last] = v; };
+const defaultOf = (path) => path.split('.').reduce((o, k) => o[k], DEFAULTS);
+const decimals = (step) => Math.max(0, Math.min(3, Math.ceil(-Math.log10(step))));
+const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+const updaters = [];
+const markRow = (row, it) => row.classList.toggle('changed', getP(it.k) !== defaultOf(it.k));
+
+function makeControl(it) {
+  const row = el('div', 'row');
+  const lab = el('label', null, it.label);
+  row.append(lab);
+  const done = () => { markRow(row, it); save(); };
+  if (it.t === 'range') {
+    const rng = el('input'); rng.type = 'range'; rng.min = it.min; rng.max = it.max; rng.step = it.step;
+    const num = el('input'); num.type = 'number'; num.step = it.step;
+    const dec = decimals(it.step);
+    const sync = () => { const v = getP(it.k); rng.value = v; num.value = (+v).toFixed(dec); markRow(row, it); };
+    rng.addEventListener('input', () => { setP(it.k, parseFloat(rng.value)); num.value = (+rng.value).toFixed(dec); done(); });
+    num.addEventListener('change', () => {
+      const v = parseFloat(num.value);
+      if (Number.isNaN(v)) return sync();
+      setP(it.k, it.step >= 1 ? Math.round(v) : v); rng.value = v; done();
+    });
+    lab.title = '더블클릭: 기본값';
+    lab.addEventListener('dblclick', () => { setP(it.k, defaultOf(it.k)); sync(); done(); });
+    row.append(rng, num);
+    updaters.push(sync);
+  } else if (it.t === 'color') {
+    row.classList.add('wide');
+    const wrap = el('div', 'flex');
+    const pick = el('input'); pick.type = 'color';
+    const txt = el('input'); txt.type = 'text'; txt.maxLength = 7; txt.style.flex = '1';
+    const sync = () => { pick.value = getP(it.k); txt.value = getP(it.k); markRow(row, it); };
+    pick.addEventListener('input', () => { setP(it.k, pick.value); txt.value = pick.value; done(); });
+    txt.addEventListener('change', () => {
+      const v = txt.value.trim().replace(/^#?/, '#');
+      if (/^#[0-9a-f]{6}$/i.test(v)) { setP(it.k, v.toLowerCase()); done(); }
+      sync();
+    });
+    wrap.append(pick, txt); row.append(wrap);
+    updaters.push(sync);
+  } else if (it.t === 'toggle') {
+    row.classList.add('wide');
+    const cb = el('input'); cb.type = 'checkbox';
+    const sync = () => { cb.checked = getP(it.k); markRow(row, it); };
+    cb.addEventListener('change', () => { setP(it.k, cb.checked); done(); });
+    lab.style.cursor = 'pointer';
+    lab.addEventListener('click', () => cb.click());
+    row.append(cb);
+    updaters.push(sync);
+  } else if (it.t === 'select') {
+    row.classList.add('wide');
+    const sel = el('select');
+    for (const [v, l] of it.opts) { const o = el('option', null, l); o.value = v; sel.append(o); }
+    const sync = () => { sel.value = getP(it.k); markRow(row, it); };
+    sel.addEventListener('change', () => {
+      if (it.k === 'icon.shape' && sel.value === 'image' && !P.icon.image) { sync(); $('#imgFile').click(); return; }
+      setP(it.k, sel.value); done(); syncGradTab();
+    });
+    row.append(sel);
+    updaters.push(sync);
+  } else if (it.t === 'button') {
+    row.classList.add('wide');
+    const b = el('button', null, it.text);
+    b.addEventListener('click', it.onClick);
+    row.append(b);
+  }
+  return row;
+}
+function makePresetGrid() {
+  const grid = el('div', 'presets');
+  for (const name in PRESETS) {
+    const st = presetState(name);
+    const b = el('button');
+    const sw = el('span', 'pstrip');
+    sw.style.background = slotCss(st.gradients.aura, false);
+    b.append(sw, document.createTextNode(name));
+    b.addEventListener('click', () => { applyState(presetState(name), true); toast(`프리셋: ${name}`); });
+    grid.append(b);
+  }
+  return grid;
+}
+function buildUI() {
+  const root = $('#sections');
+  for (const sec of SCHEMA) {
+    const det = el('details'); det.open = sec.open !== false;
+    det.append(el('summary', null, sec.title));
+    const body = el('div', 'body');
+    if (sec.custom === 'presets') body.append(makePresetGrid());
+    else for (const it of sec.items) body.append(makeControl(it));
+    det.append(body);
+    root.append(det);
+  }
+}
+const refreshUI = () => { updaters.forEach((f) => f()); syncGradTab(); };
+function applyState(state, keepIcon = false) {
+  const icon = P.icon;
+  P = deepMerge(clone(DEFAULTS), state.settings || {});
+  if (keepIcon || !state.settings?.icon) P.icon = icon;
+  const d = defaultGradients();
+  const fallback = state.gradients?.aura ? normSlot(state.gradients.aura, d.aura) : null;
+  for (const k in d) G[k] = normSlot(state.gradients?.[k], fallback || d[k]);
+  sel = { type: null, id: null };
+  compiled = null; fieldDirty = true;
+  refreshUI(); renderEdgeList(); renderInspector(); invalidate();
+  save();
+}
+// 2D 단독판 JSON(색 3개)도 받아들인다
+function parseImported(obj) {
+  if (obj && obj.settings && obj.gradients) return obj;
+  const s = obj && obj.settings ? obj.settings : obj;
+  if (s && s.aura && s.icon) return { settings: s, gradients: gradSet(colorsGrad(s.aura)) };
+  throw new Error('알 수 없는 형식');
+}
+const currentState = () => ({ type: 'aura-2d-studio', version: 1, settings: clone(P), gradients: clone(G) });
+function randomState(seed) {
+  const S = randomSettings(seed);
+  return { settings: deepMerge(clone(DEFAULTS), S), gradients: gradSet(colorsGrad(S.aura)) };
+}
+
+// ═════════════════════════ 탭 ═════════════════════════
+const panel = $('#panel');
+let activeTab = 'settings';
+function setTab(name) {
+  activeTab = name;
+  for (const b of $('#tabs').children) b.classList.toggle('on', b.dataset.tab === name);
+  for (const p of document.querySelectorAll('#panel .page')) p.hidden = p.dataset.page !== name;
+  if (document.body.classList.contains('panel-hidden')) togglePanel();
+  if (name === 'grad') { sizeGradCanvases(); syncGradTab(); }
+}
+$('#tabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) setTab(b.dataset.tab); });
+
+// ═════════════════════════ 그라데이션 편집기 (Color Picker Lab 포팅) ═════════════════════════
+const SLOT_HINT = {
+  aura: '막대 왼쪽(t=0) = 아이콘 쪽, 오른쪽(t=1) = 아우라 바깥 (매핑은 아우라 설정 › 그라데이션 매핑)',
+  particles: '불꽃 입자마다 막대 위 임의 위치의 색을 뽑아 써요 (광선은 아우라 그라데이션 25% 지점 색)',
+  ring: '궤도 링: “둘레 따라 그라데이션”을 켜면 한 바퀴에 막대 전체, 끄면 60% 지점 색',
+};
+const SLOT_P = { aura: 'aura', particles: 'sparks', ring: 'ring' };   // 그라데이션 슬롯 → 설정 키
+let slotKey = 'aura';
+let editMode = 'point';           // 'point' | 'line'
+let pickModel = 'oklch';
+let sel = { type: null, id: null };   // 'v' | 'e'
+const S = () => G[slotKey];
+const vertexById = (id) => S().vertices.find((v) => v.id === id);
+const edgeById = (id) => S().edges.find((e) => e.id === id);
+let compiled = null;
+const model_ = () => compiled || (compiled = compileSlot(S()));
+
+const disc = $('#disc'), dctx = disc.getContext('2d');
+const bar = $('#bar'), bctx = bar.getContext('2d');
+const field = document.createElement('canvas');
+const barRow = document.createElement('canvas'), rctx = barRow.getContext('2d');
+let discCss = 300, barCss = 300, dpr = 1;
+const LOW_RES = 110, DRAG_SLOP = 4;
+
+function sizeGradCanvases() {
+  dpr = devicePixelRatio || 1;
+  discCss = disc.clientWidth || 300;
+  barCss = bar.clientWidth || 300;
+  disc.width = disc.height = Math.round(discCss * dpr);
+  bar.width = Math.round(barCss * dpr);
+  bar.height = Math.round(bar.clientHeight * dpr);
+  fieldDirty = true;
+  invalidate();
+}
+const discGeom = () => ({ c: discCss / 2, R: discCss / 2 - 12 });
+const highRes = () => Math.min(Math.round(2 * discGeom().R * dpr), 300);
+
+let raf = 0, wantFast = false, fieldDirty = true, fieldRes = 0;
+function invalidate(fast = false) {
+  wantFast = fast;
+  if (!raf) raf = requestAnimationFrame(drawGrad);
+}
+function drawGrad() {
+  raf = 0;
+  if (activeTab !== 'grad' || document.body.classList.contains('panel-hidden')) return;
+  const res = wantFast ? LOW_RES : highRes();
+  if (fieldDirty || res !== fieldRes) { renderField(res); fieldDirty = false; fieldRes = res; }
+  drawDisc();
+  drawBar();
+}
+function renderField(res) {
+  const m = model_();
+  field.width = field.height = res;
+  if (!m.any) return;
+  const fctx = field.getContext('2d');
+  const img = fctx.createImageData(res, res), d = img.data, out = [0, 0, 0];
+  for (let y = 0; y < res; y++) {
+    const ny = ((y + 0.5) / res) * 2 - 1;
+    for (let x = 0; x < res; x++) {
+      const nx = ((x + 0.5) / res) * 2 - 1;
+      if (nx * nx + ny * ny > 1.03) continue;
+      sampleField(m, nx, ny, out);
+      const k = (y * res + x) * 4;
+      d[k] = out[0] * 255; d[k + 1] = out[1] * 255; d[k + 2] = out[2] * 255; d[k + 3] = 255;
+    }
+  }
+  fctx.putImageData(img, 0, 0);
+}
+function drawDisc() {
+  const m = model_(), { c, R } = discGeom(), ctx = dctx;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, discCss, discCss);
+  ctx.save();
+  ctx.beginPath(); ctx.arc(c, c, R, 0, TAU); ctx.clip();
+  if (m.any) { ctx.imageSmoothingEnabled = true; ctx.drawImage(field, c - R, c - R, 2 * R, 2 * R); }
+  else { ctx.fillStyle = '#1d2029'; ctx.fillRect(c - R, c - R, 2 * R, 2 * R); }
+  ctx.restore();
+  ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(c, c, R + 0.5, 0, TAU); ctx.stroke();
+  if (!m.any) {
+    ctx.fillStyle = '#8a90a2'; ctx.font = '13px system-ui, "Malgun Gothic", sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('클릭해서 색을 찍어 보세요', c, c + 4);
+  }
+  drawGuides(ctx, c, R);
+}
+function drawGuides(ctx, c, R) {
+  const Pt = (v) => [c + v.x * R, c + v.y * R];
+  const slot = S(), lineMode = effectiveMode() === 'line';
+  const from = sel.type === 'v' ? vertexById(sel.id) : null;
+  if (lineMode && from && hoverPx && !drag) {
+    const [ax, ay] = Pt(from);
+    ctx.setLineDash([5, 5]); ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(hoverPx[0], hoverPx[1]); ctx.stroke();
+    ctx.strokeStyle = '#7aa2ff'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(hoverPx[0], hoverPx[1]); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  slot.edges.forEach((ed, idx) => {
+    const A = vertexById(ed.a), B = vertexById(ed.b);
+    if (!A || !B) return;
+    const selected = sel.type === 'e' && sel.id === ed.id;
+    if (!slot.guides && !selected) return;
+    const [ax, ay] = Pt(A), [bx, by] = Pt(B);
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = selected ? 6 : 3.5;
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    ctx.strokeStyle = selected ? '#7aa2ff' : 'rgba(255,255,255,.85)'; ctx.lineWidth = selected ? 3 : 1.5;
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    // 구간 번호 (막대 순서)
+    const mx = (ax + bx) / 2, my = (ay + by) / 2;
+    ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.beginPath(); ctx.arc(mx, my, 8, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = '10px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(String(idx + 1), mx, my + 0.5);
+    ctx.textBaseline = 'alphabetic';
+  });
+  for (const v of slot.vertices) {
+    const [x, y] = Pt(v);
+    const selected = sel.type === 'v' && sel.id === v.id;
+    if (!slot.guides && !selected) {
+      ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(x, y, 3, 0, TAU); ctx.stroke();
+      continue;
+    }
+    const r = selected ? 9 : 7;
+    ctx.fillStyle = v.color;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.stroke();
+    ctx.lineWidth = 2; ctx.strokeStyle = selected ? '#7aa2ff' : '#fff'; ctx.stroke();
+    if ((v.alpha ?? 1) < 0.999) {   // 알파가 있는 점은 안쪽 반을 비워 표시
+      ctx.fillStyle = 'rgba(0,0,0,.55)';
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, r - 1, -Math.PI / 2, -Math.PI / 2 + TAU * (1 - (v.alpha ?? 1))); ctx.fill();
+    }
+    if (selected && lineMode) {
+      ctx.setLineDash([3, 3]); ctx.lineWidth = 1.5; ctx.strokeStyle = '#7aa2ff';
+      ctx.beginPath(); ctx.arc(x, y, r + 5, 0, TAU); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+}
+function checker(ctx, w, h, s = 6) {
+  ctx.fillStyle = '#2a2d36'; ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = '#3a3e4a';
+  for (let y = 0; y < h; y += s) for (let x = (y / s) % 2 ? s : 0; x < w; x += s * 2) ctx.fillRect(x, y, s, s);
+}
+function drawBar() {
+  const ctx = bctx, m = model_(), H = bar.clientHeight, gh = 34;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, barCss, H);
+  ctx.save();
+  ctx.beginPath(); ctx.roundRect(0, 0, barCss, gh, 6); ctx.clip();
+  if (!m.edges.length) {
+    ctx.fillStyle = '#1d2029'; ctx.fillRect(0, 0, barCss, gh);
+    ctx.fillStyle = '#8a90a2'; ctx.font = '12px system-ui, "Malgun Gothic", sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('구간을 만들면 여기에 그라데이션이 펼쳐져요', barCss / 2, gh / 2 + 4);
+    ctx.restore();
+    return;
+  }
+  checker(ctx, barCss, gh);
+  const segs = barSegments(m), W = bar.width;
+  barRow.width = W; barRow.height = 2;
+  const img = rctx.createImageData(W, 2), d = img.data, out = [0, 0, 0, 1];
+  for (let x = 0; x < W; x++) {
+    sampleBar(segs, (x + 0.5) / W, m.space, out);
+    // 윗줄: 알파 적용, 아랫줄: 불투명 (색만)
+    d[x * 4] = d[(W + x) * 4] = out[0] * 255;
+    d[x * 4 + 1] = d[(W + x) * 4 + 1] = out[1] * 255;
+    d[x * 4 + 2] = d[(W + x) * 4 + 2] = out[2] * 255;
+    d[x * 4 + 3] = clamp01(out[3]) * 255; d[(W + x) * 4 + 3] = 255;
+  }
+  rctx.putImageData(img, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(barRow, 0, 0, W, 1, 0, 0, barCss, gh * 0.68);
+  ctx.drawImage(barRow, 0, 1, W, 1, 0, gh * 0.68, barCss, gh * 0.32);
+  if (S().guides) {
+    for (const sg of segs.slice(1)) {
+      const x = Math.round(sg.start * barCss) + 0.5;
+      ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, gh); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, gh); ctx.stroke();
+    }
+  }
+  ctx.restore();
+  const selSeg = sel.type === 'e' && segs.find((sg) => sg.e.id === sel.id);
+  if (selSeg) {
+    ctx.fillStyle = '#7aa2ff';
+    ctx.beginPath(); ctx.roundRect(selSeg.start * barCss + 1, gh + 5, (selSeg.end - selSeg.start) * barCss - 2, 5, 2.5); ctx.fill();
+  }
+}
+
+// ── 변경 전파 ──
+function gradChanged(fast = false) {
+  compiled = null;
+  fieldDirty = true;
+  Pver++;
+  invalidate(fast);
+  updateEdgeStrips();
+  if (!fast) save();
+}
+function structureChanged() {
+  renderEdgeList();
+  renderInspector();
+  gradChanged(false);
+}
+function select(type, id) {
+  sel = type ? { type, id } : { type: null, id: null };
+  renderInspector();
+  for (const r of $('#edgeList').children) r.classList.toggle('sel', sel.type === 'e' && sel.id === r.dataset.id);
+  invalidate(false);
+}
+function deleteSelection() {
+  const slot = S();
+  if (sel.type === 'v') {
+    slot.vertices = slot.vertices.filter((v) => v.id !== sel.id);
+    slot.edges = slot.edges.filter((e) => e.a !== sel.id && e.b !== sel.id);
+  } else if (sel.type === 'e') {
+    slot.edges = slot.edges.filter((e) => e.id !== sel.id);
+  } else return;
+  sel = { type: null, id: null };
+  structureChanged();
+}
+function toggleEdge(a, b) {
+  const slot = S();
+  const existing = slot.edges.find((e) => (e.a === a && e.b === b) || (e.a === b && e.b === a));
+  if (existing) slot.edges = slot.edges.filter((e) => e !== existing);
+  else slot.edges.push({ id: uid(), a, b, bez: [...EASES.linear] });
+}
+function setSlot(key) {
+  slotKey = key;
+  sel = { type: null, id: null };
+  compiled = null; fieldDirty = true;
+  syncGradTab();
+  renderEdgeList();
+  renderInspector();
+  invalidate();
+}
+function syncGradTab() {
+  for (const b of $('#slotSeg').children) b.classList.toggle('on', b.dataset.v === slotKey);
+  for (const b of $('#modeSeg').children) b.classList.toggle('on', b.dataset.v === effectiveMode());
+  disc.classList.toggle('line', effectiveMode() === 'line');
+  $('#slotHint').textContent = SLOT_HINT[slotKey];
+  $('#linkNotice').hidden = slotKey === 'aura' || P[SLOT_P[slotKey]].gradient === 'own';
+  const s = S();
+  $('#gSpace').value = s.space;
+  $('#gSpread').value = s.spread; $('#gSpreadVal').textContent = (+s.spread).toFixed(1);
+  $('#gEqual').value = s.equal ? '1' : '0';
+  $('#gGuides').checked = s.guides;
+}
+$('#slotSeg').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) setSlot(b.dataset.v); });
+$('#modeSeg').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) { editMode = b.dataset.v; syncGradTab(); invalidate(); } });
+$('#btnUnlink').addEventListener('click', () => { P[SLOT_P[slotKey]].gradient = 'own'; refreshUI(); save(); toast('전용 그라데이션을 사용해요'); });
+$('#gSpace').addEventListener('change', (e) => { S().space = e.target.value; gradChanged(); });
+$('#gSpread').addEventListener('input', (e) => { S().spread = +e.target.value; $('#gSpreadVal').textContent = (+e.target.value).toFixed(1); gradChanged(true); });
+$('#gSpread').addEventListener('change', () => gradChanged());
+$('#gEqual').addEventListener('change', (e) => { S().equal = e.target.value === '1'; gradChanged(); });
+$('#gGuides').addEventListener('change', (e) => { S().guides = e.target.checked; invalidate(); save(); });
+
+// ── 원판 조작 ──
+function discPoint(e) {
+  const rect = disc.getBoundingClientRect(), { c, R } = discGeom();
+  const px = e.clientX - rect.left, py = e.clientY - rect.top;
+  return { px, py, nx: (px - c) / R, ny: (py - c) / R };
+}
+function hitVertex(px, py, tol) {
+  const { c, R } = discGeom(), vs = S().vertices;
+  for (let i = vs.length - 1; i >= 0; i--) {
+    const v = vs[i];
+    if (Math.hypot(c + v.x * R - px, c + v.y * R - py) <= tol) return v;
+  }
+  return null;
+}
+function hitEdge(px, py, tol) {
+  const { c, R } = discGeom(), es = S().edges;
+  for (let i = es.length - 1; i >= 0; i--) {
+    const ed = es[i], A = vertexById(ed.a), B = vertexById(ed.b);
+    if (!A || !B) continue;
+    const ax = c + A.x * R, ay = c + A.y * R, ex = (B.x - A.x) * R, ey = (B.y - A.y) * R;
+    const l2 = ex * ex + ey * ey;
+    const s = l2 ? clamp01(((px - ax) * ex + (py - ay) * ey) / l2) : 0;
+    if (Math.hypot(ax + ex * s - px, ay + ey * s - py) <= tol) return ed;
+  }
+  return null;
+}
+const clampToDisc = (x, y) => { const r = Math.hypot(x, y); return r > 1 ? [x / r, y / r] : [x, y]; };
+
+let shiftHeld = false;
+const effectiveMode = () => (shiftHeld ? 'line' : editMode);
+function setShift(on) { if (on !== shiftHeld) { shiftHeld = on; syncGradTab(); invalidate(); } }
+addEventListener('keyup', (e) => { if (e.key === 'Shift') setShift(false); });
+addEventListener('blur', () => setShift(false));
+
+let drag = null, hoverPx = null;
+disc.addEventListener('pointerdown', (e) => {
+  if (e.shiftKey !== shiftHeld) setShift(e.shiftKey);
+  const { px, py, nx, ny } = discPoint(e);
+  const touch = e.pointerType === 'touch';
+  const lineMode = effectiveMode() === 'line';
+  const from = sel.type === 'v' && vertexById(sel.id) ? sel.id : null;
+  const hitV = hitVertex(px, py, touch ? 20 : 11);
+  if (hitV) {
+    if (lineMode && from === hitV.id) { select(null); return; }
+    if (lineMode && from) { toggleEdge(from, hitV.id); select('v', hitV.id); structureChanged(); return; }
+    select('v', hitV.id);
+    drag = { id: hitV.id, px, py, moved: false };
+    disc.setPointerCapture(e.pointerId);
+    return;
+  }
+  const hitE = !lineMode && hitEdge(px, py, touch ? 12 : 6);
+  if (hitE) { select('e', hitE.id); return; }
+  if (nx * nx + ny * ny > 1) { select(null); return; }
+  const sampled = sampleField(model_(), nx, ny, [0, 0, 0]);
+  const color = sampled ? rgbToHex(...sampled) : hslToHex(Math.random() * 360, 0.8, 0.6);
+  const v = { id: uid(), x: round3(nx), y: round3(ny), color, alpha: 1 };
+  S().vertices.push(v);
+  if (lineMode && from) toggleEdge(from, v.id);
+  select('v', v.id);
+  drag = { id: v.id, px, py, moved: true };
+  disc.setPointerCapture(e.pointerId);
+  structureChanged();
+});
+disc.addEventListener('pointermove', (e) => {
+  const { px, py, nx, ny } = discPoint(e);
+  hoverPx = e.pointerType === 'touch' ? null : [px, py];
+  if (drag) {
+    if (!drag.moved && Math.hypot(px - drag.px, py - drag.py) >= DRAG_SLOP) drag.moved = true;
+    const v = drag.moved && vertexById(drag.id);
+    if (v) { [v.x, v.y] = clampToDisc(nx, ny).map(round3); renderInspector(); gradChanged(true); }
+  } else if (effectiveMode() === 'line' && sel.type === 'v') invalidate();
+  showHover(nx * nx + ny * ny <= 1 ? sampleField(model_(), nx, ny, [0, 0, 0]) : null, posLabel(nx, ny));
+});
+const endDrag = () => { if (!drag) return; const moved = drag.moved; drag = null; if (moved) gradChanged(false); };
+disc.addEventListener('pointerup', endDrag);
+disc.addEventListener('pointercancel', endDrag);
+disc.addEventListener('pointerleave', () => { hoverPx = null; invalidate(); if (!drag) showHover(null, ''); });
+disc.addEventListener('dblclick', (e) => {
+  if (effectiveMode() === 'line') return;
+  const { px, py } = discPoint(e);
+  const v = hitVertex(px, py, 11);
+  if (v) { select('v', v.id); $('#vColor').click(); }
+});
+const barU = (e) => { const r = bar.getBoundingClientRect(); return clamp01((e.clientX - r.left) / r.width); };
+bar.addEventListener('pointermove', (e) => {
+  const m = model_();
+  if (!m.edges.length) return;
+  const out = [0, 0, 0, 1];
+  sampleBar(barSegments(m), barU(e), m.space, out);
+  showHover(out, `t ${barU(e).toFixed(3)} · 알파 ${(out[3] * 100).toFixed(0)}%`);
+});
+bar.addEventListener('pointerleave', () => showHover(null, ''));
+bar.addEventListener('pointerdown', (e) => {
+  const m = model_();
+  if (!m.edges.length) return;
+  select('e', sampleBar(barSegments(m), barU(e), m.space, [0, 0, 0, 1]).e.id);
+});
+function posLabel(x, y) {
+  const deg = ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
+  return `r ${Math.hypot(x, y).toFixed(2)}, ${deg.toFixed(0)}°`;
+}
+function showHover(rgb, label) {
+  const hex = rgb ? rgbToHex(rgb[0], rgb[1], rgb[2]) : null;
+  $('#hSw').style.background = hex || 'transparent';
+  $('#hHex').textContent = hex || '—';
+  $('#hPos').textContent = hex ? label : '';
+}
+
+// ── 인스펙터 ──
+function renderInspector() {
+  if (sel.type === 'v' && !vertexById(sel.id)) sel = { type: null, id: null };
+  if (sel.type === 'e' && !edgeById(sel.id)) sel = { type: null, id: null };
+  const v = sel.type === 'v' ? vertexById(sel.id) : null;
+  const ed = sel.type === 'e' ? edgeById(sel.id) : null;
+  $('#insEmpty').hidden = !!(v || ed);
+  $('#insVertex').hidden = !v;
+  $('#insEdge').hidden = !ed;
+  if (v) {
+    $('#vColor').value = v.color;
+    if (document.activeElement !== $('#vHex')) $('#vHex').value = v.color;
+    $('#vAlpha').value = v.alpha ?? 1;
+    $('#vAlphaVal').textContent = pct(v.alpha ?? 1);
+    $('#vAlpha').style.background = `linear-gradient(90deg, transparent, ${v.color}), repeating-conic-gradient(#3a3e4a 0 25%, #2a2d36 0 50%) 0 0 / 8px 8px`;
+    const deg = S().edges.filter((e) => e.a === v.id || e.b === v.id).length;
+    $('#vInfo').textContent = `${posLabel(v.x, v.y)} · 연결 ${deg}개`;
+    renderPicker(v);
+  }
+  if (ed) {
+    $('#eA').style.background = vertexById(ed.a).color;
+    $('#eB').style.background = vertexById(ed.b).color;
+    $('#eName').textContent = ` 구간 ${S().edges.indexOf(ed) + 1}`;
+    renderBezier(ed);
+  }
+  for (const b of $('#pickSeg').children) b.classList.toggle('on', b.dataset.v === pickModel);
+}
+function setVertexColor(hex, final) {
+  const v = sel.type === 'v' && vertexById(sel.id);
+  if (!v) return;
+  v.color = hex.toLowerCase();
+  renderInspector();
+  gradChanged(!final);
+}
+$('#vColor').addEventListener('input', (e) => setVertexColor(e.target.value, false));
+$('#vColor').addEventListener('change', (e) => setVertexColor(e.target.value, true));
+$('#vHex').addEventListener('input', (e) => {
+  let s = e.target.value.trim();
+  if (!s.startsWith('#')) s = '#' + s;
+  if (/^#[0-9a-f]{6}$/i.test(s)) setVertexColor(s, true);
+});
+$('#vHex').addEventListener('blur', renderInspector);
+$('#vDel').addEventListener('click', deleteSelection);
+$('#eDel').addEventListener('click', deleteSelection);
+$('#vAlpha').addEventListener('input', (e) => {
+  const v = vertexById(sel.id);
+  if (!v) return;
+  v.alpha = +e.target.value;
+  $('#vAlphaVal').textContent = pct(v.alpha);
+  gradChanged(true);
+  invalidate();
+});
+$('#vAlpha').addEventListener('change', () => gradChanged(false));
+$('#vAlphaAll').addEventListener('click', () => {
+  const v = vertexById(sel.id);
+  if (!v) return;
+  for (const o of S().vertices) o.alpha = v.alpha;
+  gradChanged();
+  toast('모든 점에 알파 적용');
+});
+$('#pickSeg').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) { pickModel = b.dataset.v; renderInspector(); } });
+
+// 슬라이더 값은 따로 들고 있어서 범위 밖 색·무채색에서 다른 슬라이더가 튀지 않게 한다
+let pick = { id: null, model: null, hex: null, v: [0, 0, 0] };
+function syncPick(vtx) {
+  if (pick.id === vtx.id && pick.model === pickModel && pick.hex === vtx.color) return;
+  const next = PICK_MODELS[pickModel].from(vtx.color);
+  if (pick.id === vtx.id && pick.model === pickModel && next[1] < 1e-3) next[0] = pick.v[0];
+  pick = { id: vtx.id, model: pickModel, hex: vtx.color, v: next };
+}
+const sliders = [0, 1, 2].map((k) => {
+  const label = el('label'), input = el('input'), code = el('code'), all = el('button', 'mini', '전체');
+  input.type = 'range'; input.className = 'track';
+  all.title = '이 값을 모든 점에 적용';
+  input.addEventListener('input', () => slide(k, +input.value, false));
+  input.addEventListener('change', () => slide(k, +input.value, true));
+  all.addEventListener('click', () => applyToAll(k));
+  $('#pickSliders').append(label, input, code, all);
+  return { label, input, code };
+});
+function renderPicker(vtx) {
+  syncPick(vtx);
+  const Mdl = PICK_MODELS[pick.model];
+  sliders.forEach((s, k) => {
+    const comp = Mdl.comps[k];
+    s.label.textContent = comp.label;
+    s.input.min = comp.min; s.input.max = comp.max; s.input.step = comp.step;
+    s.input.value = pick.v[k];
+    s.code.textContent = comp.fmt(pick.v[k]);
+    const stops = [];
+    for (let i = 0; i <= 12; i++) {
+      const vv = [...pick.v];
+      vv[k] = comp.min + (comp.max - comp.min) * i / 12;
+      stops.push(Mdl.to(...vv));
+    }
+    s.input.style.background = `linear-gradient(90deg, ${stops.join(',')})`;
+  });
+}
+function slide(k, value, final) {
+  const v = vertexById(sel.id);
+  if (!v) return;
+  syncPick(v);
+  pick.v[k] = value;
+  const hex = PICK_MODELS[pick.model].to(...pick.v);
+  pick.hex = hex;
+  v.color = hex;
+  renderInspector();
+  gradChanged(!final);
+}
+function applyToAll(k) {
+  const v = vertexById(sel.id);
+  if (!v) return;
+  syncPick(v);
+  const Mdl = PICK_MODELS[pick.model];
+  for (const o of S().vertices) {
+    const comps = Mdl.from(o.color);
+    comps[k] = pick.v[k];
+    o.color = Mdl.to(...comps);
+  }
+  pick.hex = null;
+  renderInspector();
+  gradChanged();
+  toast(`모든 점에 ${Mdl.comps[k].label} 적용`);
+}
+
+// ── 베지어 편집 (선택한 구간) ──
+const PW = 200, PH = 200;
+const bezSvg = $('#bezSvg');
+bezSvg.innerHTML = `
+  <rect class="plot" x="0" y="0" width="${PW}" height="${PH}" rx="4"></rect>
+  ${[0.25, 0.5, 0.75].map((f) => `<line class="grid" x1="${f * PW}" y1="0" x2="${f * PW}" y2="${PH}"/><line class="grid" x1="0" y1="${f * PH}" x2="${PW}" y2="${f * PH}"/>`).join('')}
+  <line class="diag" x1="0" y1="${PH}" x2="${PW}" y2="0"></line>
+  <line class="arm" data-arm="0"></line><line class="arm" data-arm="1"></line>
+  <path class="curve"></path>
+  <circle class="hit" r="14" data-h="0"></circle><circle class="hit" r="14" data-h="1"></circle>
+  <circle class="handle" r="6" data-hv="0"></circle><circle class="handle" r="6" data-hv="1"></circle>`;
+const BX = (v) => v * PW, BY = (v) => (1 - v) * PH;
+for (const k of Object.keys(EASES)) { const o = el('option', null, k); o.value = k; $('#bezPreset').append(o); }
+$('#bezPreset').append(Object.assign(el('option', null, '사용자 지정'), { value: 'custom', disabled: true }));
+for (const k of Object.keys(EASES)) { const o = el('option', null, k); o.value = k; $('#hBez').append(o); }
+$('#hBez').value = 'ease';
+function renderBezier(ed) {
+  const [x1, y1, x2, y2] = ed.bez;
+  bezSvg.querySelector('.curve').setAttribute('d', `M0 ${PH} C ${BX(x1)} ${BY(y1)}, ${BX(x2)} ${BY(y2)}, ${PW} 0`);
+  const arms = bezSvg.querySelectorAll('.arm');
+  arms[0].setAttribute('x1', 0); arms[0].setAttribute('y1', PH); arms[0].setAttribute('x2', BX(x1)); arms[0].setAttribute('y2', BY(y1));
+  arms[1].setAttribute('x1', PW); arms[1].setAttribute('y1', 0); arms[1].setAttribute('x2', BX(x2)); arms[1].setAttribute('y2', BY(y2));
+  for (let i = 0; i < 2; i++) {
+    for (const c of bezSvg.querySelectorAll(`[data-h="${i}"],[data-hv="${i}"]`)) {
+      c.setAttribute('cx', BX(ed.bez[i * 2])); c.setAttribute('cy', BY(ed.bez[i * 2 + 1]));
+    }
+  }
+  $('#bezCode').textContent = `cubic-bezier(${ed.bez.join(', ')})`;
+  const preset = Object.keys(EASES).find((k) => EASES[k].every((v, i) => v === ed.bez[i]));
+  $('#bezPreset').value = preset || 'custom';
+}
+let bezDrag = -1;
+bezSvg.addEventListener('pointerdown', (e) => {
+  const h = e.target.closest('[data-h],[data-hv]');
+  if (!h) return;
+  bezDrag = +(h.dataset.h ?? h.dataset.hv);
+  bezSvg.setPointerCapture(e.pointerId);
+});
+bezSvg.addEventListener('pointermove', (e) => {
+  if (bezDrag < 0) return;
+  const ed = edgeById(sel.id);
+  if (!ed) return;
+  const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(bezSvg.getScreenCTM().inverse());
+  ed.bez[bezDrag * 2] = round3(clamp01(pt.x / PW));
+  ed.bez[bezDrag * 2 + 1] = round3(clamp01(1 - pt.y / PH));
+  renderBezier(ed);
+  gradChanged(true);
+});
+const endBez = () => { if (bezDrag >= 0) { bezDrag = -1; gradChanged(false); } };
+bezSvg.addEventListener('pointerup', endBez);
+bezSvg.addEventListener('pointercancel', endBez);
+$('#bezPreset').addEventListener('change', (e) => {
+  const ed = edgeById(sel.id);
+  if (!ed || !EASES[e.target.value]) return;
+  ed.bez = [...EASES[e.target.value]];
+  renderBezier(ed); gradChanged();
+});
+$('#bezReverse').addEventListener('click', () => {
+  const ed = edgeById(sel.id);
+  if (!ed) return;
+  const [x1, y1, x2, y2] = ed.bez;
+  ed.bez = [1 - x2, 1 - y2, 1 - x1, 1 - y1].map(round3);
+  renderBezier(ed); gradChanged();
+});
+$('#edgeFlip').addEventListener('click', () => {
+  const ed = edgeById(sel.id);
+  if (!ed) return;
+  [ed.a, ed.b] = [ed.b, ed.a];
+  structureChanged();
+});
+
+// ── 구간 목록 ──
+function renderEdgeList() {
+  const list = $('#edgeList'), slot = S();
+  list.innerHTML = '';
+  $('#edgeEmpty').hidden = slot.edges.length > 0;
+  $('#edgeCount').textContent = slot.edges.length ? `(${slot.edges.length})` : '';
+  slot.edges.forEach((ed, i) => {
+    const row = el('div', 'edge-row');
+    row.dataset.id = ed.id;
+    row.classList.toggle('sel', sel.type === 'e' && sel.id === ed.id);
+    const cv = el('canvas'); cv.width = 160; cv.height = 1;
+    const preset = Object.keys(EASES).find((k) => EASES[k].every((v, j) => v === ed.bez[j])) || 'custom';
+    row.append(el('b', null, String(i + 1)), cv, el('span', null, preset));
+    row.addEventListener('click', () => select('e', ed.id));
+    list.append(row);
+  });
+  updateEdgeStrips();
+}
+function updateEdgeStrips() {
+  const m = model_(), out = [0, 0, 0];
+  for (const row of $('#edgeList').children) {
+    const e = m.edges.find((x) => x.id === row.dataset.id);
+    const cv = row.querySelector('canvas');
+    if (!e || !cv) continue;
+    const cx = cv.getContext('2d'), img = cx.createImageData(cv.width, 1);
+    for (let x = 0; x < cv.width; x++) {
+      const i = Math.round(x / (cv.width - 1) * (LUT_N - 1)) * 4;
+      fromSpace(e.lut[i], e.lut[i + 1], e.lut[i + 2], m.space, out);
+      img.data.set([out[0] * 255, out[1] * 255, out[2] * 255, 255], x * 4);
+    }
+    cx.putImageData(img, 0, 0);
+  }
+}
+
+// ── 팔레트 생성 / 슬롯 도구 ──
+$('#hCount').addEventListener('input', (e) => { $('#hCountVal').textContent = e.target.value; });
+$('#hMake').addEventListener('click', () => {
+  const n = +$('#hCount').value;
+  const colors = harmony($('#hBase').value, $('#hType').value, n);
+  const alphas = $('#hFade').checked ? colors.map((_, i) => (n > 1 ? 1 - 0.75 * Math.pow(i / (n - 1), 2) : 1)) : [];
+  const keep = S();
+  G[slotKey] = { ...chainSlot(colors, alphas.map(round3), $('#hBez').value), space: keep.space, spread: keep.spread, equal: keep.equal, guides: keep.guides };
+  sel = { type: null, id: null };
+  structureChanged();
+  toast('팔레트 생성됨');
+});
+$('#gReverse').addEventListener('click', () => {
+  const slot = S();
+  slot.edges.reverse();
+  for (const ed of slot.edges) {
+    [ed.a, ed.b] = [ed.b, ed.a];
+    const [x1, y1, x2, y2] = ed.bez;
+    ed.bez = [1 - x2, 1 - y2, 1 - x1, 1 - y1].map(round3);
+  }
+  structureChanged();
+});
+$('#gCss').addEventListener('click', () => copyText(slotCss(S()), 'CSS 그라데이션 복사됨'));
+$('#gCopy').addEventListener('click', () => {
+  const to = $('#gCopyTo').value;
+  if (to === slotKey) return toast('같은 슬롯이에요');
+  G[to] = clone(S());
+  if (to !== 'aura') P[SLOT_P[to]].gradient = 'own';
+  refreshUI(); gradChanged();
+  toast('그라데이션 복사됨');
+});
+
+// ═════════════════════════ 라이브러리 (실시간 아이콘 목록) ═════════════════════════
+let library = [];
+try { library = (JSON.parse(localStorage.getItem(LIB_KEY)) || []).filter((x) => x && x.settings); } catch (e) { library = []; }
+let libInstances = [];
+function saveLibrary() {
+  try { localStorage.setItem(LIB_KEY, JSON.stringify(library)); return true; }
+  catch (e) {
+    // 저장소가 막혀 있거나 가득 차도 이번 세션에는 남겨 둔다
+    toast(e.name === 'QuotaExceededError' ? '브라우저 저장 공간이 가득 찼어요 — 내보내기로 백업하세요' : '브라우저 저장소를 쓸 수 없어 이 창에서만 유지돼요 — 내보내기로 백업하세요');
+    return false;
+  }
+}
+function renderLibrary() {
+  const list = $('#libList');
+  list.innerHTML = '';
+  $('#libCount').textContent = library.length ? `(${library.length})` : '';
+  instances = instances.filter((i) => !libInstances.includes(i));
+  libInstances = [];
+  if (!library.length) {
+    list.append(el('div', 'empty', '저장된 아우라가 없어요. 이름을 입력하고 “현재 아우라 저장”을 눌러 보세요.'));
+  } else {
+    const grid = el('div', 'libgrid');
+    for (const item of [...library].sort((a, b) => b.updated - a.updated)) {
+      const card = el('div', 'litem');
+      const cell = el('div', 'cell');
+      cell.title = '클릭해서 불러오기';
+      cell.addEventListener('click', () => { applyState(clone(item)); toast(`불러옴: ${item.name}`); });
+      const name = el('div', 'name');
+      name.textContent = item.name;
+      const ops = el('div', 'ops');
+      const op = (text, fn, cls) => { const b = el('button', cls, text); b.addEventListener('click', fn); ops.append(b); };
+      op('덮어쓰기', () => {
+        if (!confirm(`“${item.name}”을(를) 현재 아우라로 덮어쓸까요?`)) return;
+        Object.assign(item, currentState(), { updated: Date.now() });
+        saveLibrary(); renderLibrary();
+      });
+      op('이름', () => {
+        const nm = prompt('새 이름', item.name);
+        if (!nm) return;
+        item.name = nm.trim().slice(0, 60); item.updated = Date.now();
+        saveLibrary(); renderLibrary();
+      });
+      op('복제', () => { library.push({ ...clone(item), id: uid(), name: item.name + ' 복사본', updated: Date.now() }); saveLibrary(); renderLibrary(); });
+      op('JSON', () => { jsonText.value = JSON.stringify({ type: 'aura-2d-studio', version: 1, settings: item.settings, gradients: item.gradients }, null, 2); jsonDlg.showModal(); });
+      op('삭제', () => {
+        if (!confirm(`“${item.name}”을(를) 라이브러리에서 삭제할까요?`)) return;
+        library = library.filter((x) => x !== item);
+        saveLibrary(); renderLibrary();
+      }, 'danger');
+      card.append(cell, name, ops);
+      grid.append(card);
+      libInstances.push({ el: cell, S: item.settings, G: item.gradients, phase: Math.random() * 10, cache: { ver: -1, buf: null }, clip: $('#libPage') });
+    }
+    list.append(grid);
+  }
+  instances.push(...libInstances);
+  if (VIEW.mode === 'library') buildGallery();
+}
+$('#libSave').addEventListener('click', () => {
+  const name = ($('#libName').value.trim() || `아우라 ${library.length + 1}`).slice(0, 60);
+  library.push({ id: uid(), name, created: Date.now(), updated: Date.now(), ...currentState() });
+  $('#libName').value = '';
+  renderLibrary();
+  if (saveLibrary()) toast(`저장됨: ${name}`);
+});
+$('#libShow').addEventListener('click', () => { VIEW.mode = 'library'; VIEW.count = Math.max(library.length, 1); syncToolbar(); buildGallery(); save(); });
+$('#libExport').addEventListener('click', () => {
+  download(JSON.stringify({ type: 'aura-2d-studio-library', version: 1, items: library }, null, 2), 'aura-2d-library.json', 'application/json');
+});
+$('#libImport').addEventListener('click', () => $('#libFile').click());
+$('#libFile').addEventListener('change', async (e) => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  try {
+    const obj = JSON.parse(await f.text());
+    const items = Array.isArray(obj.items) ? obj.items : [obj];
+    for (const it of items) {
+      const st = parseImported(it);
+      library.push({ id: uid(), name: String(it.name || f.name.replace(/\.json$/, '')).slice(0, 60), created: it.created || Date.now(), updated: Date.now(),
+        type: 'aura-2d-studio', version: 1, settings: deepMerge(clone(DEFAULTS), st.settings), gradients: st.gradients });
+    }
+    saveLibrary(); renderLibrary();
+    toast(`${items.length}개 가져옴`);
+  } catch (err) { toast('가져오기 실패: ' + err.message); }
+});
+
+// ═════════════════════════ 이미지 업로드 ═════════════════════════
+$('#imgFile').addEventListener('change', async (e) => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  const url = URL.createObjectURL(f);
+  try {
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('이미지를 읽을 수 없어요')); i.src = url; });
+    // 128×128 정사각형에 맞춰 넣고 dataURL로 설정에 저장 (JSON·프리셋에 그대로 담긴다)
+    const N = 128, c = el('canvas');
+    c.width = c.height = N;
+    const cx = c.getContext('2d');
+    const s = Math.min(N / img.width, N / img.height) * 0.96;
+    cx.drawImage(img, (N - img.width * s) / 2, (N - img.height * s) / 2, img.width * s, img.height * s);
+    P.icon.image = c.toDataURL('image/png');
+    P.icon.shape = 'image';
+    refreshUI(); save();
+    toast('이미지 아이콘 적용 (투명 배경 PNG·SVG 권장)');
+  } catch (err) { toast(err.message); }
+  finally { URL.revokeObjectURL(url); }
+});
+
+// ═════════════════════════ 공용 기능 ═════════════════════════
+let toastTimer = 0;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 1700);
+}
+async function copyText(text, msg) {
+  try { await navigator.clipboard.writeText(text); }
+  catch (e) { const ta = el('textarea'); ta.value = text; document.body.append(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+  toast(msg || '복사됨');
+}
+function download(data, name, type) {
+  const a = el('a');
+  a.href = URL.createObjectURL(data instanceof Blob ? data : new Blob([data], { type }));
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+function togglePanel() { document.body.classList.toggle('panel-hidden'); if (activeTab === 'grad') sizeGradCanvases(); }
+$('#toggle').addEventListener('click', togglePanel);
+$('#btnReset').addEventListener('click', () => { if (confirm('설정과 그라데이션을 기본값으로 되돌릴까요?')) { applyState({ settings: clone(DEFAULTS), gradients: defaultGradients() }); toast('기본값으로 초기화'); } });
+$('#btnRandom').addEventListener('click', () => { applyState(randomState(), true); toast('랜덤 아우라'); });
+
+const jsonDlg = $('#jsonDlg'), jsonText = $('#jsonText');
+$('#btnJson').addEventListener('click', () => { jsonText.value = JSON.stringify(currentState(), null, 2); jsonDlg.showModal(); });
+$('#jsonClose').addEventListener('click', () => jsonDlg.close());
+$('#jsonCopy').addEventListener('click', () => copyText(jsonText.value, '클립보드에 복사됨'));
+$('#jsonDownload').addEventListener('click', () => download(jsonText.value, 'aura-2d-studio.json', 'application/json'));
+$('#jsonOpen').addEventListener('click', () => $('#jsonFile').click());
+$('#jsonFile').addEventListener('change', async (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) jsonText.value = await f.text(); });
+$('#jsonApply').addEventListener('click', () => {
+  try {
+    applyState(parseImported(JSON.parse(jsonText.value)));
+    jsonDlg.close(); toast('설정 적용됨');
+  } catch (e) { toast('JSON 오류: ' + e.message); }
+});
+
+// ═════════════════════════ 내보내기 (PNG · GIF · 스프라이트시트) ═════════════════════════
+// 별도의 작은 오프스크린 렌더러로 현재 설정 1개를 정사각형으로 그린다
+let exporting = false;
+function exportRenderer(size) {
+  const c = el('canvas'); c.width = c.height = size;
+  return new AuraRenderer(c, { preserve: true });
+}
+function renderToImageData(ER, buf, t, size, cx) {
+  ER.begin(size, size);
+  ER.draw(buf, t, 0, 0, size, size, null, P.icon.shape === 'image' ? P.icon.image : null);
+  cx.clearRect(0, 0, size, size);
+  cx.drawImage(ER.canvas, 0, 0);
+  return cx.getImageData(0, 0, size, size);
+}
+// 루프 크로스페이드: f(t) = (1-w)·A(t) + w·A(t-L), w=t/L  → f(L) = A(0)
+function blendFrames(A, B, w) {
+  const a = A.data, b = B.data;
+  for (let i = 0; i < a.length; i += 4) {
+    const aa = a[i + 3] / 255 * (1 - w), ba = b[i + 3] / 255 * w, oa = aa + ba;
+    if (oa > 0) for (let k = 0; k < 3; k++) a[i + k] = (a[i + k] * aa + b[i + k] * ba) / oa;
+    a[i + 3] = oa * 255;
+  }
+  return A;
+}
+async function renderSequence({ size, dur, fps, loop, onFrame }) {
+  const ER = exportRenderer(size);
+  const buf = pack(P, G, null);
+  const cv = el('canvas'); cv.width = cv.height = size;
+  const cx = cv.getContext('2d', { willReadFrequently: true });
+  const n = Math.max(1, Math.round(dur * fps));
+  try {
+    for (let i = 0; i < n; i++) {
+      const t = i / fps;
+      let img = renderToImageData(ER, buf, t, size, cx);
+      if (loop && n > 1) img = blendFrames(img, renderToImageData(ER, buf, t - dur, size, cx), t / dur);
+      await onFrame(img, i, n);
+      await new Promise((r) => setTimeout(r));
+    }
+  } finally {
+    ER.gl.getExtension('WEBGL_lose_context')?.loseContext();
+  }
+  return n;
+}
+function flatten(img, bgHex) {
+  const [r, g, b] = hexToRgb(bgHex).map((v) => v * 255), d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const a = d[i + 3] / 255;
+    d[i] = d[i] * a + r * (1 - a); d[i + 1] = d[i + 1] * a + g * (1 - a); d[i + 2] = d[i + 2] * a + b * (1 - a); d[i + 3] = 255;
+  }
+  return img;
+}
+
+$('#btnPng').addEventListener('click', () => {
+  const size = 512, ER = exportRenderer(size), cv = el('canvas');
+  cv.width = cv.height = size;
+  renderToImageData(ER, pack(P, G, null), simTime, size, cv.getContext('2d'));
+  ER.gl.getExtension('WEBGL_lose_context')?.loseContext();
+  cv.toBlob((b) => download(b, 'aura-2d.png'));
+});
+
+const expDlg = $('#expDlg');
+let expKind = 'gif';
+function openExport(kind) {
+  expKind = kind;
+  $('#expTitle').textContent = kind === 'gif' ? 'GIF 내보내기' : '스프라이트시트 내보내기 (PNG 가로 띠 + CSS)';
+  $('#eColorsLbl').hidden = $('#eColors').hidden = kind !== 'gif';
+  $('#eBg').value = kind === 'gif' ? 'color' : 'transparent';
+  $('#eSize').value = kind === 'gif' ? 256 : 128;
+  $('#eFps').value = kind === 'gif' ? '20' : '24';
+  $('#eInfo').textContent = kind === 'gif'
+    ? 'GIF는 반투명을 못 담아서 배경색을 채워요.'
+    : '프레임을 가로로 이어 붙인 PNG 한 장 + CSS steps() 애니메이션. 런타임 비용이 거의 없어 목록에 수천 개도 가능해요.';
+  $('#eProg').hidden = true; $('#eCssWrap').hidden = true;
+  expDlg.showModal();
+}
+$('#btnGif').addEventListener('click', () => openExport('gif'));
+$('#btnSprite').addEventListener('click', () => openExport('sprite'));
+$('#eClose').addEventListener('click', () => { if (!exporting) expDlg.close(); });
+expDlg.addEventListener('cancel', (e) => { if (exporting) e.preventDefault(); });
+$('#eFitPulse').addEventListener('click', () => {
+  const s = P.pulse.speed;
+  if (s <= 0) { $('#eInfo').textContent = '펄스 속도가 0이라 주기를 계산할 수 없어요.'; return; }
+  let d = 1 / s;
+  while (d < 1) d *= 2;
+  $('#eDur').value = d.toFixed(2);
+  $('#eInfo').textContent = `펄스 주기 기준 ${d.toFixed(2)}초`;
+});
+$('#eCssCopy').addEventListener('click', () => copyText($('#eCss').value, 'CSS 복사됨'));
+$('#eStart').addEventListener('click', async () => {
+  if (exporting) return;
+  const size = Math.max(16, Math.min(1024, Math.round(+$('#eSize').value || 128)));
+  const dur = Math.max(0.2, +$('#eDur').value || 2), fps = +$('#eFps').value, loop = $('#eLoop').checked;
+  const bg = $('#eBg').value === 'color' || expKind === 'gif' ? $('#eBgColor').value : null;
+  const prog = $('#eProg'), info = $('#eInfo');
+  exporting = true; $('#eStart').disabled = true; prog.hidden = false; prog.value = 0; $('#eCssWrap').hidden = true;
+  const t0 = performance.now();
+  try {
+    if (expKind === 'gif') {
+      const gif = GIFEncoder(), colors = +$('#eColors').value, delay = Math.round(1000 / fps);
+      let palette = null;
+      const n = await renderSequence({ size, dur, fps, loop, onFrame: (img, i, total) => {
+        flatten(img, bg);
+        if (!palette) palette = quantize(img.data, colors);
+        gif.writeFrame(applyPalette(img.data, palette), size, size, { palette, delay });
+        prog.value = (i + 1) / total; info.textContent = `프레임 ${i + 1} / ${total}`;
+      } });
+      gif.finish();
+      const blob = new Blob([gif.bytes()], { type: 'image/gif' });
+      download(blob, `aura-2d-${size}.gif`);
+      info.textContent = `완료: ${size}×${size}, ${n}프레임, ${(blob.size / 1024).toFixed(0)}KB (${((performance.now() - t0) / 1000).toFixed(1)}초)`;
+    } else {
+      const n = Math.max(1, Math.round(dur * fps));
+      if (n * size > 16384) throw new Error(`띠가 너무 길어요 (${n}×${size}px). 크기나 프레임 수를 줄여 주세요.`);
+      const sheet = el('canvas'); sheet.width = n * size; sheet.height = size;
+      const sx = sheet.getContext('2d');
+      await renderSequence({ size, dur, fps, loop, onFrame: (img, i, total) => {
+        if (bg) flatten(img, bg);
+        sx.putImageData(img, i * size, 0);
+        prog.value = (i + 1) / total; info.textContent = `프레임 ${i + 1} / ${total}`;
+      } });
+      const blob = await new Promise((r) => sheet.toBlob(r, 'image/png'));
+      download(blob, `aura-sprite-${size}x${n}.png`);
+      $('#eCss').value =
+`/* aura-sprite-${size}x${n}.png — ${n}프레임, ${dur}s 루프 */
+.aura-icon {
+  width: ${size}px;
+  height: ${size}px;
+  background: url("aura-sprite-${size}x${n}.png") 0 0 / ${n * size}px ${size}px no-repeat;
+  animation: aura-play ${dur}s steps(${n}) infinite;
+}
+@keyframes aura-play { to { background-position: -${n * size}px 0; } }
+/* 다른 크기로 쓰려면 width/height와 background-size를 같은 비율로 바꾸고 keyframes의 값도 맞추세요. */`;
+      $('#eCssWrap').hidden = false;
+      info.textContent = `완료: ${n * size}×${size} PNG, ${(blob.size / 1024).toFixed(0)}KB (${((performance.now() - t0) / 1000).toFixed(1)}초)`;
+    }
+  } catch (err) {
+    console.error(err);
+    info.textContent = '실패: ' + err.message;
+  } finally {
+    exporting = false; $('#eStart').disabled = false;
+  }
+});
+
+addEventListener('keydown', (e) => {
+  if (e.key === 'Shift') setShift(true);
+  if (e.target.closest('input, textarea, select') || jsonDlg.open || expDlg.open) return;
+  if (e.key === 'h' || e.key === 'H') togglePanel();
+  if (activeTab === 'grad') {
+    if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteSelection(); }
+    if (e.key === 'Escape') select(null);
+  }
+});
+addEventListener('resize', () => { if (activeTab === 'grad') sizeGradCanvases(); });
+
+// ═════════════════════════ 시작 ═════════════════════════
+buildUI();
+$('#presetGrid').replaceWith(makePresetGrid());
+refreshUI();
+syncToolbar();
+renderEdgeList();
+renderInspector();
+renderLibrary();
+buildGallery();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
