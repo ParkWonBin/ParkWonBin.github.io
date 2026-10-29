@@ -79,6 +79,16 @@
     <br> 원판 위 점과 엣지로 색을 배치하고
     <br> 보간 곡선과 그라데이션을 다듬는 도구입니다.
 
+- title : 워해머 전장 플래너
+  url : /webapps/warhammer_map
+  url_app : /webapps/warhammer_map/app.html
+  repo : https://github.com/ParkWonBin/ParkWonBin.github.io/blob/jekyll-blog/webapps/warhammer_map/index.html
+  thumbnail :
+  type : demo
+  desc : <strong> 워해머 전장 플래너 </strong>
+    <br> 성향으로 추천 지도를 골라 지형 · 목표 위에 유닛을 놓고
+    <br> 이동 · 돌격 · 오라 · 심층 타격 · 시야선을 2D/3D 로 미리 재 보는 도구입니다.
+
 - title : 워해머 판 · 턴과 이동
   url : /webapps/warhammer_move
   url_app : /webapps/warhammer_move/app.html
