@@ -15,6 +15,7 @@ Jekyll 블로그 + 정적 웹앱 모음 (GitHub Pages 기본 빌드, Jekyll 3.10
 
 - 그림 작품: `webapps/drawing/img/*.md` (`layout: artwork`). 원본 PNG 는 매우 크므로 페이지에는 `_web.webp` 를 쓴다.
 - 글: `_posts/YYYY-MM-DD-제목.md` + `category:`.
-- 옛 주소 처리는 `404.html` → `_includes/resolver.html` (+ `_data/redirects.yml`). 기존 공개 주소를 바꾸거나 지울 땐 여기에 옮겨 둔다.
-- 스타일은 `assets/css/site.css` (순수 CSS, Sass 없음). 색은 `:root` 변수로, 다크 모드는 `prefers-color-scheme`.
+- 옛 주소 처리는 `404.html` → `_includes/resolver.html` (+ `_data/redirects.yml`). 기존 공개 주소를 옮길 땐 여기에 옛 주소를 남긴다. (일부러 내린 콘텐츠는 404 로 둔다.)
+- 스타일은 `assets/css/site.css` (순수 CSS, Sass 없음). 색은 `:root` 변수로, 다크 모드는 `:root[data-theme="dark"]` 한 곳에만 (head 인라인 스크립트가 data-theme 를 정함).
+- 카테고리: info · tech(기술 도구) · art(예술 도구) · game · test. 새 카테고리는 `_config.yml` 의 `app_categories` + CSS `--<id>` 색 변수.
 - Liquid 는 Jekyll 3.10(Liquid 4) 문법만 쓴다. 주석 안의 `{% include %}` 도 실행되니 지운 include 를 남기지 않는다.

@@ -21,8 +21,8 @@ pages/                 그림(/drawing/) · 글 목록(/posts/) · About(/about/
 index.html             홈 = 웹앱 목록 (검색 · 카테고리 필터)
 404.html               없는 주소 안내 + 단축 주소 / 옛 주소 처리
 assets/
-  css/site.css         사이트 스타일 (순수 CSS, 라이트/다크 자동)
-  js/site.js           목록 검색 · 필터
+  css/site.css         사이트 스타일 (순수 CSS, 라이트/다크 — 시스템 설정 + 헤더 토글)
+  js/site.js           라이트/다크 토글, 목록 검색 · 필터
   js/analytics.js      Google Analytics (블로그 + 모든 웹앱 공용)
 webapps/<slug>/        웹앱 하나 = 폴더 하나 (index.html 이 곧 앱)
 webapps/drawing/img/   전시 작품 페이지(*.md) 와 이미지
@@ -51,7 +51,7 @@ webapps/drawing/img/   전시 작품 페이지(*.md) 와 이미지
 ```yaml
 - slug: my_app                 # webapps/ 아래 폴더 이름 → /webapps/my_app/
   title: 내 앱
-  category: demo               # info | demo | test | project
+  category: art                # info | tech | art | game | test
   icon: 🧪                     # (선택) 카드 아이콘 이모지
   desc: 한두 문장 설명. HTML 없이 줄글로.
   tags: [Canvas, WebGL]        # (선택) 기술 · 키워드 — 검색에도 쓰임
@@ -67,7 +67,7 @@ webapps/drawing/img/   전시 작품 페이지(*.md) 와 이미지
 | `repo` | 소스 링크. 생략하면 이 저장소의 `webapps/<slug>/` 로 자동 연결 |
 | `hidden: true` | 목록에서만 숨김. 앱 주소 · 단축 주소는 그대로 동작 |
 
-같은 카테고리 안에서는 파일에 적힌 순서대로 보입니다. 카테고리 이름 · 순서는 `_config.yml` 의 `app_categories` 에서 바꿉니다.
+같은 카테고리 안에서는 파일에 적힌 순서대로 보입니다. 카테고리(정보 · 기술 도구 · 예술 도구 · 게임 · 테스트)의 이름 · 순서는 `_config.yml` 의 `app_categories` 에서 바꾸고, 카드 색은 `assets/css/site.css` 의 `--<카테고리>` 변수입니다.
 
 **끝.** 리다이렉트 파일, 카테고리별 include, 홈 화면 수정은 필요 없습니다.
 

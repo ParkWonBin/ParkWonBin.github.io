@@ -6,7 +6,7 @@
 #   slug      webapps/ 아래 폴더 이름. 앱 주소는 /webapps/<slug>/
 #   url       (선택) 다른 곳에 있는 앱이면 그 주소. 있으면 slug 대신 이 주소로 연결
 #   title     카드 제목
-#   category  info | demo | test | project  (이름과 순서는 _config.yml 의 app_categories)
+#   category  info | tech | art | game | test  (이름과 순서는 _config.yml 의 app_categories)
 #   icon      (선택) 카드 아이콘으로 쓸 이모지
 #   desc      한두 문장 설명 (줄글, HTML 없이)
 #   tags      (선택) 기술 스택 · 키워드 — 검색에도 쓰입니다
@@ -48,110 +48,20 @@
   alias: [flood_map]
 
 
-# ── 데모 ────────────────────────────────────────────────────────────────────
-
-- slug: aura_3d_studio
-  title: Aura 3D Studio
-  category: demo
-  icon: 🔮
-  desc: 3D 오브젝트에 아우라를 씌우고 모든 수치를 조절합니다. 표면 그라데이션 채우기와 일렁임 연출, 컬러피커 그라데이션 · 라이브러리 · GIF/JSON 내보내기를 지원합니다.
-  tags: [Three.js, WebGL, GIF]
-  date: 2026-10-25
-  alias: [aura_3d_studio]
-
-- slug: aura_2d_studio
-  title: Aura 2D Studio
-  category: demo
-  icon: 💫
-  desc: 아이콘용 2D 아우라를 캔버스 하나에 수백 개 띄워 봅니다. 도형 내부 그라데이션과 일렁임 연출, 컬러피커 그라데이션 · 라이브러리 · GIF/스프라이트시트 내보내기를 지원합니다.
-  tags: [WebGL, Canvas, GIF]
-  date: 2026-10-25
-  alias: [aura_2d_studio]
-
-- slug: art_threading
-  title: String Art Threading
-  category: demo
-  icon: 🧵
-  desc: 못과 실 한 가닥으로 이미지를 재현하는 스트링 아트 생성기입니다. 배경 제거, 원·타원·정사각형·직사각형 틀, SVG/작업 순서 내보내기를 지원합니다.
-  tags: [Canvas, 이미지 처리]
-  date: 2026-10-23
-  alias: [threading]
-
-- slug: art_caire
-  title: Caire — Seam Carving
-  category: demo
-  icon: ✂️
-  desc: 중요한 부분은 지키고 덜 중요한 이음선부터 지워 크기를 바꾸는 이미지 리사이즈입니다. 모서리를 드래그해 미리보고 제거 픽셀 · 에너지 · 제거 우선순위 히트맵을 확인합니다.
-  tags: [Canvas, 이미지 처리]
-  date: 2026-10-23
-  alias: [caire]
-
-- slug: art_primitive_brush
-  title: Primitive × p5.brush
-  category: demo
-  icon: 🖌️
-  desc: 삼각형·타원 같은 기본 도형을 하나씩 더해 이미지를 근사하고, 그 도형을 그대로 또는 p5.brush 수채·해칭 붓질로 다시 그립니다.
-  tags: [p5.js, p5.brush, Web Worker]
-  date: 2026-10-23
-  alias: [primitive_brush]
-
-- slug: isoluminance
-  title: 같은 그림, 다른 도형
-  category: demo
-  icon: 👁️
-  desc: 한 장의 풀컬러 이미지가 흑백·색상 등 보는 방식에 따라 다른 도형으로 보이는 원리를 체험합니다.
-  tags: [색채, 지각]
-  date: 2026-10-03
-  alias: [isoluminance]
+# ── 기술 도구 ───────────────────────────────────────────────────────────────
 
 - slug: glb_viewer
   title: 3D Viewer Lab
-  category: demo
+  category: tech
   icon: 🧊
   desc: GLB 모델을 불러와 살펴보고 파츠별로 분리하거나, 로우폴리로 변환해 다운로드합니다.
   tags: [Three.js, GLB, Web Worker]
   date: 2026-09-30
   alias: [glb_viewer]
 
-- slug: color_picker
-  title: Color Picker Lab
-  category: demo
-  icon: 🎨
-  desc: 원판 위에 점과 엣지로 색을 배치하고 보간 곡선과 그라데이션을 다듬습니다.
-  tags: [Canvas, 색채]
-  date: 2026-09-17
-  alias: [color_picker]
-
-- slug: warhammer_map
-  title: 워해머 전장 플래너
-  category: demo
-  icon: 🗺️
-  desc: 성향으로 추천 지도를 골라 지형·목표 위에 유닛을 놓고, 이동 · 돌격 · 오라 · 심층 타격 · 시야선을 2D/3D로 미리 재 봅니다. 목표 장악, 미션 트위스트, 공유 링크 지원.
-  tags: [Three.js, 워해머]
-  date: 2026-10-29
-  alias: [warhammer_map]
-
-- slug: warhammer_move
-  title: 워해머 판 · 턴과 이동
-  category: demo
-  icon: ♟️
-  desc: 3D 보드 위에서 유닛을 배치하고 턴별 이동을 다룹니다.
-  tags: [Three.js, 워해머]
-  date: 2026-08-21
-  alias: [warhammer_move]
-
-- slug: warhammer_simul
-  title: 워해머 전투 계산 시뮬레이터
-  category: demo
-  icon: 🎲
-  desc: 공격 프로필을 넣고 단계별 해석 기대값과 N회 시뮬레이션 실측값을 나란히 비교하는 검증 도구입니다.
-  tags: [확률, 시뮬레이션, 워해머]
-  date: 2026-08-18
-  alias: [warhammer_simul]
-
 - slug: demo_physicsSimulation
   title: 물리 시뮬레이터
-  category: demo
+  category: tech
   icon: 🌀
   desc: 단진동 · 진자 · 이중진자 실험과 설명 페이지입니다. 위상 공간(phase diagram)을 실시간으로 보고 데이터를 CSV로 받을 수 있습니다.
   tags: [React, KaTeX, 물리]
@@ -160,7 +70,7 @@
 
 - slug: demo_Earth
   title: Earth 시뮬레이터
-  category: demo
+  category: tech
   icon: 🌏
   desc: 남극의 백야 · 극야 현상을 3D 지구로 봅니다. 자전 속도를 n배속으로 조절하고 확대 · 축소 · 시점 이동이 가능합니다.
   tags: [React Three Fiber, 천문]
@@ -169,7 +79,7 @@
 
 - slug: demo_qrcode
   title: QR 코드 생성기
-  category: demo
+  category: tech
   icon: 🔳
   desc: URL을 QR 코드로 바꾸고 색상과 오류 정정 수준을 조절합니다. QR 이미지를 드래그하거나 Ctrl+V로 붙여 넣으면 원문 URL을 읽어 줍니다.
   tags: [QRCode.js, jsQR]
@@ -177,7 +87,7 @@
 
 - slug: demo_GPT001
   title: OpenAI API · Assistant
-  category: demo
+  category: tech
   icon: 🤖
   desc: GPT Assistant API 테스트 페이지입니다. Thread(채팅방) 생성, Assistant(챗봇) 생성 · 수정, Run(AI 응답 생성)을 실행해 봅니다.
   tags: [OpenAI API]
@@ -185,7 +95,7 @@
 
 - slug: demo_react001
   title: React 목록 CRUD
-  category: demo
+  category: tech
   icon: ⚛️
   desc: React로 만든 목록 CRUD 테스트입니다. 상태(State) 데이터를 URL에 담아 내보낼 수 있습니다.
   tags: [React]
@@ -193,10 +103,113 @@
 
 - slug: demo_Image_CURD
   title: 이미지 맵 · 이미지 CRUD
-  category: demo
+  category: tech
   icon: 🖼️
   desc: 이미지를 업로드(파일 · 드롭다운)하고 드래그나 터치로 움직여 봅니다.
   tags: [HTML, CSS, JS]
+
+
+# ── 예술 도구 ───────────────────────────────────────────────────────────────
+
+- slug: aura_3d_studio
+  title: Aura 3D Studio
+  category: art
+  icon: 🔮
+  desc: 3D 오브젝트에 아우라를 씌우고 모든 수치를 조절합니다. 표면 그라데이션 채우기와 일렁임 연출, 컬러피커 그라데이션 · 라이브러리 · GIF/JSON 내보내기를 지원합니다.
+  tags: [Three.js, WebGL, GIF]
+  date: 2026-10-25
+  alias: [aura_3d_studio]
+
+- slug: aura_2d_studio
+  title: Aura 2D Studio
+  category: art
+  icon: 💫
+  desc: 아이콘용 2D 아우라를 캔버스 하나에 수백 개 띄워 봅니다. 도형 내부 그라데이션과 일렁임 연출, 컬러피커 그라데이션 · 라이브러리 · GIF/스프라이트시트 내보내기를 지원합니다.
+  tags: [WebGL, Canvas, GIF]
+  date: 2026-10-25
+  alias: [aura_2d_studio]
+
+- slug: art_threading
+  title: String Art Threading
+  category: art
+  icon: 🧵
+  desc: 못과 실 한 가닥으로 이미지를 재현하는 스트링 아트 생성기입니다. 배경 제거, 원·타원·정사각형·직사각형 틀, SVG/작업 순서 내보내기를 지원합니다.
+  tags: [Canvas, 이미지 처리]
+  date: 2026-10-23
+  alias: [threading]
+
+- slug: art_caire
+  title: Caire — Seam Carving
+  category: art
+  icon: ✂️
+  desc: 중요한 부분은 지키고 덜 중요한 이음선부터 지워 크기를 바꾸는 이미지 리사이즈입니다. 모서리를 드래그해 미리보고 제거 픽셀 · 에너지 · 제거 우선순위 히트맵을 확인합니다.
+  tags: [Canvas, 이미지 처리]
+  date: 2026-10-23
+  alias: [caire]
+
+- slug: art_primitive_brush
+  title: Primitive × p5.brush
+  category: art
+  icon: 🖌️
+  desc: 삼각형·타원 같은 기본 도형을 하나씩 더해 이미지를 근사하고, 그 도형을 그대로 또는 p5.brush 수채·해칭 붓질로 다시 그립니다.
+  tags: [p5.js, p5.brush, Web Worker]
+  date: 2026-10-23
+  alias: [primitive_brush]
+
+- slug: isoluminance
+  title: 같은 그림, 다른 도형
+  category: art
+  icon: 👁️
+  desc: 한 장의 풀컬러 이미지가 흑백·색상 등 보는 방식에 따라 다른 도형으로 보이는 원리를 체험합니다.
+  tags: [색채, 지각]
+  date: 2026-10-03
+  alias: [isoluminance]
+
+- slug: color_picker
+  title: Color Picker Lab
+  category: art
+  icon: 🎨
+  desc: 원판 위에 점과 엣지로 색을 배치하고 보간 곡선과 그라데이션을 다듬습니다.
+  tags: [Canvas, 색채]
+  date: 2026-09-17
+  alias: [color_picker]
+
+
+# ── 게임 ────────────────────────────────────────────────────────────────────
+
+- slug: warhammer_map
+  title: 워해머 전장 플래너
+  category: game
+  icon: 🗺️
+  desc: 성향으로 추천 지도를 골라 지형·목표 위에 유닛을 놓고, 이동 · 돌격 · 오라 · 심층 타격 · 시야선을 2D/3D로 미리 재 봅니다. 목표 장악, 미션 트위스트, 공유 링크 지원.
+  tags: [Three.js, 워해머]
+  date: 2026-10-29
+  alias: [warhammer_map]
+
+- slug: warhammer_move
+  title: 워해머 판 · 턴과 이동
+  category: game
+  icon: ♟️
+  desc: 3D 보드 위에서 유닛을 배치하고 턴별 이동을 다룹니다.
+  tags: [Three.js, 워해머]
+  date: 2026-08-21
+  alias: [warhammer_move]
+
+- slug: warhammer_simul
+  title: 워해머 전투 계산 시뮬레이터
+  category: game
+  icon: 🎲
+  desc: 공격 프로필을 넣고 단계별 해석 기대값과 N회 시뮬레이션 실측값을 나란히 비교하는 검증 도구입니다.
+  tags: [확률, 시뮬레이션, 워해머]
+  date: 2026-08-18
+  alias: [warhammer_simul]
+
+- slug: game_snake
+  title: Snake Game
+  category: game
+  icon: 🐍
+  desc: 간단한 웹 게임 만들기.
+  tags: [Canvas]
 
 
 # ── 테스트 ──────────────────────────────────────────────────────────────────
@@ -236,13 +249,6 @@
   desc: 챗봇 대본을 JSON으로 관리하는 요령을 연습합니다.
   tags: [jQuery, JSON]
 
-- slug: game_snake
-  title: Snake Game
-  category: test
-  icon: 🐍
-  desc: 간단한 웹 게임 만들기.
-  tags: [Canvas, 게임]
-
 - slug: test_webGPU
   title: WebGPU 예제
   category: test
@@ -252,51 +258,11 @@
   hidden: true
 
 
-# ── 프로젝트 ────────────────────────────────────────────────────────────────
-
-- slug: proj_AICC4
-  title: AICC 4차 프로젝트
-  category: project
-  icon: 🎓
-  desc: 코드랩 아카데미 4차 프로젝트.
-  tags: [React(TS), Express(TS), Flask, Oracle, OpenAI Assistant API]
-  repo: https://github.com/ParkWonBin/Codelabit_AICC_Project_04
-  alias: [aicc4]
-
-- slug: proj_AICC3
-  url: https://aicc3.wbpark.app/react
-  title: AICC 3차 프로젝트
-  category: project
-  icon: 🎓
-  desc: 코드랩 아카데미 3차 프로젝트.
-  tags: [React, Express, Flask, Oracle]
-  repo: https://github.com/ParkWonBin/Codelabit_AICC_Project_03
-  alias: [aicc3]
-
-- slug: proj_AICC2
-  title: AICC 2차 프로젝트
-  category: project
-  icon: 🎓
-  desc: 코드랩 아카데미 2차 프로젝트.
-  tags: [Express, Oracle]
-  repo: https://github.com/ParkWonBin/Codelabit_AICC_Project_02
-  alias: [aicc2]
-
-- slug: proj_AICC1
-  title: AICC 1차 프로젝트
-  category: project
-  icon: 🎓
-  desc: 코드랩 아카데미 1차 프로젝트.
-  tags: [HTML5, CSS, JS, jQuery]
-  repo: https://github.com/ParkWonBin/Codelabit_AICC_Project_01
-  alias: [aicc1]
-
-
 # ── 목록에는 숨기고 주소만 살려 두는 앱 ─────────────────────────────────────
 
 - slug: ex
   title: 3D 전시관
-  category: demo
+  category: art
   icon: 🖼️
   desc: 2025년 3월 전시회 작품을 걸어 둔 3D 갤러리입니다. (그림 페이지에서 들어갑니다)
   tags: [React Three Fiber]

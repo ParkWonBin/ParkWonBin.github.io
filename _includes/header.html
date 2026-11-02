@@ -2,23 +2,30 @@
   <div class="container header-inner">
     <a class="brand" href="{{ '/' | relative_url }}" rel="author">
       <span class="brand-logo" aria-hidden="true"></span>
-      <span class="brand-name">{{ site.title | escape }}</span>
+      {%- assign brand_first = site.title | split: " " | first %}
+      <span class="brand-name">{{ brand_first | escape }}<span class="brand-rest">{{ site.title | remove_first: brand_first | escape }}</span></span>
     </a>
-    <nav class="site-nav" aria-label="주 메뉴">
-      {%- for item in site.nav -%}
-        {%- if item.url == '/posts/' and site.posts.size == 0 -%}{%- continue -%}{%- endif -%}
-        {%- assign active = false -%}
-        {%- if item.url == '/' -%}
-          {%- if page.url == '/' -%}{%- assign active = true -%}{%- endif -%}
-        {%- elsif page.url contains item.url -%}
-          {%- assign active = true -%}
-        {%- elsif item.url == '/drawing/' and page.layout == 'artwork' -%}
-          {%- assign active = true -%}
-        {%- elsif item.url == '/posts/' and page.layout == 'post' -%}
-          {%- assign active = true -%}
-        {%- endif -%}
-        <a href="{{ item.url | relative_url }}"{% if active %} aria-current="page"{% endif %}>{{ item.title }}</a>
-      {%- endfor -%}
-    </nav>
+    <div class="header-actions">
+      <nav class="site-nav" aria-label="주 메뉴">
+        {%- for item in site.nav -%}
+          {%- if item.url == '/posts/' and site.posts.size == 0 -%}{%- continue -%}{%- endif -%}
+          {%- assign active = false -%}
+          {%- if item.url == '/' -%}
+            {%- if page.url == '/' -%}{%- assign active = true -%}{%- endif -%}
+          {%- elsif page.url contains item.url -%}
+            {%- assign active = true -%}
+          {%- elsif item.url == '/drawing/' and page.layout == 'artwork' -%}
+            {%- assign active = true -%}
+          {%- elsif item.url == '/posts/' and page.layout == 'post' -%}
+            {%- assign active = true -%}
+          {%- endif -%}
+          <a href="{{ item.url | relative_url }}"{% if active %} aria-current="page"{% endif %}>{{ item.title }}</a>
+        {%- endfor -%}
+      </nav>
+      <button class="theme-toggle" type="button" data-theme-toggle aria-label="다크 모드로 전환" title="다크 모드로 전환">
+        <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      </button>
+    </div>
   </div>
 </header>

@@ -1,3 +1,41 @@
+// 라이트 · 다크 토글
+//   첫 테마는 _includes/head.html 의 인라인 스크립트가 정한다 (저장된 선택 → 시스템 설정).
+//   버튼을 누르면 반대 테마로 바꾸고, 시스템 설정과 같아지면 저장을 지워 다시 시스템을 따른다.
+(function () {
+  var root = document.documentElement;
+  var btn = document.querySelector('[data-theme-toggle]');
+  var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+  function system() { return mq && mq.matches ? 'dark' : 'light'; }
+  function current() { return root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'; }
+  function saved() { try { return localStorage.getItem('theme'); } catch (e) { return null; } }
+
+  function sync() {
+    if (!btn) { return; }
+    var label = current() === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환';
+    btn.setAttribute('aria-label', label);
+    btn.setAttribute('title', label);
+  }
+
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var next = current() === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try {
+        if (next === system()) { localStorage.removeItem('theme'); } else { localStorage.setItem('theme', next); }
+      } catch (e) {}
+      sync();
+    });
+  }
+
+  // 직접 고른 적이 없으면 시스템 설정이 바뀔 때 따라간다
+  if (mq) {
+    var follow = function () { if (!saved()) { root.setAttribute('data-theme', system()); sync(); } };
+    if (mq.addEventListener) { mq.addEventListener('change', follow); } else if (mq.addListener) { mq.addListener(follow); }
+  }
+  sync();
+})();
+
 // 목록 필터 · 검색 (홈 웹앱 목록, 글 목록 공용)
 //   [data-filterable]  감싸는 영역
 //   [data-filter]      카테고리 칩 (all | 카테고리 id)

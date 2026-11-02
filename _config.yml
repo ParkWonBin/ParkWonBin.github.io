@@ -33,15 +33,18 @@ app_categories:
   - id: info
     label: 정보
     title: 📌 공익 목적 정보글
-  - id: demo
-    label: 데모
-    title: 🛠️ 데모 · 도구
+  - id: tech
+    label: 기술 도구
+    title: 🛠️ 기술 도구
+  - id: art
+    label: 예술 도구
+    title: 🎨 예술 도구
+  - id: game
+    label: 게임
+    title: 🎲 게임
   - id: test
     label: 테스트
     title: 🧪 테스트 · 실험
-  - id: project
-    label: 프로젝트
-    title: 🎓 교육 · 팀 프로젝트
 
 # 이 기간(일) 안에 추가된 앱에는 NEW 표시
 new_badge_days: 30

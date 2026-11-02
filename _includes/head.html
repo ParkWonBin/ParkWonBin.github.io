@@ -1,6 +1,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    /* 테마: 저장된 선택(localStorage 'theme') → 없으면 시스템 설정. 그리기 전에 정해서 깜빡임 방지 */
+    (function () {
+      var t;
+      try { t = localStorage.getItem('theme'); } catch (e) {}
+      if (t !== 'light' && t !== 'dark') {
+        t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   {%- if page.resolver -%}{%- include resolver.html -%}{%- endif -%}
   {%- seo -%}
   <meta name="color-scheme" content="light dark">
