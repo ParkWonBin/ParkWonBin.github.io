@@ -5,7 +5,7 @@
 {%- assign art = include.art -%}
 <a class="art-card{% if include.current %} is-current{% endif %}" href="{{ art.url | relative_url }}"{% if include.current %} aria-current="page"{% endif %}>
   <span class="art-thumb">
-    <img src="{{ art.thumbnail | relative_url }}" alt="{{ art.title | escape }}" loading="lazy">
+    <img src="{{ art.thumbnail | relative_url }}" alt="" loading="lazy">
   </span>
   <span class="art-meta">
     <strong>{{ art.title | escape }}</strong>

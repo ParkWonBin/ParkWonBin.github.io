@@ -25,11 +25,11 @@ layout: default
       <kbd aria-hidden="true">/</kbd>
     </label>
     <nav class="filters" aria-label="카테고리">
-      <a class="chip is-active" href="#" data-filter="all" aria-pressed="true">전체 <span>{{ apps.size }}</span></a>
+      <a class="chip is-active" href="#" data-filter="all" aria-current="true">전체 <span>{{ apps.size }}</span></a>
       {%- for c in site.app_categories -%}
         {%- assign n = apps | where: "category", c.id | size -%}
         {%- if n > 0 %}
-      <a class="chip" href="#{{ c.id }}" data-filter="{{ c.id }}" aria-pressed="false">{{ c.label }} <span>{{ n }}</span></a>
+      <a class="chip" href="#{{ c.id }}" data-filter="{{ c.id }}">{{ c.label }} <span>{{ n }}</span></a>
         {%- endif -%}
       {%- endfor %}
     </nav>

@@ -28,10 +28,10 @@
 
 {%- capture search -%}{{ app.title }} {{ app.desc }} {{ app.tags | join: " " }} {{ app.slug }} {{ app.alias | join: " " }}{%- endcapture -%}
 
-<article class="app-card" data-item data-cat="{{ app.category }}" data-search="{{ search | downcase | strip_newlines | escape }}">
+<article class="app-card" data-item data-cat="{{ app.category }}" style="--cat: var(--{{ app.category | escape }}, var(--tech)); --cat-soft: var(--{{ app.category | escape }}-soft, var(--tech-soft))" data-search="{{ search | downcase | strip_newlines | escape }}">
   <div class="app-card-top">
     <span class="app-icon" aria-hidden="true">{{ app.icon | default: "🧩" }}</span>
-    {%- if is_new %}<span class="badge-new" title="{{ app.date | date: '%Y.%m.%d' }} 추가">NEW</span>{% endif %}
+    {%- if is_new %}<span class="badge-new" title="{{ app.date | date: '%Y.%m.%d' }} 추가" data-new-until="{{ app_s | plus: limit_s }}">NEW</span>{% endif %}
   </div>
   <h3 class="app-title">
     <a class="card-link" href="{{ href | relative_url }}"{% if external %} target="_blank" rel="noopener"{% endif %}>{{ app.title | escape }}</a>

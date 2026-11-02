@@ -69,18 +69,37 @@
     chips.forEach(function (c) {
       var on = c.getAttribute('data-filter') === current;
       c.classList.toggle('is-active', on);
-      c.setAttribute('aria-pressed', on ? 'true' : 'false');
+      if (on) { c.setAttribute('aria-current', 'true'); } else { c.removeAttribute('aria-current'); }
     });
   }
 
+  function isChip(id) { return chips.some(function (c) { return c.getAttribute('data-filter') === id; }); }
+
+  // 휴대폰에서 칩 줄이 가로로 넘칠 때, 선택된 칩이 보이도록 줄만 가로로 민다
+  function revealActiveChip() {
+    var strip = root.querySelector('.filters');
+    var act = strip && strip.querySelector('.is-active');
+    if (!act || strip.scrollWidth <= strip.clientWidth) { return; }
+    strip.scrollLeft += act.getBoundingClientRect().left - strip.getBoundingClientRect().left - 16;
+  }
+
   function select(id, updateUrl) {
-    var known = chips.some(function (c) { return c.getAttribute('data-filter') === id; });
-    current = known ? id : 'all';
+    current = isChip(id) ? id : 'all';
     apply();
+    revealActiveChip();
     if (updateUrl) {
       history.replaceState(null, '', current === 'all' ? location.pathname + location.search : '#' + current);
     }
   }
+
+  // 고정된 검색바 높이를 CSS 에 알려, 앵커 이동 · 키보드 포커스가 검색바 밑으로 숨지 않게 한다
+  var toolbar = root.querySelector('.toolbar');
+  function measureToolbar() {
+    var h = toolbar && getComputedStyle(toolbar).position === 'sticky' ? toolbar.offsetHeight : 0;
+    document.documentElement.style.setProperty('--toolbar-h', h + 'px');
+  }
+  measureToolbar();
+  window.addEventListener('resize', measureToolbar);
 
   chips.forEach(function (c) {
     c.addEventListener('click', function (e) {
@@ -104,8 +123,23 @@
     });
   }
 
-  // wbpark.app/#demo 처럼 해시로 들어오면 그 카테고리만 보여준다 (뒤로 가기 · 해시 링크 포함)
-  function fromHash() { select(decodeURIComponent(location.hash.slice(1)) || 'all', false); }
+  // wbpark.app/#art 처럼 해시로 들어오면 그 카테고리만 보여준다 (뒤로 가기 · 해시 링크 포함).
+  // 카테고리가 아닌 해시(#main 같은 본문 바로가기 등)는 필터를 건드리지 않는다.
+  function fromHash() {
+    var id = '';
+    try { id = decodeURIComponent(location.hash.slice(1)); } catch (e) {}
+    if (!id) { select('all', false); } else if (isChip(id)) { select(id, false); }
+  }
   window.addEventListener('hashchange', fromHash);
+  apply();
   fromHash();
+})();
+
+// NEW 표시: 빌드 때 붙인 배지라도 기한(data-new-until, 초)이 지났으면 브라우저에서 뗀다
+(function () {
+  var now = Date.now() / 1000;
+  var badges = document.querySelectorAll('[data-new-until]');
+  for (var i = 0; i < badges.length; i++) {
+    if (Number(badges[i].getAttribute('data-new-until')) < now) { badges[i].parentNode.removeChild(badges[i]); }
+  }
 })();
