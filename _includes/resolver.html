@@ -20,25 +20,32 @@
     "": "/"
   };
 
-  var path = location.pathname;
-  try { path = decodeURIComponent(path); } catch (e) {}
-  var key = path.replace(/^\/+|\/+$/g, '').toLowerCase();
+  // 슬래시가 겹친 주소(//webapps/...)가 다른 호스트로 읽히지 않도록 앞 슬래시는 하나로
+  var raw = '/' + location.pathname.replace(/^\/+/, '');
+  var path = raw;
+  try { path = decodeURIComponent(raw); } catch (e) {}
+  // 비교용 키: 앞뒤 슬래시 · 끝의 index.html · .html 을 떼고 소문자로 (/finance/index.html → finance)
+  var key = path.toLowerCase()
+    .replace(/^\/+|\/+$/g, '')
+    .replace(/(^|\/)index\.html$/, '')
+    .replace(/\.html$/, '')
+    .replace(/\/+$/, '');
   var keep = location.search + location.hash;
   var to = null;
 
-  if (/^webapps\/.+\/app(\.html)?$/.test(key)) {
-    // 예전 '전체화면' 주소: 같은 폴더의 index.html 로
-    to = path.replace(/\/app(\.html)?\/?$/i, '/') + keep;
+  if (/^webapps\/.+\/app$/.test(key)) {
+    // 예전 '전체화면' 주소(app.html): 같은 폴더의 index.html 로
+    to = raw.replace(/\/app(\.html)?\/?$/i, '/') + keep;
   } else if (MAP.hasOwnProperty(key) && key !== '') {
     to = MAP[key] + (MAP[key].indexOf('://') === -1 ? keep : '');
   } else if (key.indexOf('webapps/drawing/img') === 0) {
     // 전시회 펭귄 gif 로 들어온 사람은 움직임 작품 페이지로
     to = '/webapps/drawing/img/005_Animation/';
   } else if (key.indexOf('webapps/drawing') === 0) {
-    // 그 밖의 깨진 전시회 주소는 전시관 입구로
-    to = '/webapps/drawing/';
+    // 그 밖의 깨진 전시회 주소는 그림 페이지(작품 목록 + 3D 전시관 입구)로
+    to = '/drawing/';
   }
 
-  if (to && to !== location.pathname + keep) { location.replace(to); }
+  if (to && to !== raw + keep) { location.replace(to); }
 })();
 </script>
