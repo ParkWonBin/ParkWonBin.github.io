@@ -1,62 +1,110 @@
 title: wbpark Dev Blog
 author: wbpark
 email: pwb1128@gmail.com
+description: >-
+  직접 만든 웹앱과 그림, 공부한 기록을 모아 두는 곳
+lang: ko
+timezone: Asia/Seoul
 
-description: >- 
-  기술블로그 제작중..
-
+url: "https://wbpark.app"
+baseurl: ""
 permalink: pretty
-url: "https://github.com/ParkWonBin" 
-# baseurl: "htpps://wbpark.app" 
-# baseurl 입력하면 src의 시작 주소가 바뀐다.
+
+# 이 저장소 — 웹앱 카드의 '소스' 링크 기본값에 쓰입니다.
+repository: ParkWonBin/ParkWonBin.github.io
+source_branch: jekyll-blog
 
 google_analytics: G-3MML9FLTTZ
 
-github_username: ParkWonBin
-tistory_username: phy64ev1
-linkedin_username: wbpark14
-instagram_username: wbpark14
-facebook_username: wbpark14
-pinterest_username: wbpark14
-naverblog_username: wbpark14
-youtube_username: AIPenguinStudio
+# ── 상단 메뉴 ──────────────────────────────────────────────
+nav:
+  - title: 웹앱
+    url: /
+  - title: 그림
+    url: /drawing/
+  - title: 글
+    url: /posts/
+  - title: About
+    url: /about/
 
-# Build settings
-# theme: minima
-# minima 2.5.1 그대로 복사해서 필요 없음.
+# ── 웹앱 카테고리 (홈 화면에 이 순서대로 나옵니다) ──────────
+# 앱 목록 자체는 _data/apps.yml 에 있습니다.
+app_categories:
+  - id: info
+    label: 정보
+    title: 📌 공익 목적 정보글
+  - id: demo
+    label: 데모
+    title: 🛠️ 데모 · 도구
+  - id: test
+    label: 테스트
+    title: 🧪 테스트 · 실험
+  - id: project
+    label: 프로젝트
+    title: 🎓 교육 · 팀 프로젝트
 
+# 이 기간(일) 안에 추가된 앱에는 NEW 표시
+new_badge_days: 30
+
+# ── 푸터 링크 ──────────────────────────────────────────────
+# icon: assets/minima-social-icons.svg 안의 아이콘 이름 / image: 이미지 경로
+social_links:
+  - name: GitHub
+    url: https://github.com/ParkWonBin
+    icon: github
+  - name: YouTube
+    url: https://youtube.com/@AIPenguinStudio
+    icon: youtube
+  - name: Instagram
+    url: https://instagram.com/wbpark14
+    icon: instagram
+  - name: LinkedIn
+    url: https://www.linkedin.com/in/wbpark14
+    icon: linkedin
+  - name: Tistory
+    url: https://phy64ev1.tistory.com/
+    mask: /assets/images/tistory.svg
+  - name: Naver Blog
+    url: https://blog.naver.com/wbpark14
+    image: /assets/images/naverblog.png
+  - name: Facebook
+    url: https://www.facebook.com/wbpark14
+    icon: facebook
+  - name: Pinterest
+    url: https://www.pinterest.com/wbpark14
+    icon: pinterest
+
+# ── 빌드 설정 ──────────────────────────────────────────────
 plugins:
   - jekyll-feed
-  - jekyll-paginate
   - jekyll-sitemap
   - jekyll-seo-tag
-
-# Pagination
-paginate: 5
-paginate_path: "/page:num/"
 
 markdown: kramdown
 kramdown:
   input: GFM
 
-compress_html:
-  comments:          ["<!-- ", " -->"]
-  clippings:         all
-  endings:           all
-  ignore:
-    envs:            [local]
-
 sass:
-  style:             compressed
+  style: compressed
+
+defaults:
+  # 글: _posts/YYYY-MM-DD-제목.md → /posts/제목/
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: post
+      permalink: /posts/:title/
 
 exclude:
-  - .sass-cache/
-  - .jekyll-cache/
-  - gemfiles/
+  - README.md
+  - CLAUDE.md
+  - serve.bat
   - Gemfile
   - Gemfile.lock
+  - .sass-cache/
+  - .jekyll-cache/
   - node_modules/
-  - vendor/bundle/
-  - vendor/cache/
-  - vendor/gems/
-  - vendor/ruby/
+  - vendor/
+  - webapps/flood_map/convert_shp.mjs
+  - webapps/health/extract_urls.ps1

@@ -1,0 +1,14 @@
+{%- comment -%}
+  그림 카드 하나. 사용: {% include art-card.html art=page %}
+  데이터는 webapps/drawing/img/*.md 의 front matter (title, subtitle, thumbnail).
+{%- endcomment -%}
+{%- assign art = include.art -%}
+<a class="art-card{% if include.current %} is-current{% endif %}" href="{{ art.url | relative_url }}"{% if include.current %} aria-current="page"{% endif %}>
+  <span class="art-thumb">
+    <img src="{{ art.thumbnail | relative_url }}" alt="{{ art.title | escape }}" loading="lazy">
+  </span>
+  <span class="art-meta">
+    <strong>{{ art.title | escape }}</strong>
+    {%- if art.subtitle %}<small>{{ art.subtitle | escape }}</small>{% endif %}
+  </span>
+</a>

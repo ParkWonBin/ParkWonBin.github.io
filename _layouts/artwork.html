@@ -1,0 +1,55 @@
+---
+layout: default
+---
+{%- assign arts = site.pages | where: "layout", "artwork" | sort: "order" -%}
+{%- assign prev = nil -%}
+{%- assign next = nil -%}
+{%- for a in arts -%}
+  {%- if a.url == page.url -%}
+    {%- assign i_prev = forloop.index0 | minus: 1 -%}
+    {%- if forloop.first == false -%}{%- assign prev = arts[i_prev] -%}{%- endif -%}
+    {%- if forloop.last == false -%}{%- assign next = arts[forloop.index] -%}{%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+
+<article class="artwork">
+  <header class="page-head">
+    <p class="eyebrow"><a href="{{ '/drawing/' | relative_url }}">그림</a> · {{ site.data.drawing.exhibition }}</p>
+    <h1>{{ page.title | escape }}</h1>
+    {%- if page.subtitle %}<p class="lead">{{ page.subtitle | escape }}</p>{% endif %}
+  </header>
+
+  {%- if page.image %}
+  <figure class="artwork-figure">
+    <a href="{{ page.original | default: page.image | relative_url }}" title="원본 크기로 보기">
+      <img src="{{ page.image | relative_url }}" alt="{{ page.title | escape }}">
+    </a>
+    {%- if page.original %}<figcaption><a href="{{ page.original | relative_url }}">원본 크기로 보기</a></figcaption>{% endif %}
+  </figure>
+  {%- endif %}
+
+  <div class="prose artwork-body">
+    {{ content }}
+  </div>
+
+  <nav class="pager" aria-label="이전 · 다음 작품">
+    {%- if prev %}
+    <a class="pager-prev" href="{{ prev.url | relative_url }}"><small>이전 작품</small>{{ prev.title | escape }}</a>
+    {%- else %}<span></span>{% endif %}
+    {%- if next %}
+    <a class="pager-next" href="{{ next.url | relative_url }}"><small>다음 작품</small>{{ next.title | escape }}</a>
+    {%- endif %}
+  </nav>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>전시 작품</h2>
+      <a class="more" href="{{ site.data.drawing.gallery_url | relative_url }}">3D 전시관 →</a>
+    </div>
+    <div class="art-grid art-grid--compact">
+      {%- for a in arts -%}
+        {%- if a.url == page.url -%}{%- include art-card.html art=a current=true -%}{%- else -%}{%- include art-card.html art=a -%}{%- endif -%}
+      {%- endfor -%}
+    </div>
+  </section>
+</article>

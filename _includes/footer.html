@@ -1,41 +1,31 @@
-<footer class="site-footer h-card">
-  <data class="u-url" href="{{ '/' | relative_url }}"></data>
-
-  <div class="wrapper">
-
-    <h2 class="footer-heading">{{ site.title | escape }}</h2>
-
-    <div class="footer-col-wrapper">
-      <div class="footer-col footer-col-1">
-
-        <div class="footer-profile">
-          <img src="{{ '/assets/images/profile.jpg' | relative_url }}" alt="Profile Picture" style="width: 100px; height: 100px; border-radius: 25%;border: solid 2px black;padding: 2px;">
-        </div>
-
-        <ul class="contact-list">
-          <li class="p-name">
-            {%- if site.author -%}
-              {{ site.author | escape }}
-            {%- else -%}
-              {{ site.title | escape }}
-            {%- endif -%}
-            </li>
-            {%- if site.email -%}
-            <li><a class="u-email" href="mailto:{{ site.email }}">{{ site.email }}</a></li>
-            {%- endif -%}
-        </ul>
-      </div>
-
-      <div class="footer-col footer-col-2">
-        {%- include social.html -%}
-      </div>
-
-      <div class="footer-col footer-col-3">
-        <p>{{- site.description | escape -}}</p>
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <div class="footer-profile">
+      <img src="{{ '/assets/images/profile.jpg' | relative_url }}" alt="" width="44" height="44">
+      <div>
+        <strong>{{ site.author | escape }}</strong>
+        <a href="mailto:{{ site.email }}">{{ site.email }}</a>
       </div>
     </div>
-
-    <p class="rss-subscribe">subscribe <a href="{{ '/feed.xml' | relative_url }}">via RSS</a></p>
+    <ul class="social">
+      {%- for s in site.social_links -%}
+      <li>
+        <a href="{{ s.url }}" title="{{ s.name }}" aria-label="{{ s.name }}" rel="me noopener" target="_blank">
+          {%- if s.icon -%}
+            <svg aria-hidden="true"><use href="{{ '/assets/minima-social-icons.svg' | relative_url }}#{{ s.icon }}"></use></svg>
+          {%- elsif s.mask -%}
+            <span class="mask-icon" style="--mask: url('{{ s.mask | relative_url }}')" aria-hidden="true"></span>
+          {%- else -%}
+            <img src="{{ s.image | relative_url }}" alt="" width="18" height="18">
+          {%- endif -%}
+        </a>
+      </li>
+      {%- endfor -%}
+    </ul>
   </div>
-
+  <div class="container footer-meta">
+    <span>© {{ site.time | date: "%Y" }} {{ site.author | escape }}</span>
+    <a href="{{ '/feed.xml' | relative_url }}">RSS</a>
+    <a href="https://github.com/{{ site.repository }}">사이트 소스</a>
+  </div>
 </footer>

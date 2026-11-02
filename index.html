@@ -1,0 +1,73 @@
+---
+layout: default
+---
+{%- assign apps = site.data.apps | where_exp: "a", "a.hidden != true" -%}
+{%- assign arts = site.pages | where: "layout", "artwork" | sort: "order" -%}
+
+<section class="hero">
+  <h1>{{ site.title | escape }}</h1>
+  <p class="lead">{{ site.description | escape }}</p>
+  <ul class="stats" aria-label="사이트 현황">
+    <li><span><strong>{{ apps.size }}</strong> 웹앱</span></li>
+    <li><a href="{{ '/drawing/' | relative_url }}"><strong>{{ arts.size }}</strong> 그림</a></li>
+    {%- if site.posts.size > 0 %}
+    <li><a href="{{ '/posts/' | relative_url }}"><strong>{{ site.posts.size }}</strong> 글</a></li>
+    {%- endif %}
+  </ul>
+</section>
+
+<div class="catalog" data-filterable>
+  <div class="toolbar">
+    <label class="search">
+      <span class="visually-hidden">웹앱 검색</span>
+      <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" data-search-input placeholder="웹앱 검색 — 이름, 설명, 기술" autocomplete="off">
+      <kbd aria-hidden="true">/</kbd>
+    </label>
+    <nav class="filters" aria-label="카테고리">
+      <a class="chip is-active" href="#" data-filter="all" aria-pressed="true">전체 <span>{{ apps.size }}</span></a>
+      {%- for c in site.app_categories -%}
+        {%- assign n = apps | where: "category", c.id | size -%}
+        {%- if n > 0 %}
+      <a class="chip" href="#{{ c.id }}" data-filter="{{ c.id }}" aria-pressed="false">{{ c.label }} <span>{{ n }}</span></a>
+        {%- endif -%}
+      {%- endfor %}
+    </nav>
+  </div>
+
+  {%- for c in site.app_categories -%}
+    {%- assign group = apps | where: "category", c.id -%}
+    {%- if group.size > 0 %}
+  <section class="section app-section" id="{{ c.id }}" data-group>
+    <h2>{{ c.title }}</h2>
+    <div class="app-grid">
+      {%- for app in group -%}{%- include app-card.html app=app -%}{%- endfor -%}
+    </div>
+  </section>
+    {%- endif -%}
+  {%- endfor %}
+
+  <p class="empty-state" data-empty hidden>검색 결과가 없어요. 다른 단어로 찾아보세요.</p>
+</div>
+
+<section class="section">
+  <div class="section-head">
+    <h2>🖼️ 그림 · {{ site.data.drawing.exhibition }}</h2>
+    <a class="more" href="{{ '/drawing/' | relative_url }}">전체 보기 →</a>
+  </div>
+  <div class="art-grid art-grid--compact">
+    {%- for a in arts -%}{%- include art-card.html art=a -%}{%- endfor -%}
+  </div>
+</section>
+
+{%- if site.posts.size > 0 %}
+<section class="section">
+  <div class="section-head">
+    <h2>✏️ 최근 글</h2>
+    <a class="more" href="{{ '/posts/' | relative_url }}">전체 보기 →</a>
+  </div>
+  <ul class="post-list">
+    {%- for post in site.posts limit: 5 -%}{%- include post-item.html post=post -%}{%- endfor -%}
+  </ul>
+</section>
+{%- endif %}

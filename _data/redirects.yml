@@ -1,0 +1,8 @@
+# 앱이 아닌 옛 주소 → 새 주소 (404.html 이 처리합니다)
+# 앱 단축 주소는 여기가 아니라 _data/apps.yml 의 alias 에 적습니다.
+# 앞뒤 슬래시 · 대소문자는 구분하지 않습니다.
+
+/webapps: /                       # 예전 WebApps 메뉴 페이지
+/posts/network: /posts/           # 예전 위키식 글 목록
+/posts/network/01_basic: /posts/
+/posts/booktalk: /posts/

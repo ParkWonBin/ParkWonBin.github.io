@@ -1,0 +1,12 @@
+{%- assign post = include.post -%}
+{%- capture search -%}{{ post.title }} {{ post.description }} {{ post.categories | join: " " }} {{ post.tags | join: " " }}{%- endcapture -%}
+<li class="post-item" data-item data-cat="{{ post.categories | first | slugify }}" data-search="{{ search | downcase | strip_newlines | escape }}">
+  <a href="{{ post.url | relative_url }}">
+    <span class="post-title">{{ post.title | escape }}</span>
+    {%- if post.description %}<span class="post-desc">{{ post.description | escape }}</span>{% endif %}
+  </a>
+  <span class="post-meta">
+    {%- if post.categories.size > 0 %}<span class="post-cat">{{ post.categories | first }}</span>{% endif %}
+    <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%Y.%m.%d" }}</time>
+  </span>
+</li>

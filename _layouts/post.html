@@ -1,26 +1,30 @@
 ---
 layout: default
 ---
-<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
-
-  <header class="post-header">
-    <h1 class="post-title p-name" itemprop="name headline">{{ page.title | escape }}</h1>
-    <p class="post-meta">
-      <time class="dt-published" datetime="{{ page.date | date_to_xmlschema }}" itemprop="datePublished">
-        {%- assign date_format = site.minima.date_format | default: "%b %-d, %Y" -%}
-        {{ page.date | date: date_format }}
-      </time>
-      {%- if page.author -%}
-        • <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">{{ page.author }}</span></span>
-      {%- endif -%}</p>
+<article class="post h-entry">
+  <header class="page-head">
+    <p class="eyebrow">
+      <time class="dt-published" datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%Y.%m.%d" }}</time>
+      {%- for c in page.categories %} · <a href="{{ '/posts/' | relative_url }}#{{ c | slugify }}">{{ c }}</a>{% endfor %}
+    </p>
+    <h1 class="p-name">{{ page.title | escape }}</h1>
+    {%- if page.description %}<p class="lead">{{ page.description }}</p>{% endif %}
   </header>
 
-  <div class="post-content e-content" itemprop="articleBody">
+  <div class="prose e-content">
     {{ content }}
   </div>
 
-  <!-- 포스트 카테고리 목록 -->
-  {% include category-list.html %}
-  
-  <a class="u-url" href="{{ page.url | relative_url }}" hidden></a>
+  {%- if page.tags.size > 0 %}
+  <ul class="tags post-tags">{% for t in page.tags %}<li>{{ t }}</li>{% endfor %}</ul>
+  {%- endif %}
+
+  <nav class="pager" aria-label="이전 · 다음 글">
+    {%- if page.previous %}
+    <a class="pager-prev" href="{{ page.previous.url | relative_url }}"><small>이전 글</small>{{ page.previous.title | escape }}</a>
+    {%- else %}<span></span>{% endif %}
+    {%- if page.next %}
+    <a class="pager-next" href="{{ page.next.url | relative_url }}"><small>다음 글</small>{{ page.next.title | escape }}</a>
+    {%- endif %}
+  </nav>
 </article>

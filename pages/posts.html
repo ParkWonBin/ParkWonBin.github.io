@@ -1,0 +1,28 @@
+---
+layout: default
+title: 글
+permalink: /posts/
+---
+<header class="page-head">
+  <h1>글</h1>
+  <p class="lead">공부하고 정리한 기록입니다.</p>
+</header>
+
+{%- if site.posts.size == 0 %}
+<p class="empty-state">아직 올린 글이 없어요.</p>
+{%- else %}
+<div class="catalog" data-filterable>
+  {%- assign cats = site.categories | sort -%}
+  {%- if cats.size > 0 %}
+  <nav class="filters" aria-label="카테고리">
+    <a class="chip is-active" href="#" data-filter="all" aria-pressed="true">전체 <span>{{ site.posts.size }}</span></a>
+    {%- for c in cats %}
+    <a class="chip" href="#{{ c[0] | slugify }}" data-filter="{{ c[0] | slugify }}" aria-pressed="false">{{ c[0] }} <span>{{ c[1].size }}</span></a>
+    {%- endfor %}
+  </nav>
+  {%- endif %}
+  <ul class="post-list">
+    {%- for post in site.posts -%}{%- include post-item.html post=post -%}{%- endfor -%}
+  </ul>
+</div>
+{%- endif %}

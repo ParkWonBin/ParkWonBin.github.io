@@ -1,6 +1,11 @@
 ---
-layout: dev_apps
-custom_css: /assets/webapp_card.css
+layout: artwork
+title: "움직임"
+subtitle: "단어에 담기지 않는 언어"
+order: 3
+thumbnail: /webapps/drawing/img/005_Animation_thm.png
+image: /webapps/drawing/img/005_Animation_web.webp
+original: /webapps/drawing/img/005_Animation.png
 ---
 
 <style>
@@ -14,18 +19,7 @@ custom_css: /assets/webapp_card.css
 </style>
 
 <div id='center'>
-  <img src="../005_Animation.png">
   <img src="../005_Animation1.gif">
   <img src="../005_Animation2.gif">
   <img src="../005_Animation3.gif">
 </div>
-
-### 움직임
-> 단어에 담기지 않는 언어
-
-
-<br>
-
----
-
-{% include dataPage/webapp_drawing.html %}

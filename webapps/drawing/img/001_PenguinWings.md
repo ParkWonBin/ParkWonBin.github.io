@@ -1,11 +1,12 @@
 ---
-layout: dev_apps
-custom_css: /assets/webapp_card.css
+layout: artwork
+title: "펭귄의 날개"
+subtitle: "완벽하고 완전하고 허술한"
+order: 1
+thumbnail: /webapps/drawing/img/001_PenguinWings_thm.png
+image: /webapps/drawing/img/001_PenguinWings_web.webp
+original: /webapps/drawing/img/001_PenguinWings.png
 ---
-<img src = '../001_PenguinWings.png'>
-
-### 펭귄의 날개
-> 완벽하고 완전하고 허술한
 
 새로운 능력을 얻는 과정은  
 가진 능력의 일부를 잃는 과정입니다.  
@@ -49,8 +50,3 @@ custom_css: /assets/webapp_card.css
 <!-- 변화의 화신인 동시에  
 변화란 역린을 갖게된  
 펭귄의 이야기입니다.   -->
-
-<br>
-
----
-{% include dataPage/webapp_drawing.html %}

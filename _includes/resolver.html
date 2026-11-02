@@ -1,0 +1,44 @@
+{%- comment -%}
+  404.html 의 <head> 에서 실행됩니다. 화면을 그리기 전에 옛 주소 · 단축 주소를 새 주소로 보냅니다.
+  · 단축 주소   : _data/apps.yml 의 alias   (wbpark.app/finance → /webapps/finance/)
+  · 옛 주소     : _data/redirects.yml
+  · 옛 전체화면 : /webapps/<앱>/app.html → /webapps/<앱>/   (?쿼리 · #해시 유지)
+  · 전시회 QR   : /webapps/drawing/... 아래 깨진 주소
+{%- endcomment -%}
+<script>
+(function () {
+  var MAP = {
+    {%- for app in site.data.apps -%}
+      {%- if app.url -%}{%- assign target = app.url -%}{%- else -%}{%- capture target -%}/webapps/{{ app.slug }}/{%- endcapture -%}{%- endif -%}
+      {%- for a in app.alias %}
+    {{ a | downcase | jsonify }}: {{ target | jsonify }},
+      {%- endfor -%}
+    {%- endfor -%}
+    {%- for r in site.data.redirects %}
+    {{ r[0] | downcase | remove_first: "/" | jsonify }}: {{ r[1] | jsonify }},
+    {%- endfor %}
+    "": "/"
+  };
+
+  var path = location.pathname;
+  try { path = decodeURIComponent(path); } catch (e) {}
+  var key = path.replace(/^\/+|\/+$/g, '').toLowerCase();
+  var keep = location.search + location.hash;
+  var to = null;
+
+  if (/^webapps\/.+\/app(\.html)?$/.test(key)) {
+    // 예전 '전체화면' 주소: 같은 폴더의 index.html 로
+    to = path.replace(/\/app(\.html)?\/?$/i, '/') + keep;
+  } else if (MAP.hasOwnProperty(key) && key !== '') {
+    to = MAP[key] + (MAP[key].indexOf('://') === -1 ? keep : '');
+  } else if (key.indexOf('webapps/drawing/img') === 0) {
+    // 전시회 펭귄 gif 로 들어온 사람은 움직임 작품 페이지로
+    to = '/webapps/drawing/img/005_Animation/';
+  } else if (key.indexOf('webapps/drawing') === 0) {
+    // 그 밖의 깨진 전시회 주소는 전시관 입구로
+    to = '/webapps/drawing/';
+  }
+
+  if (to && to !== location.pathname + keep) { location.replace(to); }
+})();
+</script>

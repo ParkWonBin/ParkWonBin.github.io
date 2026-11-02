@@ -1,0 +1,51 @@
+{%- comment -%}
+  웹앱 카드 하나. 사용: {% include app-card.html app=app %}
+  데이터는 _data/apps.yml 항목 그대로.
+{%- endcomment -%}
+{%- assign app = include.app -%}
+
+{%- if app.url -%}
+  {%- assign href = app.url -%}
+{%- else -%}
+  {%- capture href -%}/webapps/{{ app.slug }}/{%- endcapture -%}
+{%- endif -%}
+{%- assign external = false -%}
+{%- if href contains '://' -%}{%- assign external = true -%}{%- endif -%}
+
+{%- assign repo = app.repo -%}
+{%- if repo == nil and app.slug -%}
+  {%- capture repo -%}https://github.com/{{ site.repository }}/tree/{{ site.source_branch }}/webapps/{{ app.slug }}{%- endcapture -%}
+{%- endif -%}
+
+{%- assign is_new = false -%}
+{%- if app.date -%}
+  {%- assign now_s = site.time | date: "%s" | plus: 0 -%}
+  {%- assign app_s = app.date | date: "%s" | plus: 0 -%}
+  {%- assign limit_s = site.new_badge_days | default: 30 | times: 86400 -%}
+  {%- assign age_s = now_s | minus: app_s -%}
+  {%- if age_s < limit_s -%}{%- assign is_new = true -%}{%- endif -%}
+{%- endif -%}
+
+{%- capture search -%}{{ app.title }} {{ app.desc }} {{ app.tags | join: " " }} {{ app.slug }} {{ app.alias | join: " " }}{%- endcapture -%}
+
+<article class="app-card" data-item data-cat="{{ app.category }}" data-search="{{ search | downcase | strip_newlines | escape }}">
+  <div class="app-card-top">
+    <span class="app-icon" aria-hidden="true">{{ app.icon | default: "🧩" }}</span>
+    {%- if is_new %}<span class="badge-new" title="{{ app.date | date: '%Y.%m.%d' }} 추가">NEW</span>{% endif %}
+  </div>
+  <h3 class="app-title">
+    <a class="card-link" href="{{ href | relative_url }}"{% if external %} target="_blank" rel="noopener"{% endif %}>{{ app.title | escape }}</a>
+  </h3>
+  <p class="app-desc">{{ app.desc | escape }}</p>
+  {%- if app.tags %}
+  <ul class="tags" aria-label="기술 · 키워드">
+    {%- for t in app.tags %}<li>{{ t | escape }}</li>{% endfor -%}
+  </ul>
+  {%- endif %}
+  <div class="app-actions">
+    <span class="open-hint" aria-hidden="true">{% if external %}새 창에서 열기 ↗{% else %}열기 →{% endif %}</span>
+    {%- if repo %}
+    <a class="src-link" href="{{ repo }}" target="_blank" rel="noopener" aria-label="{{ app.title | escape }} 소스 코드">소스</a>
+    {%- endif %}
+  </div>
+</article>

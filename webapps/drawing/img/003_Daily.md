@@ -1,11 +1,12 @@
 ---
-layout: dev_apps
-custom_css: /assets/webapp_card.css
+layout: artwork
+title: "일상"
+subtitle: "기억하고 재현하는 과정"
+order: 5
+thumbnail: /webapps/drawing/img/003_Daily_thm.png
+image: /webapps/drawing/img/003_Daily_web.webp
+original: /webapps/drawing/img/003_Daily.png
 ---
-<img src = '../003_Daily.png'>
-
-### 일상
-> 기억하고 재현하는 과정
 
 2024년 1월부터 하루에 한 마리씩 그린 펭귄입니다.  
 
@@ -18,9 +19,4 @@ custom_css: /assets/webapp_card.css
 정답을 정해두고  
 정답에 가까워질 때까지  
 만들고 고치기를 반복하는 것  
-일상.  
-
-<br>
-
----
-{% include dataPage/webapp_drawing.html %}
+일상.

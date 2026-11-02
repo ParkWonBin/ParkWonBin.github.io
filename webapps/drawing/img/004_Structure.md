@@ -1,11 +1,12 @@
 ---
-layout: dev_apps
-custom_css: /assets/webapp_card.css
+layout: artwork
+title: "구조, 계단 나무 온도"
+subtitle: "삶에 형태가 있다면"
+order: 2
+thumbnail: /webapps/drawing/img/004_Structure_thm.png
+image: /webapps/drawing/img/004_Structure_web.webp
+original: /webapps/drawing/img/004_Structure.png
 ---
-<img src = '../004_Structure.png'>
-
-### 구조, 계단 나무 온도
-> 삶에 형태가 있다면
 
 #### 계단
 교육, 수련, 신분.  
@@ -66,10 +67,4 @@ custom_css: /assets/webapp_card.css
 어쩌면 섞인 듯, 섞이지 않은 것들이.  
 혼란과 변화를 만들어내면서   
 기묘한 조화를 이루는 것이   
-삶의 모습입니다. 
-
-
-<br>
-
----
-{% include dataPage/webapp_drawing.html %}
+삶의 모습입니다.

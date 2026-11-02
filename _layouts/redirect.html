@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta http-equiv="refresh" content="0; url={{ page.redirectTo }}" />
-    <link rel="canonical" href="{{ page.redirectTo }}" />
-  </head>
-  <body>
-    <p>If you are not redirected, <a href="{{ page.redirectTo }}">click here</a>.</p>
-  </body>
+<html lang="{{ site.lang | default: 'ko' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex">
+  <meta http-equiv="refresh" content="0; url={{ page.redirectTo | relative_url }}">
+  <link rel="canonical" href="{{ page.redirectTo | absolute_url }}">
+  <script>location.replace({{ page.redirectTo | relative_url | jsonify }});</script>
+  <title>이동 중…</title>
+</head>
+<body>
+  <p><a href="{{ page.redirectTo | relative_url }}">{{ page.redirectTo }}</a> 로 이동합니다.</p>
+</body>
 </html>
-

@@ -1,23 +1,13 @@
 <!DOCTYPE html>
-<html lang="{{ page.lang | default: site.lang | default: "en" }}">
-
+<html lang="{{ site.lang | default: 'ko' }}">
 {%- include head.html -%}
-
 <body>
-
+  <a class="skip-link" href="#main">본문 바로가기</a>
   {%- include header.html -%}
-
-  <main class="page-content" style="width: 100%" aria-label="Content" >
-    <div class="wrapper">
-      {{ content }}
-
-      <!-- 커스텀 기능 추가 -->
-      {%- include util/urlMenuBtn.html -%}
-    </div>
+  <main id="main" class="container">
+    {{ content }}
   </main>
-
   {%- include footer.html -%}
-
+  <script src="{{ '/assets/js/site.js' | relative_url }}" defer></script>
 </body>
-
 </html>
