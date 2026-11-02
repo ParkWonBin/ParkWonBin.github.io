@@ -32,6 +32,233 @@
     <button id="downloadPng" style="display:none;">Download as PNG</button><br>
     <button id="downloadSvg" style="display:none;">Download as SVG</button><br>
 
+    <hr style="margin: 30px 0;">
+
+    <h1>QR Code Reader</h1>
+    <p>QR 코드 이미지를 아래 영역에 드래그&amp;드롭하거나, 페이지에서 <b>Ctrl+V</b>로 붙여넣으면 원문 URL을 보여줍니다.</p>
+    <div id="qrDropZone" tabindex="0" style="max-width:400px;padding:30px 15px;border:2px dashed #888;border-radius:8px;text-align:center;cursor:pointer;color:#555;user-select:none;">
+        여기에 QR 이미지를 드래그하거나 Ctrl+V<br>
+        <small>(클릭하면 파일 선택)</small>
+    </div>
+    <input type="file" id="qrFileInput" accept="image/*" hidden>
+    <p id="qrDecodeStatus" style="min-height:1.5em;"></p>
+    <div id="qrDecodeResult" hidden>
+        <img id="qrDecodePreview" alt="입력된 QR 이미지" style="max-width:200px;max-height:200px;display:block;margin-bottom:10px;">
+        <label for="qrDecodeText">QR 코드 원문:</label><br>
+        <textarea id="qrDecodeText" readonly rows="3" style="width:100%;max-width:400px;margin-top:10px;"></textarea><br>
+        <button id="qrCopyBtn" type="button">복사</button>
+        <a id="qrOpenLink" target="_blank" rel="noopener noreferrer" hidden>열기</a>
+        <button id="qrUseBtn" type="button">생성기에 입력</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script>
+        (function () {
+            const dropZone = document.getElementById('qrDropZone');
+            const fileInput = document.getElementById('qrFileInput');
+            const statusElement = document.getElementById('qrDecodeStatus');
+            const resultElement = document.getElementById('qrDecodeResult');
+            const previewElement = document.getElementById('qrDecodePreview');
+            const textElement = document.getElementById('qrDecodeText');
+            const copyButton = document.getElementById('qrCopyBtn');
+            const openLink = document.getElementById('qrOpenLink');
+            const useButton = document.getElementById('qrUseBtn');
+            let previewObjectUrl = null;
+
+            function setStatus(message, isError) {
+                statusElement.textContent = message;
+                statusElement.style.color = isError ? '#c00' : '';
+            }
+
+            // Blob → HTMLImageElement
+            function loadImage(blob) {
+                return new Promise(function (resolve, reject) {
+                    const objectUrl = URL.createObjectURL(blob);
+                    const image = new Image();
+                    image.onload = function () { resolve({ image: image, objectUrl: objectUrl }); };
+                    image.onerror = function () {
+                        URL.revokeObjectURL(objectUrl);
+                        reject(new Error('이미지를 읽을 수 없습니다.'));
+                    };
+                    image.src = objectUrl;
+                });
+            }
+
+            // 이미지를 지정 크기로 캔버스에 그려 jsQR로 해석 (흰 배경을 깔아 투명 PNG/SVG도 처리)
+            function scanAtSize(image, width, height) {
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const context = canvas.getContext('2d', { willReadFrequently: true });
+                context.fillStyle = '#ffffff';
+                context.fillRect(0, 0, width, height);
+                context.drawImage(image, 0, 0, width, height);
+                const imageData = context.getImageData(0, 0, width, height);
+                const code = jsQR(imageData.data, width, height, { inversionAttempts: 'attemptBoth' });
+                return code ? code.data : null;
+            }
+
+            async function decodeImage(image) {
+                // SVG는 naturalWidth가 0이거나 작게 잡히므로 기본 크기를 보정
+                const naturalWidth = image.naturalWidth || 300;
+                const naturalHeight = image.naturalHeight || naturalWidth;
+                const longSide = Math.max(naturalWidth, naturalHeight);
+
+                // 원본 크기(너무 크거나 작으면 보정) → 축소본 순서로 시도
+                const sizes = [];
+                if (longSide > 2000) sizes.push(2000, 1000, 600);
+                else if (longSide < 400) sizes.push(800);
+                else sizes.push(longSide, 600);
+
+                if (typeof jsQR === 'function') {
+                    for (const size of sizes) {
+                        const scale = size / longSide;
+                        const result = scanAtSize(image, Math.round(naturalWidth * scale), Math.round(naturalHeight * scale));
+                        if (result !== null) return result;
+                    }
+                }
+
+                // jsQR로 못 읽거나 로드 실패 시 브라우저 내장 BarcodeDetector로 재시도
+                if ('BarcodeDetector' in window) {
+                    try {
+                        const detector = new BarcodeDetector({ formats: ['qr_code'] });
+                        const barcodes = await detector.detect(image);
+                        if (barcodes.length > 0) return barcodes[0].rawValue;
+                    } catch (error) {
+                        console.warn(error);
+                    }
+                }
+
+                if (typeof jsQR !== 'function' && !('BarcodeDetector' in window)) {
+                    throw new Error('QR 해석 라이브러리를 불러오지 못했습니다. 네트워크를 확인해 주세요.');
+                }
+                return null;
+            }
+
+            function showResult(text) {
+                textElement.value = text;
+                resultElement.hidden = false;
+
+                // http(s) 링크일 때만 열기 버튼 노출
+                let isWebUrl = false;
+                try {
+                    const parsed = new URL(text);
+                    isWebUrl = parsed.protocol === 'http:' || parsed.protocol === 'https:';
+                } catch (_) { }
+                openLink.hidden = !isWebUrl;
+                openLink.href = isWebUrl ? text : '#';
+            }
+
+            async function handleImageBlob(blob) {
+                if (!blob || !blob.type.startsWith('image/')) {
+                    setStatus('이미지 파일이 아닙니다.', true);
+                    return;
+                }
+                setStatus('QR 코드 읽는 중...', false);
+                try {
+                    const loaded = await loadImage(blob);
+                    if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
+                    previewObjectUrl = loaded.objectUrl;
+                    previewElement.src = loaded.objectUrl;
+
+                    const text = await decodeImage(loaded.image);
+                    if (text === null) {
+                        resultElement.hidden = true;
+                        setStatus('이미지에서 QR 코드를 찾지 못했습니다.', true);
+                        return;
+                    }
+                    showResult(text);
+                    setStatus('QR 코드를 읽었습니다.', false);
+                } catch (error) {
+                    console.error(error);
+                    resultElement.hidden = true;
+                    setStatus(error.message || 'QR 코드를 읽는 동안 오류가 발생했습니다.', true);
+                }
+            }
+
+            // 다른 웹페이지에서 이미지를 끌어온 경우(파일 없이 URL만 전달됨)
+            async function handleImageUrl(imageUrl) {
+                try {
+                    const response = await fetch(imageUrl);
+                    if (!response.ok) throw new Error();
+                    await handleImageBlob(await response.blob());
+                } catch (_) {
+                    setStatus('해당 이미지를 가져올 수 없습니다. 이미지를 저장한 뒤 파일로 드래그하거나 복사(Ctrl+C) 후 붙여넣어 주세요.', true);
+                }
+            }
+
+            // 페이지 전체에서 드롭 허용 (이미지가 새 탭으로 열리는 기본 동작 방지)
+            document.addEventListener('dragover', function (event) {
+                event.preventDefault();
+                dropZone.style.borderColor = '#0a7';
+                dropZone.style.background = '#effaf5';
+            });
+            document.addEventListener('dragleave', function (event) {
+                if (event.relatedTarget === null) {
+                    dropZone.style.borderColor = '#888';
+                    dropZone.style.background = '';
+                }
+            });
+            document.addEventListener('drop', function (event) {
+                event.preventDefault();
+                dropZone.style.borderColor = '#888';
+                dropZone.style.background = '';
+
+                const files = Array.from(event.dataTransfer.files).filter(function (file) { return file.type.startsWith('image/'); });
+                if (files.length > 0) {
+                    handleImageBlob(files[0]);
+                    return;
+                }
+                const uriList = event.dataTransfer.getData('text/uri-list');
+                const imageUrl = uriList.split(/\r?\n/).find(function (line) { return line && !line.startsWith('#'); });
+                if (imageUrl) {
+                    handleImageUrl(imageUrl);
+                    return;
+                }
+                setStatus('이미지 파일을 드롭해 주세요.', true);
+            });
+
+            // Ctrl+V 붙여넣기 (텍스트 붙여넣기는 그대로 둠)
+            document.addEventListener('paste', function (event) {
+                const items = Array.from(event.clipboardData ? event.clipboardData.items : []);
+                const imageItem = items.find(function (item) { return item.kind === 'file' && item.type.startsWith('image/'); });
+                if (!imageItem) return;
+                event.preventDefault();
+                handleImageBlob(imageItem.getAsFile());
+            });
+
+            // 클릭/엔터로 파일 선택 (모바일 대응)
+            dropZone.addEventListener('click', function () { fileInput.click(); });
+            dropZone.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    fileInput.click();
+                }
+            });
+            fileInput.addEventListener('change', function () {
+                if (fileInput.files.length > 0) handleImageBlob(fileInput.files[0]);
+                fileInput.value = '';
+            });
+
+            copyButton.addEventListener('click', async function () {
+                try {
+                    await navigator.clipboard.writeText(textElement.value);
+                } catch (_) {
+                    textElement.select();
+                    document.execCommand('copy');
+                }
+                setStatus('클립보드에 복사했습니다.', false);
+            });
+
+            useButton.addEventListener('click', function () {
+                const urlInput = document.getElementById('url');
+                urlInput.value = textElement.value;
+                urlInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                urlInput.focus();
+            });
+        })();
+    </script>
+
     <script>
         document.getElementById('qrForm').addEventListener('submit', function(event) {
             event.preventDefault();

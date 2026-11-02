@@ -136,6 +136,7 @@
     <br> - URL로 QR로 변환하기
     <br> - QR 색상 설정
     <br> - 오류율 조정  
+    <br> - QR 이미지 드래그/Ctrl+V로 원문 URL 읽기
 
 
 - title : OpenAI API - Assistant
