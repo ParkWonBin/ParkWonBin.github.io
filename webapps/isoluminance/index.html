@@ -889,7 +889,16 @@ function toggleFixed(id) {
   commit(() => { s.fixed = !s.fixed; if (!s.fixed) delete s.fixed; });
 }
 
+// 누를 때마다 innerHTML 을 새로 그려 브라우저가 click/dblclick 을 만들지 못한다 → 더블클릭은 직접 감지
+//   다각형 도구: 끌기가 없으니 두 번째로 누를 때 바로 닫는다.
+//   그 밖에는 두 번째로 '뗄' 때 포인터가 거의 안 움직였을 때만 더블클릭 (클릭 직후 바로 끌어도 평소처럼 끌기)
+let lastDown = null, pendingDbl = null;
 edSvg.addEventListener('pointerdown', e => {
+  const dbl = e.button === 0 && lastDown && e.timeStamp - lastDown.t < 500 && Math.hypot(e.clientX - lastDown.x, e.clientY - lastDown.y) < 8;
+  lastDown = dbl ? null : { t: e.timeStamp, x: e.clientX, y: e.clientY };
+  pendingDbl = null;
+  if (dbl && state.tool === 'poly' && onDblClick(e)) { e.preventDefault(); return; }
+  if (dbl) pendingDbl = { e, x: e.clientX, y: e.clientY };
   const p = svgPt(edSvg, e.clientX, e.clientY);
   if (e.button === 1 || (e.button === 0 && (spaceDown || state.tool === 'hand'))) {
     drag = { kind: 'pan', c0: [e.clientX, e.clientY], v0: { ...view }, u0: upp() };
@@ -964,13 +973,20 @@ function endDrag() {
 }
 edSvg.addEventListener('pointerup', endDrag);
 edSvg.addEventListener('pointercancel', endDrag);
-edSvg.addEventListener('dblclick', e => {
-  if (state.tool === 'poly') { finishPoly(); return; }
-  if (state.tool !== 'select') return;
-  const h = e.target.closest('[data-h]');
-  if (h && h.dataset.h[0] === 'v') { state.selNode = +h.dataset.h.slice(1); deleteNode(); return; }
-  if (e.target.closest('[data-id]') && findSel()) setSelMode(state.selMode === 'node' ? 'transform' : 'node');
+edSvg.addEventListener('pointerup', e => {
+  const p = pendingDbl; pendingDbl = null;
+  if (p && Math.hypot(e.clientX - p.x, e.clientY - p.y) < 8) onDblClick(p.e);
 });
+edSvg.addEventListener('pointercancel', () => { pendingDbl = null; });
+function onDblClick(e) {
+  if (spaceDown) return false;
+  if (state.tool === 'poly') { finishPoly(); return true; }
+  if (state.tool !== 'select') return false;
+  const h = e.target.closest('[data-h]');
+  if (h && h.dataset.h[0] === 'v') { state.selNode = +h.dataset.h.slice(1); deleteNode(); return true; }
+  if (e.target.closest('[data-id]') && findSel()) { setSelMode(state.selMode === 'node' ? 'transform' : 'node'); return true; }
+  return false;
+}
 edSvg.addEventListener('wheel', e => {
   e.preventDefault();
   zoomAt(Math.exp(-e.deltaY * (e.deltaMode === 1 ? 0.05 : 0.0015)), e.clientX, e.clientY);
@@ -1057,6 +1073,11 @@ $('#palSel').addEventListener('change', e => { state.palette = e.target.value; c
 $('#ySl').addEventListener('input', e => { state.Y = +e.target.value; computeColors(); save(); renderAll(); });
 
 /* ---------------- 키보드 ---------------- */
+// 마우스로 누른 버튼에 포커스가 남아 있으면 Enter 단축키를 쓸 때 그 버튼까지 다시 눌린다 → 마우스 클릭 뒤엔 포커스를 놓는다
+document.addEventListener('click', e => {
+  const b = e.detail && e.target.closest && e.target.closest('button');
+  if (b) b.blur();
+});
 document.addEventListener('keydown', e => {
   if (e.target.closest && e.target.closest('input, select, textarea')) return;
   const k = e.key, mod = e.ctrlKey || e.metaKey;

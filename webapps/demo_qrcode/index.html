@@ -265,7 +265,7 @@
             event.preventDefault();
 
             // 입력된 URL을 가져오기
-            const url = document.getElementById('url').value.trim();
+            let url = document.getElementById('url').value.trim();
             const foregroundColor = document.getElementById('foreground').value;
             const backgroundColor = document.getElementById('background').value;
             const errorCorrectionLevel = document.getElementById('errorCorrectionLevel').value;
@@ -285,11 +285,16 @@
             try {
                 new URL(url);
             } catch (_) {
-                alert("유효한 URL을 입력해 주세요.");
-                qrImageElement.hidden = true;
-                downloadPngButton.style.display = "none";
-                downloadSvgButton.style.display = "none";
-                return;
+                // 'naver.com' 처럼 http(s):// 없이 주소만 적은 경우 https:// 를 붙여 준다
+                if (/^[^\s\/?#@:]+\.\p{L}{2,}(:\d+)?([\/?#]\S*)?$/u.test(url)) {
+                    url = 'https://' + url;
+                    document.getElementById('url').value = url;
+                } else if (!confirm("URL 형식이 아닙니다. 입력한 글자 그대로 QR 코드를 만들까요?")) {
+                    qrImageElement.hidden = true;
+                    downloadPngButton.style.display = "none";
+                    downloadSvgButton.style.display = "none";
+                    return;
+                }
             }
 
             // 데이터가 문자열인지 확인

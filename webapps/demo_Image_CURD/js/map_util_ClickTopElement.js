@@ -11,16 +11,16 @@ const selectImage = (e) => {
     const topElement = document.elementFromPoint(e.clientX, e.clientY);
 
     // 찾은 요소에 대한 조작을 수행합니다.
-    if (topElement.parentNode) {
+    if (topElement && topElement.parentNode && topElement.parentNode.classList) {
         // alert(JSON.stringify(topElement.parentNode.getAttributeNames()))
 
         // imageHotSpot를 클릭한 게 아니라면 return
-        if (!topElement.parentNode.getAttribute('class').includes('imageHotSpot')) {
+        if (!topElement.parentNode.classList.contains('imageHotSpot')) {
             return null
         }
 
         // 이미 Active 클라스를 갖고있다면 return
-        if (topElement.parentNode.getAttribute('class').includes('Active')) {
+        if (topElement.parentNode.classList.contains('Active')) {
             return null
         }
 

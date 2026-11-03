@@ -31,11 +31,11 @@ const init_Create_addPictureInput = ()=>{
             if (e.target.files.length === 0) {
                 return null
             }
-            // 입력받은 파일 있으면 이미지 만들기
+            // 입력받은 파일 있으면 이미지 만들기 (화면 가운데에 배치)
             createImageConainer({
                 file:e.target.files[0],
-                dropX:0,
-                dropY:0
+                dropX:window.innerWidth / 2,
+                dropY:window.innerHeight / 2
             })
         }
     });

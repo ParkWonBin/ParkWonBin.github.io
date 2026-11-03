@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Adjustable GPS Location Tracker with Speed in m/s</title>
   <script src="/assets/js/analytics.js" defer></script>
 </head>
@@ -60,8 +62,18 @@
 
                     lastPosition = {latitude: currentLatitude, longitude: currentLongitude};
                     lastUpdateTime = now;
+                    if (isUpdating) document.getElementById('trackingState').textContent = '추적중';
                 }, function(error) {
                     console.error("Error Code = " + error.code + " - " + error.message);
+                    if (!isUpdating) return;
+                    if (error.code === error.PERMISSION_DENIED) {
+                        // 권한이 없으면 계속 물어봐도 소용없으니 멈춘다
+                        clearInterval(updateInterval);
+                        isUpdating = false;
+                        document.getElementById('trackingState').textContent = '추적 멈춤 (위치 권한이 거부되었습니다)';
+                    } else {
+                        document.getElementById('trackingState').textContent = '추적중 (위치를 가져오지 못함: ' + error.message + ')';
+                    }
                 });
             } else {
                 alert("Geolocation is not supported by this browser.");
@@ -69,7 +81,9 @@
         }
 
         document.getElementById('toggleUpdate').addEventListener('click', function() {
-            const intervalSeconds = parseInt(document.getElementById('updateInterval').value, 10) ;
+            // 비었거나 100 보다 작으면 setInterval 이 쉬지 않고 돌므로 100ms 이상으로 맞춘다 (비면 500)
+            const intervalSeconds = Math.max(100, parseInt(document.getElementById('updateInterval').value, 10) || 500);
+            document.getElementById('updateInterval').value = intervalSeconds;
             if (isUpdating) {
                 clearInterval(updateInterval);
                 document.getElementById('trackingState').textContent = '추적 멈춤';

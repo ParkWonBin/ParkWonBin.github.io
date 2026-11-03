@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
         observer.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.1 });
+  }, { threshold: 0 });
   document.querySelectorAll('.fade-in').forEach(function(el) { observer.observe(el); });
 
   /* ===== Auto-link Ep tags ===== */

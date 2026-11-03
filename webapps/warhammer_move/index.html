@@ -65,6 +65,11 @@
       height: 100%
     }
 
+    /* 닫힌 판(오른쪽 밖으로 민 #panel)이 넘치면 폰 크롬이 화면 폭을 600px 로 넓혔다 — 뿌리에서 자른다 */
+    html {
+      overflow: hidden
+    }
+
     body {
       margin: 0;
       background: var(--ink);
@@ -1983,10 +1988,10 @@
       $('selMove').oninput = (e) => {
         const v = e.target.value.trim();
         u.move = v === '' ? null : Math.max(0, +v);
-        updateRings(); drawSel(); drawUnits();
+        updateRings(); drawSel(); drawUnits(); keepInput(e.target);
       };
       if ($('btnHudBack')) $('btnHudBack').onclick = () => { state.hudHidden = false; drawSel(); };
-      if ($('selFace')) $('selFace').oninput = (e) => setFacing(selM(), (+e.target.value || 0) * Math.PI / 180);
+      if ($('selFace')) $('selFace').oninput = (e) => { setFacing(selM(), (+e.target.value || 0) * Math.PI / 180); keepInput(e.target); };
       for (const el of box.querySelectorAll('[data-mm]')) {
         el.onclick = () => {
           state.selModel = el.dataset.mm;
@@ -1996,6 +2001,12 @@
       }
 
       drawModelHud();
+    }
+
+    // 치는 중에 drawSel 이 #selBox 를 새로 그리면 그 칸이 사라져 첫 글자만 남았다 — 치던 칸(값 · 커서)을 제자리에 되돌리고 초점도 돌려준다
+    function keepInput(el) {
+      const n = $(el.id);
+      if (n && n !== el) { n.replaceWith(el); el.focus({ preventScroll: true }); }
     }
 
     function drawModelHud() {

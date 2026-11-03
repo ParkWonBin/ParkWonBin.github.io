@@ -673,7 +673,8 @@ function makeLowPoly(objectId) {
       const cur = objById(objectId) ?? o;
       const p = toWorld(cur, cur.w + 0.3, 0);
       addObject({ ...cur, id: uid(), assetId: id, name: cur.name + ' low', x: round2(p.x), z: round2(p.z), lowOf: srcAssetId });
-      toast(`로우폴리 완료 · ${fmtMB(src.bytes)} → ${fmtMB(low.bytes)} · 삼각형 ${src.tris.toLocaleString('ko-KR')} → ${low.tris.toLocaleString('ko-KR')}`);
+      const little = low.bytes > src.bytes * 0.95 && low.tris > src.tris * 0.95; // 이미 같은 방식으로 최적화된 파일
+      toast(`로우폴리 완료 · ${fmtMB(src.bytes)} → ${fmtMB(low.bytes)} · 삼각형 ${src.tris.toLocaleString('ko-KR')} → ${low.tris.toLocaleString('ko-KR')}` + (little ? ' · 이미 최적화된 모델이라 더 줄일 게 거의 없어요' : ''));
     } catch (err) {
       console.error(err);
       toast(`로우폴리를 만들지 못했어요: ${err.message}`);
@@ -836,7 +837,7 @@ async function splitParts(objectId) {
     if (meshes.some(m => m.isSkinnedMesh)) throw new Error('뼈대(스킨)가 있는 모델은 나눌 수 없어요');
     const diag = new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3()).length();
     const parts = groupIslands(meshes.flatMap(m => meshIslands(m, diag * 1e-5)), diag * PART_GAP);
-    if (parts.length < 2) { toast('떨어져 있는 파츠를 찾지 못했어요'); return; }
+    if (parts.length < 2) { toast('떨어져 있는 파츠를 찾지 못했어요 · 이 모델은 한 덩어리예요'); return; }
 
     const base = src.name.replace(/\.(glb|gltf)$/i, '');
     const cur = objById(objectId) ?? o;

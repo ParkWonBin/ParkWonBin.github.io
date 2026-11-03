@@ -97,6 +97,8 @@ footer ul { margin: 4px 0 0; padding-left: 18px; }
 .handle.se { width: 18px; height: 18px; right: -10px; bottom: -10px; cursor: nwse-resize; border-radius: 50%; }
 .orig-wrap { position: relative; margin: 0 auto; }
 .orig-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.orig-wrap canvas:not(#src) { background: none; }
+.orig-wrap canvas[hidden] { display: none; } /* .pane canvas{display:block} 이 hidden 을 덮어써서 숨긴 히트맵이 원본을 가리던 문제 */
 #mask { cursor: crosshair; touch-action: none; }
 #mask.off { pointer-events: none; }
 .dims { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -698,7 +700,7 @@ function compose() {
   const wide = applyOrder(w, h, base.px, Int32Array.from({ length: w * h }, (_, i) => i), hOrder, tw);
   let th = target.h, img = wide, approx = false;
   if (th !== h) {
-    if (vCache && vCache.tw === tw && vCache.done >= Math.max(0, h - th)) {
+    if (vCache && vCache.tw === tw && vCache.done >= Math.abs(h - th)) {
       const vt = applyOrder(vCache.tr.w, vCache.tr.h, vCache.tr.px, Int32Array.from({ length: vCache.tr.w * vCache.tr.h }, (_, i) => i), vCache.order, th);
       // map positions back to original ids
       vt.ids = vt.ids.map((p) => (p < 0 ? (vCache.tr.ids[-1 - p] < 0 ? vCache.tr.ids[-1 - p] : -1 - vCache.tr.ids[-1 - p]) : vCache.tr.ids[p]));

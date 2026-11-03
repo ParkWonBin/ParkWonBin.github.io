@@ -136,13 +136,16 @@ const chatbotCreateHyperlink = (linkArray)=>{
 // 고객님이 먼전 말하며 쳇봇이 대답함.
 const chatbotSendMessage = (userMassage)=>{
 
+    // 빈 입력은 무시
+    if(!userMassage.trim()) return
+
     // 우선 고객님의 한마디
-    // 입력된 메시지를 USER 이름으로 체팅방 안에 추가한다.
-    chatbotAppendMessage(USERNAME,userMassage)
+    // 입력된 메시지를 USER 이름으로 체팅방 안에 추가한다. (HTML 이 아닌 글자 그대로 보이게)
+    chatbotAppendMessage(USERNAME,$('<div>').text(userMassage).html())
 
     // 나쁜 사용자가 줄바꿈 넣거나 스페이스바 넣으면 화나니까...
-    // 앞뒤 공백문자를 제거한 뒤 대본이랑 비교한다.
-    userMassage = userMassage.replace(' ',"").trim()
+    // 모든 공백문자를 제거한 뒤 대본이랑 비교한다.
+    userMassage = userMassage.replace(/\s+/g,"")
 
 
     // 고객이 순순히 대본에 있는 말을 했는지부터 알아야함.
@@ -172,6 +175,10 @@ const chatbotSendMessage = (userMassage)=>{
             userMassage = '처음으로'
         }
 
+    } else if(userMassage !== '처음으로'){
+        // 대본에 없는 말이면 지금 고를 수 있는 버튼을 다시 보여준다.
+        chatbotAppendMessage(CHATBOTNAME,'잘 모르겠어요. 아래에서 골라 주세요.')
+        chatbotCreateBtnsByText(chatbotCurrentDialog.BtnText)
     }
 
     if(userMassage === '처음으로'){

@@ -7,6 +7,10 @@
     <style>
         canvas {
             border: 1px solid black;
+            box-sizing: border-box;
+            max-width: 100%;
+            height: auto;
+            touch-action: none;
         }
         #controls {
             margin-top: 10px;
@@ -17,7 +21,7 @@
 <body>
     <h2>Snake Game</h2>
     <p>시작 : 엔터 </p>
-    <p>이동 : 방향키</p>
+    <p>이동 : 방향키 (모바일: 화면 스와이프)</p>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
     <div id="controls">
         <label for="gridSize">Grid Size:</label>
@@ -37,8 +41,13 @@
         let food = {x: 15, y: 15};
         let dx = 1;
         let dy = 0;
+        let lastDx = 1; // 마지막 이동에 실제로 쓰인 방향 (역방향 판정용)
+        let lastDy = 0;
+        let cols = 20; // 화면에 온전히 들어가는 칸 수
+        let rows = 20;
         let gameInterval;
         let isGameRunning = false;
+        let isPaused = false;
 
         function drawSnake() {
             snake.forEach(segment => {
@@ -54,12 +63,14 @@
 
         function moveSnake() {
             const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+            lastDx = dx;
+            lastDy = dy;
             snake.unshift(head);
 
             if (head.x === food.x && head.y === food.y) {
                 food = {
-                    x: Math.floor(Math.random() * canvas.width / gridSize),
-                    y: Math.floor(Math.random() * canvas.height / gridSize)
+                    x: Math.floor(Math.random() * cols),
+                    y: Math.floor(Math.random() * rows)
                 };
             } else {
                 snake.pop();
@@ -68,8 +79,8 @@
 
         function checkCollision() {
             const head = snake[0];
-            if (head.x < 0 || head.x >= canvas.width / gridSize ||
-                head.y < 0 || head.y >= canvas.height / gridSize) {
+            if (head.x < 0 || head.x >= cols ||
+                head.y < 0 || head.y >= rows) {
                 return true;
             }
 
@@ -97,20 +108,29 @@
 
         function startGame() {
             if (!isGameRunning) {
-                gridSize = parseInt(gridSizeInput.value);
-                snake = [{x: Math.floor(canvas.width / gridSize / 2), y: Math.floor(canvas.height / gridSize / 2)}];
-                food = {
-                    x: Math.floor(Math.random() * canvas.width / gridSize),
-                    y: Math.floor(Math.random() * canvas.height / gridSize)
-                };
-                dx = 1;
-                dy = 0;
+                if (!isPaused) { // 일시정지 후 재개가 아니면 새 게임
+                    gridSize = Math.min(40, Math.max(10, parseInt(gridSizeInput.value) || 20));
+                    gridSizeInput.value = gridSize;
+                    cols = Math.floor(canvas.width / gridSize);
+                    rows = Math.floor(canvas.height / gridSize);
+                    snake = [{x: Math.floor(cols / 2), y: Math.floor(rows / 2)}];
+                    food = {
+                        x: Math.floor(Math.random() * cols),
+                        y: Math.floor(Math.random() * rows)
+                    };
+                    dx = 1;
+                    dy = 0;
+                    lastDx = 1;
+                    lastDy = 0;
+                }
+                isPaused = false;
                 isGameRunning = true;
                 gameInterval = setInterval(gameLoop, 100);
                 startBtn.textContent = 'Pause';
             } else {
                 clearInterval(gameInterval);
                 isGameRunning = false;
+                isPaused = true;
                 startBtn.textContent = 'Resume';
             }
         }
@@ -118,6 +138,7 @@
         function resetGame() {
             clearInterval(gameInterval);
             isGameRunning = false;
+            isPaused = false;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             startBtn.textContent = 'Start';
         }
@@ -125,6 +146,7 @@
         function endGame() {
             clearInterval(gameInterval);
             isGameRunning = false;
+            isPaused = false;
             alert('Game Over!');
             startBtn.textContent = 'Start';
         }
@@ -132,8 +154,17 @@
         startBtn.addEventListener('click', startGame);
         resetBtn.addEventListener('click', resetGame);
 
+        // 방향 전환: 이번 틱에 이미 바꾼 dx/dy 가 아니라 마지막으로 실제 이동한 방향 기준으로 역주행을 막는다
+        function turn(ndx, ndy) {
+            if ((ndx !== 0 && lastDx === 0) || (ndy !== 0 && lastDy === 0)) {
+                dx = ndx;
+                dy = ndy;
+            }
+        }
+
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
+                e.preventDefault(); // 포커스된 버튼이 Enter 로 한 번 더 눌리는 것 방지
                 if (startBtn.textContent === 'Start' || startBtn.textContent === 'Resume') {
                     startGame();
                 } else {
@@ -141,13 +172,34 @@
                 }
             } else if (isGameRunning) {
                 switch(e.key) {
-                    case 'ArrowUp': if (dy === 0) { dx = 0; dy = -1; } break;
-                    case 'ArrowDown': if (dy === 0) { dx = 0; dy = 1; } break;
-                    case 'ArrowLeft': if (dx === 0) { dx = -1; dy = 0; } break;
-                    case 'ArrowRight': if (dx === 0) { dx = 1; dy = 0; } break;
+                    case 'ArrowUp': turn(0, -1); break;
+                    case 'ArrowDown': turn(0, 1); break;
+                    case 'ArrowLeft': turn(-1, 0); break;
+                    case 'ArrowRight': turn(1, 0); break;
+                    default: return;
                 }
+                e.preventDefault(); // 방향키로 페이지가 스크롤되지 않게
             }
         });
+
+        // 모바일: 캔버스 위에서 스와이프로 방향 전환
+        let touchX = null;
+        let touchY = null;
+        canvas.addEventListener('touchstart', (e) => {
+            touchX = e.touches[0].clientX;
+            touchY = e.touches[0].clientY;
+        }, { passive: true });
+        canvas.addEventListener('touchmove', (e) => {
+            if (touchX === null || !isGameRunning) return;
+            const mx = e.touches[0].clientX - touchX;
+            const my = e.touches[0].clientY - touchY;
+            if (Math.max(Math.abs(mx), Math.abs(my)) < 30) return;
+            if (Math.abs(mx) > Math.abs(my)) turn(mx > 0 ? 1 : -1, 0);
+            else turn(0, my > 0 ? 1 : -1);
+            touchX = e.touches[0].clientX; // 손을 떼지 않고 이어서 꺾을 수 있게
+            touchY = e.touches[0].clientY;
+        }, { passive: true });
+        canvas.addEventListener('touchend', () => { touchX = null; touchY = null; });
     </script>
 </body>
 </html>

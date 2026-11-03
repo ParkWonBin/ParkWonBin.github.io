@@ -284,7 +284,8 @@ function getStyle(props, year) {
     color: YEAR_COLORS[year],
     weight: hidden ? 0 : 1.5,
     opacity: hidden ? 0 : 0.8,
-    fillOpacity: hidden ? 0 : fillOp
+    fillOpacity: hidden ? 0 : fillOp,
+    interactive: !hidden // 필터로 숨긴 폴리곤은 클릭(팝업)도 막음
   };
 }
 
@@ -352,6 +353,9 @@ function toggleLayer(year) {
   if (l.visible) {
     if (!l.geoLayer) {
       l.geoLayer = buildGeoLayer(l.geojson, year);
+    } else {
+      // 꺼져 있는 동안 바뀐 침수심 필터·투명도 반영
+      l.geoLayer.setStyle(f => getStyle(f.properties, year));
     }
     l.geoLayer.addTo(map);
   } else {
@@ -375,6 +379,7 @@ function toggleAll(on) {
     l.visible = on;
     if (on) {
       if (!l.geoLayer) l.geoLayer = buildGeoLayer(l.geojson, parseInt(year));
+      else l.geoLayer.setStyle(f => getStyle(f.properties, l.year));
       l.geoLayer.addTo(map);
     } else {
       if (l.geoLayer) map.removeLayer(l.geoLayer);
@@ -470,7 +475,7 @@ async function loadAll() {
 
   updateStats();
   document.getElementById('loading').classList.add('hidden');
-  map.fitBounds([[37.413, 126.764], [37.715, 127.183]]);
+  map.fitBounds([[37.413, 126.764], [37.715, 127.183]], { animate: false }); // 애니메이션 중엔 아래 검색의 setView 가 무시됨
 
   // Auto-search from URL query param
   const urlQ = new URLSearchParams(window.location.search).get('q');

@@ -361,12 +361,11 @@ function renderETFSim() {
 function renderETFResults(results) {
   const fx = 1363;
   document.getElementById('etf-results').innerHTML = results.map(r => {
-    const krwTotal = r.total * fx;
-    const krwInvested = r.invested * fx;
+    const usdTotal = r.total / fx; // r.total 은 만원 단위 → 만 달러
     return `<div class="result-card">
       <div class="label" style="color:${r.color};font-weight:600">${r.key} <span style="font-size:.7rem;color:var(--text2)">CAGR ${(r.cagr*100).toFixed(1)}%</span></div>
       <div class="value" style="color:${r.color}">${(r.total / 10000).toFixed(1)}억</div>
-      <div class="label">≈ ${(krwTotal / 100000000).toFixed(1)}억원 <span style="font-size:.7rem">(₩${fx}/$ 기준)</span></div>
+      <div class="label">≈ ${Math.round(usdTotal).toLocaleString()}만 달러 <span style="font-size:.7rem">(₩${fx}/$ 기준)</span></div>
       <div class="label">납입: ${r.totalPayments}회 × ${(r.invested / r.totalPayments).toLocaleString()}만원 = <b>${(r.invested / 10000).toFixed(1)}억</b></div>
       <div class="label" style="color:var(--green)">수익률: +${r.roi.toFixed(0)}%</div>
     </div>`;
@@ -449,8 +448,9 @@ function renderTop10() {
   const cagr_p = (Math.pow(finalP / 10000, 1 / data.length) - 1) * 100;
   const cagr_s = (Math.pow(finalS / 10000, 1 / data.length) - 1) * 100;
 
-  const top10fx = parseFloat(document.getElementById('top10-exchange').value) || 1363;
-  document.getElementById('top10-summary').innerHTML = `
+  const renderSummary = () => {
+    const top10fx = parseFloat(document.getElementById('top10-exchange').value) || 1363;
+    document.getElementById('top10-summary').innerHTML = `
     <div class="result-card">
       <div class="label">Top10 전략 (2005→2024)</div>
       <div class="value" style="color:var(--gold)">$${(finalP).toLocaleString()}</div>
@@ -470,6 +470,8 @@ function renderTop10() {
       </div>
       <div class="label">연간 CAGR 차이</div>
     </div>`;
+  };
+  renderSummary();
 
   // Chart
   new Chart(document.getElementById('chart-top10'), {
@@ -541,8 +543,8 @@ function renderTop10() {
     </tr>`;
   }).join('');
 
-  // 환율 변경 시 리렌더링
-  document.getElementById('top10-exchange').addEventListener('input', renderTop10);
+  // 환율 변경 시 요약 카드만 다시 그림 (차트·표는 환율과 무관)
+  document.getElementById('top10-exchange').addEventListener('input', renderSummary);
 }
 
 // ===== ETF BACKTEST CALCULATOR =====
@@ -564,13 +566,14 @@ function setupBtCalc() {
     // Calculate cumulative for each ETF from startYear
     const results = etfKeys.map(key => {
       const returns = ETF.etfs[key].returns;
+      const from = Math.max(startYear, returns[0].year); // 상장 전 연도는 데이터가 없어 첫 데이터 연도부터 계산
       let val = amount;
-      const yearly = [{ year: startYear, val: amount }];
+      const yearly = [{ year: from, val: amount }];
       for (let y = startYear; y <= 2024; y++) {
         const r = returns.find(x => x.year === y);
         if (r) { val *= (1 + r.return / 100); yearly.push({ year: y + 1, val }); }
       }
-      return { key, final: val, yearly, roi: ((val - amount) / amount * 100) };
+      return { key, from, final: val, yearly, roi: ((val - amount) / amount * 100) };
     });
 
     // Also SPY
@@ -586,6 +589,7 @@ function setupBtCalc() {
         <div class="value" style="color:${colors[r.key]}">$${Math.round(r.final).toLocaleString()}</div>
         <div class="label">≈ ₩${Math.round(r.final * fx).toLocaleString()}</div>
         <div class="label" style="color:var(--green)">+${r.roi.toFixed(1)}%</div>
+        ${r.from > startYear ? `<div class="label" style="font-size:.75rem;color:var(--gold)">※ ${ETF.etfs[r.key].inception}년 상장 · ${r.from}년부터 계산</div>` : ''}
       </div>`
     ).join('') + `<div class="result-card">
       <div class="label" style="color:var(--text2);font-weight:600">S&P 500</div>
@@ -638,7 +642,7 @@ function setupBtCalc() {
 function setupObserver() {
   const obs = new IntersectionObserver(entries => {
     entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-  }, { threshold: 0.1 });
+  }, { threshold: 0 }); // 화면보다 훨씬 긴 섹션도 조금이라도 보이면 나타나게
   document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
 }
 

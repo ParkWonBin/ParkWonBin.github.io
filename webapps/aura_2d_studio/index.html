@@ -1391,7 +1391,13 @@ function buildGallery() {
     if (VIEW.mode === 'presets') { label = names[i % names.length]; st = presetState(label); }
     else if (VIEW.mode === 'random') { st = randomState(i * 7919 + 13); label = `랜덤 ${i + 1}`; }
     else if (VIEW.mode === 'library') {
-      if (!library.length) break;
+      if (!library.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty'; empty.style.gridColumn = '1 / -1';
+        empty.textContent = '저장된 아우라가 없어요. 패널의 “프리셋 · 라이브러리” 탭에서 “현재 아우라 저장”을 눌러 보세요.';
+        gallery.append(empty);
+        break;
+      }
       st = library[i % library.length]; label = st.name;
     }
     const S = st ? st.settings : null;

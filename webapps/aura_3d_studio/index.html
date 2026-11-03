@@ -1259,7 +1259,7 @@ function update(dt) {
   if (rampDirty) updateRamps();
   ph.flow += dt * N.flowSpeed; ph.swirl += dt * N.swirl;
   ph.pulse += dt * Pu.speed; ph.flicker += dt * Pu.flickerSpeed;
-  ph.hue = (ph.hue + dt * A.hueSpeed) % 1;
+  ph.hue = A.hueSpeed ? (ph.hue + dt * A.hueSpeed) % 1 : 0;
   ph.mapScroll += dt * M.scroll;
   ph.partPhase += dt * Pa.speed; ph.partSwirl += dt * Pa.swirl;
   ph.ring += dt * R.rotSpeed / TAU;
@@ -2277,6 +2277,7 @@ function applyState(state) {
   const d = defaultGradients();
   for (const k in d) G[k] = normSlot(state.gradients?.[k], k !== 'fill' && state.gradients?.aura ? normSlot(state.gradients.aura, d[k]) : d[k]);
   pending.object = pending.particles = true;
+  ph.hue = 0;
   sel = { type: null, id: null };
   compiled = null; fieldDirty = true; rampDirty = true;
   refreshUI(); renderEdgeList(); renderInspector(); invalidate();
@@ -2454,8 +2455,10 @@ $('#toggle').addEventListener('click', togglePanel);
 $('#btnReset').addEventListener('click', () => { if (confirm('설정과 그라데이션을 기본값으로 되돌릴까요?')) { applyState({ settings: {}, gradients: defaultGradients() }); toast('기본값으로 초기화'); } });
 $('#btnRandom').addEventListener('click', randomize);
 $('#btnShot').addEventListener('click', () => {
+  camera.clearViewOffset(); camera.updateProjectionMatrix();
   composer.render();
   renderer.domElement.toBlob((b) => download(b, 'aura.png'));
+  resize();
 });
 
 const jsonDlg = $('#jsonDlg'), jsonText = $('#jsonText');

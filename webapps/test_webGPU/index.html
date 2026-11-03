@@ -9,28 +9,42 @@
 <body>
     <h1>WebGPU Activation Guide</h1>
     <h2>WebGPU 활성화</h2>
-    <p>일부 브라우저에서는 WebGPU를 실험적 기능으로 제공하므로, 활성화가 필요할 수 있습니다. 
+    <p>Chrome · Edge 는 113 버전부터(Android 는 121 버전부터) WebGPU 가 기본으로 켜져 있습니다.
+    그 밖의 브라우저나 일부 기기(예: Linux)에서는 아직 실험적 기능이라 직접 활성화해야 할 수 있습니다.
     </p><p>예를 들어, Chrome에서는 다음과 같이 설정할 수 있습니다:</p>
     <ul>
         <li>주소창에 <code>chrome://flags</code> 입력 후 이동.</li>
         <li><code>WebGPU</code> 검색.</li>
         <li><code>Enabled</code>로 설정 후 브라우저 재시작.</li>
     </ul>
-    <canvas id="canvas" width="640" height="480"></canvas>
+    <p id="status" hidden style="padding: 0.75em 1em; border: 1px solid #d33; background: #fee; color: #900;"></p>
+    <canvas id="canvas" width="640" height="480" style="max-width: 100%; height: auto;"></canvas>
     <script>
+        // WebGPU 를 쓸 수 없을 때 화면에 이유를 보여준다
+        function showUnavailable(reason) {
+            const status = document.getElementById("status");
+            status.textContent = "이 기기/브라우저에서는 WebGPU를 쓸 수 없습니다. (" + reason + ")";
+            status.hidden = false;
+        }
+
         async function initWebGPU() {
             if (!navigator.gpu) {
                 console.log("WebGPU not supported.");
+                showUnavailable("브라우저가 WebGPU 를 지원하지 않음");
                 return;
             }
 
             const canvas = document.getElementById("canvas");
             const adapter = await navigator.gpu.requestAdapter();
+            if (!adapter) {
+                showUnavailable("사용할 수 있는 GPU 어댑터 없음");
+                return;
+            }
             const device = await adapter.requestDevice();
 
             const context = canvas.getContext("webgpu");
 
-            const swapChainFormat = "bgra8unorm";
+            const swapChainFormat = navigator.gpu.getPreferredCanvasFormat ? navigator.gpu.getPreferredCanvasFormat() : "bgra8unorm";
             context.configure({
                 device: device,
                 format: swapChainFormat,
@@ -106,7 +120,10 @@
             requestAnimationFrame(frame);
         }
 
-        initWebGPU();
+        initWebGPU().catch(err => {
+            console.error(err);
+            showUnavailable(err.message || err);
+        });
     </script>
 </body>
 </html>

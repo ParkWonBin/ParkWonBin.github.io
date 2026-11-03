@@ -2,10 +2,12 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Device Features Example</title>
 <style>
   body { font-family: Arial, sans-serif; }
   .section { margin-bottom: 20px; margin-top: 10px;}
+  .status { color: #c00; }
 </style>
   <script src="/assets/js/analytics.js" defer></script>
 </head>
@@ -14,7 +16,7 @@
 
 <div class="section" id="geolocation">
   <h2>위치 정보</h2>
-  <button id="toggleLocation">현재 위치 가져오기 시작</button>
+  <button id="toggleLocation">현재 위치 가져오기 시작</button> <span class="status" id="locationStatus"></span>
   <p>위도: <span id="latitude">-</span>, 정확도: <span id="latitudeAccuracy">-</span></p>
   <p>경도: <span id="longitude">-</span>, 정확도: <span id="longitudeAccuracy">-</span></p>
   <p>고도: <span id="altitude">-</span>, 고도 정확도: <span id="altitudeAccuracy">-</span></p>
@@ -24,7 +26,7 @@
 
 <div class="section" id="motion">
   <h2>모션 데이터</h2>
-  <button id="toggleMotion">모션 데이터 수집 시작</button>
+  <button id="toggleMotion">모션 데이터 수집 시작</button> <span class="status" id="motionStatus"></span>
   <p>Alpha (장치가 z축을 중심으로 회전한 각도): <span id="alpha">0</span></p>
   <p>Beta (장치가 x축을 중심으로 전후로 기울어진 각도): <span id="beta">0</span></p>
   <p>Gamma (장치가 y축을 중심으로 좌우로 기울어진 각도): <span id="gamma">0</span></p>
@@ -32,7 +34,7 @@
 
 <div class="section" id="device-motion">
     <h2>장치 모션 데이터</h2>
-    <button id="toggleDeviceMotion">장치 모션 데이터 수집 시작</button>
+    <button id="toggleDeviceMotion">장치 모션 데이터 수집 시작</button> <span class="status" id="deviceMotionStatus"></span>
     <p>가속도: <span id="acceleration">대기 중...</span></p>
     <p>중력 포함 가속도: <span id="accelerationGravity">대기 중...</span></p>
     <p>회전율: <span id="rotationRate">대기 중...</span></p>
@@ -42,15 +44,29 @@
 <script>
 let locationUpdateInterval, motionUpdateInterval, deviceMotionUpdateInterval;
 
+// 센서가 없으면 값이 null 로 온다 → N/A
+const fmt = v => (v == null ? 'N/A' : v.toFixed(2));
+
+// iOS 13+ 는 버튼을 누를 때 권한을 받아야 센서 이벤트가 들어온다
+async function requestSensorPermission(EventType, statusId) {
+  if (!EventType || typeof EventType.requestPermission !== 'function') return true;
+  let state;
+  try { state = await EventType.requestPermission(); } catch (e) { console.error(e); }
+  if (state === 'granted') return true;
+  document.getElementById(statusId).textContent = '센서 사용 권한이 거부되었습니다.';
+  return false;
+}
+
 // 위치 정보 토글 기능
 document.getElementById('toggleLocation').addEventListener('click', function() {
   const btn = this;
   if (btn.textContent.includes('시작')) {
     btn.textContent = '현재 위치 갱신 중지';
+    document.getElementById('locationStatus').textContent = '';
     locationUpdateInterval = setInterval(() => {
       navigator.geolocation.getCurrentPosition(position => {
-        document.getElementById('latitude').textContent = position.coords.latitude.toFixed(2);
-        document.getElementById('longitude').textContent = position.coords.longitude.toFixed(2);
+        document.getElementById('latitude').textContent = position.coords.latitude.toFixed(6);
+        document.getElementById('longitude').textContent = position.coords.longitude.toFixed(6);
         document.getElementById('latitudeAccuracy').textContent = position.coords.accuracy + 'm';
         document.getElementById('longitudeAccuracy').textContent = position.coords.accuracy + 'm';
         document.getElementById('altitude').textContent = position.coords.altitude ? position.coords.altitude.toFixed(2) + 'm' : 'N/A';
@@ -59,55 +75,75 @@ document.getElementById('toggleLocation').addEventListener('click', function() {
         document.getElementById('speed').textContent = position.coords.speed !== null ? position.coords.speed.toFixed(2) + 'm/s' : 'N/A';
       }, (err) => {
         console.error(err);
-        alert('위치 정보를 가져오는 데 실패했습니다.');
+        // 실패하면 한 번만 알리고 멈춘다 (300ms 마다 알림이 쌓이지 않도록)
+        if (!locationUpdateInterval) return;
+        clearInterval(locationUpdateInterval);
+        locationUpdateInterval = null;
+        btn.textContent = '현재 위치 가져오기 시작';
+        const reason = { 1: '위치 권한이 거부됨', 2: '위치를 확인할 수 없음', 3: '시간 초과' }[err.code] || err.message;
+        document.getElementById('locationStatus').textContent = `위치 정보를 가져오는 데 실패했습니다. (${reason})`;
       });
     }, 300);
   } else {
     clearInterval(locationUpdateInterval);
+    locationUpdateInterval = null;
     btn.textContent = '현재 위치 가져오기 시작';
   }
 });
 
+// 센서 이벤트는 리스너 하나로 마지막 값만 받아 두고, 화면은 300ms 마다 갱신
+let lastOrientation = null, lastDeviceMotion = null;
+const saveOrientation = event => { lastOrientation = event; };
+const saveDeviceMotion = event => { lastDeviceMotion = event; };
+
 // 모션 데이터 토글 기능
-document.getElementById('toggleMotion').addEventListener('click', function() {
+document.getElementById('toggleMotion').addEventListener('click', async function() {
   const btn = this;
   if (btn.textContent.includes('시작')) {
+    document.getElementById('motionStatus').textContent = '';
+    if (!(await requestSensorPermission(window.DeviceOrientationEvent, 'motionStatus'))) return;
     btn.textContent = '모션 데이터 수집 중지';
+    window.addEventListener('deviceorientation', saveOrientation);
     motionUpdateInterval = setInterval(() => {
-      if (window.DeviceOrientationEvent) {
-        window.addEventListener('deviceorientation', event => {
-          document.getElementById('alpha').textContent = event.alpha.toFixed(2);
-          document.getElementById('beta').textContent = event.beta.toFixed(2);
-          document.getElementById('gamma').textContent = event.gamma.toFixed(2);
-        }, { once: true });
+      const event = lastOrientation;
+      if (event) {
+        document.getElementById('alpha').textContent = fmt(event.alpha);
+        document.getElementById('beta').textContent = fmt(event.beta);
+        document.getElementById('gamma').textContent = fmt(event.gamma);
       }
     }, 300);
   } else {
     clearInterval(motionUpdateInterval);
+    window.removeEventListener('deviceorientation', saveOrientation);
     btn.textContent = '모션 데이터 수집 시작';
   }
 });
 
 // 장치 모션 데이터 토글 기능
-document.getElementById('toggleDeviceMotion').addEventListener('click', function() {
+document.getElementById('toggleDeviceMotion').addEventListener('click', async function() {
   const btn = this;
   if (btn.textContent.includes('시작')) {
+    document.getElementById('deviceMotionStatus').textContent = '';
+    if (!(await requestSensorPermission(window.DeviceMotionEvent, 'deviceMotionStatus'))) return;
     btn.textContent = '장치 모션 데이터 수집 중지';
+    window.addEventListener('devicemotion', saveDeviceMotion);
     deviceMotionUpdateInterval = setInterval(() => {
-      if (window.DeviceMotionEvent) {
-        window.addEventListener('devicemotion', event => {
-          document.getElementById('acceleration').textContent = 
-            `X: ${event.acceleration.x.toFixed(2)}, Y: ${event.acceleration.y.toFixed(2)}, Z: ${event.acceleration.z.toFixed(2)}`;
-          document.getElementById('accelerationGravity').textContent = 
-            `X: ${event.accelerationIncludingGravity.x.toFixed(2)}, Y: ${event.accelerationIncludingGravity.y.toFixed(2)}, Z: ${event.accelerationIncludingGravity.z.toFixed(2)}`;
-          document.getElementById('rotationRate').textContent = 
-            `α: ${event.rotationRate.alpha.toFixed(2)}, β: ${event.rotationRate.beta.toFixed(2)}, γ: ${event.rotationRate.gamma.toFixed(2)}`;
-          document.getElementById('interval').textContent = `${event.interval}ms`;
-        }, { once: true });
+      const event = lastDeviceMotion;
+      if (event) {
+        // 자이로 · 선형 가속도 센서가 없는 기기는 acceleration · rotationRate 가 null
+        const a = event.acceleration || {}, g = event.accelerationIncludingGravity || {}, r = event.rotationRate || {};
+        document.getElementById('acceleration').textContent =
+          `X: ${fmt(a.x)}, Y: ${fmt(a.y)}, Z: ${fmt(a.z)}`;
+        document.getElementById('accelerationGravity').textContent =
+          `X: ${fmt(g.x)}, Y: ${fmt(g.y)}, Z: ${fmt(g.z)}`;
+        document.getElementById('rotationRate').textContent =
+          `α: ${fmt(r.alpha)}, β: ${fmt(r.beta)}, γ: ${fmt(r.gamma)}`;
+        document.getElementById('interval').textContent = event.interval != null ? `${event.interval}ms` : 'N/A';
       }
     }, 300);
   } else {
     clearInterval(deviceMotionUpdateInterval);
+    window.removeEventListener('devicemotion', saveDeviceMotion);
     btn.textContent = '장치 모션 데이터 수집 시작';
   }
 });

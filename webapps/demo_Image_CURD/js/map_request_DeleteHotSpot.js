@@ -2,10 +2,6 @@ const request_DeleteHotSpot = (data) => {
     const {spot_id,src} = data
     // spot_id : 해당 이미지의 id,
     // src : 해당 이미지의 경로
-    alert('request_DeleteHotSpot : '+JSON.stringify(data,(key, value)=>{
-        return (typeof value === "string" && value.length > 30) ? value.substring(0, 30) + "..." :value;
-    },2))
-
     // payload 만들기
     const formData = new FormData();
     formData.append('spot_id', spot_id);
