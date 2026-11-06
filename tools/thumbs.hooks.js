@@ -4,6 +4,13 @@
 const path = require('path');
 
 module.exports = {
+  // gallery_walk
+  "gallery_walk": async (page) => {
+    // 사진 · 그림 텍스처를 다 걸 때까지 '전시장을 여는 중' 화면이 덮고 있다
+    await page.waitForSelector('#loader.done', { state: 'attached', timeout: 40000 }).catch(() => {});
+    await page.waitForTimeout(1500);
+  },
+
   // flood_map
   "flood_map": async (page) => {
     // GeoJSON 11개(2022년은 20MB)를 다 읽을 때까지 로딩 화면이 덮고 있다
