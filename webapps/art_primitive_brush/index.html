@@ -16,6 +16,10 @@
     --line: #2f2f34; --accent: #748ffc; --accent-ink: #0b0b0c; --stage: #111113;
   }
 }
+:root[data-theme="dark"] {  /* 블로그에서 다크를 고른 경우 */
+    --bg: #161618; --panel: #1f1f22; --ink: #ececef; --muted: #9a9aa2;
+    --line: #2f2f34; --accent: #748ffc; --accent-ink: #0b0b0c; --stage: #111113;
+}
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body {
@@ -92,6 +96,8 @@ body.brush-mode .brush-only { display: block; }
 body.brush-mode .pane.brush-only { display: block; }
 </style>
   <script src="/assets/js/analytics.js" defer></script>
+  <script>/* 블로그에서 고른 라이트/다크를 따른다 (assets/js/site.js 와 같은 저장값) */try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+  <script src="/assets/js/app-bar.js" defer data-pos="br"></script>
 </head>
 <body>
 <header>
