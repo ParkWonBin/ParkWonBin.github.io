@@ -2,4 +2,4 @@
 # 작품 목록은 webapps/drawing/img/*.md (layout: artwork) 에서 자동으로 모입니다.
 exhibition: 2025년 3월 전시회
 intro: 2025년 3월 전시회에 걸었던 펭귄 그림들입니다. 작품을 누르면 그림에 담은 이야기를 볼 수 있어요.
-gallery_url: /webapps/ex/
+# 3D 갤러리는 웹앱 카드(_data/apps.yml 의 gallery_walk · ex)로 들어갑니다.

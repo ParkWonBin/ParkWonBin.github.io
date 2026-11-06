@@ -130,7 +130,7 @@ GitHub Pages 는 없는 주소에 `404.html` 을 보여주는데, 그 `<head>` �
 | `/finance` 같은 단축 주소 (대소문자 무시, `/finance/index.html` · `/finance.html` 도) | `apps.yml` 의 `alias` 에 적힌 앱 |
 | `/webapps/<앱>/app.html?…#…` (예전 전체화면 · 공유 링크) | `/webapps/<앱>/?…#…` (쿼리 · 해시 유지) |
 | `_data/redirects.yml` 에 적힌 옛 주소 | 적힌 새 주소 |
-| `/webapps/drawing/` (전시회 QR) 과 그 아래 깨진 주소 | 그림 페이지(작품 목록 + 3D 전시관 입구) / 움직임 작품 |
+| `/webapps/drawing/` (전시회 QR) 과 그 아래 깨진 주소 | 그림 페이지(작품 목록) / 움직임 작품 |
 
 ---
 

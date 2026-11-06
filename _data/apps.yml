@@ -111,6 +111,23 @@
 
 # ── 예술 도구 ───────────────────────────────────────────────────────────────
 
+- slug: gallery_walk
+  title: 3D 갤러리 보기 · 걸어서 관람
+  category: art
+  icon: 🐧
+  desc: 2025년 3월 아드모 두 번째 전시회 「Colorfull」을 갤러리 미루 평면도대로 옮겼습니다. 펭귄을 걸려 1관~5관의 현장 사진을 확대해 보고, 4관에서 펭귄 그림 다섯 점을 감상합니다. 자동 관람 · 1인칭 시점을 지원합니다.
+  tags: [Three.js, 3D 전시, 그림]
+  date: 2026-11-06
+  alias: [gallery]
+
+- slug: ex
+  title: 3D 갤러리 보기 · 구버전
+  category: art
+  icon: 🖼️
+  desc: 같은 전시를 처음 3D로 옮겨 본 버전입니다. 바닥에 평면도를 깔고 벽마다 현장 사진을 세웠습니다. 드래그로 돌려 보고 휠로 확대합니다.
+  tags: [React Three Fiber, 3D 전시]
+  alias: [ex]
+
 - slug: aura_3d_studio
   title: Aura 3D Studio
   category: art
@@ -255,16 +272,4 @@
   icon: 🖥️
   desc: WebGPU 활성화 방법과 기본 렌더링 예제입니다.
   tags: [WebGPU]
-  hidden: true
-
-
-# ── 목록에는 숨기고 주소만 살려 두는 앱 ─────────────────────────────────────
-
-- slug: ex
-  title: 3D 전시관
-  category: art
-  icon: 🖼️
-  desc: 2025년 3월 전시회 작품을 걸어 둔 3D 갤러리입니다. (그림 페이지에서 들어갑니다)
-  tags: [React Three Fiber]
-  alias: [ex]
   hidden: true

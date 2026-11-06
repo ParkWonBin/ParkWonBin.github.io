@@ -1,0 +1,1482 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>3D 갤러리 · Colorfull</title>
+<meta name="description" content="2025년 3월 아드모 두 번째 전시회 「Colorfull」을 갤러리 미루 평면도대로 옮긴 3D 전시장입니다. 펭귄을 걸려 1관부터 5관까지 둘러봅니다.">
+<script src="/assets/js/analytics.js" defer></script>
+<style>
+  :root {
+    --ink: #1c1e22;
+    --muted: #6a6e77;
+    --line: rgba(28, 30, 34, .12);
+    --glass: rgba(255, 255, 255, .86);
+    --glass-strong: rgba(255, 255, 255, .96);
+    --accent: #d8661f;
+    --accent-soft: rgba(216, 102, 31, .13);
+    --shadow: 0 10px 30px rgba(30, 24, 16, .14);
+    --font: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #e9e5de; }
+  body { color: var(--ink); font: 14px/1.5 var(--font); -webkit-tap-highlight-color: transparent; }
+  button { font: inherit; color: inherit; }
+
+  #scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: none; cursor: grab; }
+  #scene.dragging { cursor: grabbing; }
+  #scene.pick { cursor: pointer; }
+
+  /* 위 막대: 돌아가기 · 이름 · 버튼 */
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+    display: flex; align-items: center; gap: 10px;
+    padding: max(12px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 0 max(14px, env(safe-area-inset-left));
+    pointer-events: none;
+  }
+  .topbar > * { pointer-events: auto; }
+  .chip {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    height: 38px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px;
+    background: var(--glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    box-shadow: var(--shadow); cursor: pointer; text-decoration: none; color: var(--ink);
+    font-weight: 600; white-space: nowrap;
+  }
+  .chip:hover { background: var(--glass-strong); }
+  .chip[aria-pressed="true"], .chip[aria-expanded="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .chip:focus-visible, .btn:focus-visible, .icon:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .back { width: 38px; padding: 0; font-size: 18px; }
+  .brand {
+    display: flex; flex-direction: column; line-height: 1.25; padding: 6px 14px; border-radius: 12px;
+    background: var(--glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--line); box-shadow: var(--shadow);
+  }
+  .brand strong { font-size: 15px; }
+  .brand span { font-size: 12px; color: var(--muted); }
+  .actions { margin-left: auto; display: flex; gap: 8px; }
+
+  /* 둘러볼 곳 목록 */
+  .list {
+    position: fixed; z-index: 12; right: max(14px, env(safe-area-inset-right));
+    top: calc(max(12px, env(safe-area-inset-top)) + 48px);
+    width: min(320px, calc(100vw - 28px)); max-height: calc(100vh - 90px); overflow: auto;
+    padding: 8px; border-radius: 14px; background: var(--glass-strong); border: 1px solid var(--line); box-shadow: var(--shadow);
+  }
+  .list h2 { margin: 6px 8px 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .list h3 { margin: 12px 8px 2px; font-size: 11.5px; font-weight: 700; color: var(--accent); letter-spacing: .03em; }
+  .list button {
+    display: flex; gap: 12px; align-items: center; width: 100%; padding: 7px 8px; border: 0; border-radius: 10px;
+    background: none; text-align: left; cursor: pointer;
+  }
+  .list button:hover, .list button:focus-visible { background: var(--accent-soft); outline: none; }
+  .list img { flex: none; width: 64px; height: 48px; object-fit: cover; border-radius: 6px; background: #ddd8cf; }
+  .list .no { display: block; font-size: 11px; font-weight: 700; color: var(--accent); }
+  .list strong { display: block; font-size: 14px; }
+  .list small { display: block; font-size: 12px; color: var(--muted); }
+
+  /* 설명 (넓은 화면: 오른쪽, 좁은 화면: 아래) */
+  .sheet {
+    position: fixed; z-index: 11; right: max(16px, env(safe-area-inset-right));
+    top: calc(max(12px, env(safe-area-inset-top)) + 54px); bottom: 16px; width: 360px;
+    display: flex; flex-direction: column; overflow: hidden;
+    border-radius: 18px; background: var(--glass-strong); border: 1px solid var(--line); box-shadow: var(--shadow);
+    animation: sheetIn .28s ease-out;
+  }
+  @keyframes sheetIn { from { opacity: 0; transform: translateX(16px); } }
+  @keyframes sheetUp { from { opacity: 0; transform: translateY(24px); } }
+  .sheet-scroll { flex: 1; overflow: auto; padding: 16px 20px 6px; }
+  .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .eyebrow { font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: .04em; }
+  .icon { flex: none; width: 32px; height: 32px; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .06); cursor: pointer; }
+  .icon:hover { background: rgba(0, 0, 0, .1); }
+  .sheet h2 { margin: 4px 0 2px; font-size: 22px; line-height: 1.3; }
+  .sub { margin: 0 0 12px; color: var(--muted); }
+  .tourbar { height: 4px; margin: 0 0 14px; border-radius: 2px; background: rgba(0, 0, 0, .08); overflow: hidden; }
+  .tourbar span { display: block; width: 0; height: 100%; background: var(--accent); }
+  .prose { font-size: 14.5px; line-height: 1.8; color: #2e3036; }
+  .prose p { margin: 0 0 1em; }
+  .prose h4 { margin: 1.4em 0 .3em; font-size: 15px; }
+  .prose img { display: block; max-width: 100%; max-height: 240px; width: auto; height: auto; margin: 10px auto; border-radius: 8px; }
+  .prose hr { margin: 16px 0; border: 0; border-top: 1px solid var(--line); }
+  .prose a { color: var(--accent); font-weight: 600; }
+  .muted { color: var(--muted); }
+  .links { display: flex; flex-wrap: wrap; gap: 14px; margin: 4px 0 12px; font-weight: 600; }
+  .links a { color: var(--accent); text-decoration: none; }
+  .links a:hover { text-decoration: underline; }
+  .sheet-foot { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line); }
+  .sheet-foot .how { flex: 1; text-align: center; font-size: 12px; color: var(--muted); }
+  .btn { height: 36px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; cursor: pointer; font-weight: 600; white-space: nowrap; }
+  .btn:hover { border-color: var(--ink); }
+
+  /* 안내 · 알림 · 마우스 말풍선 */
+  .hint, .toast {
+    position: fixed; left: 50%; z-index: 9; transform: translateX(-50%);
+    max-width: calc(100vw - 24px); padding: 10px 16px; border-radius: 999px;
+    background: rgba(28, 30, 34, .8); color: #fff; font-size: 13px; text-align: center;
+    pointer-events: none; transition: opacity .6s, transform .6s;
+  }
+  .hint { bottom: max(18px, env(safe-area-inset-bottom)); }
+  .toast { bottom: calc(max(18px, env(safe-area-inset-bottom)) + 50px); z-index: 14; }
+  .hint.gone, .toast.gone { opacity: 0; transform: translate(-50%, 10px); }
+  .hint kbd { padding: 0 5px; border: 1px solid rgba(255, 255, 255, .35); border-radius: 4px; font: 600 11px/1.6 var(--font); }
+  .pop {
+    position: fixed; z-index: 13; padding: 6px 10px; border-radius: 8px; transform: translate(14px, 14px);
+    background: rgba(28, 30, 34, .86); color: #fff; font-size: 12.5px; white-space: nowrap; pointer-events: none;
+  }
+
+  /* 불러오는 중 */
+  .loader { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; background: #e9e5de; transition: opacity .5s; }
+  .loader.done { opacity: 0; pointer-events: none; }
+  .loader div { max-width: 320px; padding: 0 20px; text-align: center; color: var(--muted); }
+  .loader strong { display: block; margin-bottom: 6px; font-size: 18px; color: var(--ink); }
+
+  @media (max-width: 720px) {
+    .brand span { display: none; }
+    .chip { padding: 0 11px; }
+    .back { padding: 0; }
+    .sheet {
+      left: 0; right: 0; top: auto; bottom: 0; width: auto; max-height: 46vh;
+      border-radius: 18px 18px 0 0; padding-bottom: env(safe-area-inset-bottom);
+      animation-name: sheetUp;
+    }
+    .hint { border-radius: 14px; }
+  }
+  @media (max-width: 460px) {
+    .brand { display: none; }
+    .actions { gap: 6px; }
+    .chip { font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="scene" tabindex="0" aria-label="3D 전시장. 바닥을 누르면 펭귄이 걸어가고, 벽 사진이나 그림을 누르면 그 앞까지 가서 감상합니다. 둘러보기 목록 버튼으로도 갈 수 있어요."></canvas>
+
+<header class="topbar">
+  <a class="chip back" href="/" aria-label="홈으로 돌아가기" title="홈으로">←</a>
+  <div class="brand"><strong>3D 갤러리 · Colorfull</strong><span>아드모 두 번째 전시회 · 2025년 3월 · 갤러리 미루</span></div>
+  <div class="actions">
+    <button id="btnList" class="chip" type="button" aria-expanded="false" aria-controls="list">둘러보기</button>
+    <button id="btnTour" class="chip" type="button" aria-pressed="false">자동 관람</button>
+    <button id="btnView" class="chip" type="button" aria-pressed="false" title="V 키">1인칭</button>
+  </div>
+</header>
+
+<nav id="list" class="list" hidden aria-label="둘러볼 곳">
+  <h2>관람 순서 · 누르면 그 앞으로 걸어가요</h2>
+</nav>
+
+<aside id="info" class="sheet" hidden aria-live="polite">
+  <div class="sheet-scroll" id="infoScroll">
+    <div class="sheet-head">
+      <span id="infoNo" class="eyebrow"></span>
+      <button id="infoClose" class="icon" type="button" aria-label="닫기">✕</button>
+    </div>
+    <h2 id="infoTitle"></h2>
+    <p id="infoSub" class="sub"></p>
+    <div id="tourBar" class="tourbar" hidden><span id="tourFill"></span></div>
+    <div id="infoBody" class="prose"></div>
+    <div class="links">
+      <a id="infoPage" target="_blank" rel="noopener">작품 페이지 →</a>
+      <a id="infoOrig" target="_blank" rel="noopener">원본 크기로 보기</a>
+    </div>
+  </div>
+  <div class="sheet-foot">
+    <button id="infoPrev" class="btn" type="button">← 이전</button>
+    <span id="infoHow" class="how"></span>
+    <button id="infoNext" class="btn" type="button">다음 →</button>
+  </div>
+</aside>
+
+<div id="hint" class="hint"></div>
+<div id="toast" class="toast gone" role="status"></div>
+<div id="pop" class="pop" hidden></div>
+
+<div id="loader" class="loader">
+  <div><strong>전시장을 여는 중이에요</strong><span id="loadMsg">사진을 거는 중…</span></div>
+</div>
+<noscript><p style="position:fixed;inset:auto 0 0;padding:16px;background:#fff;text-align:center">이 전시장은 자바스크립트가 켜져 있어야 볼 수 있어요.</p></noscript>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }
+</script>
+<script type="module">
+const loaderEl = document.getElementById('loader');
+function fail(title, msg){
+  loaderEl.classList.remove('done'); loaderEl.hidden = false;
+  loaderEl.querySelector('strong').textContent = title;
+  document.getElementById('loadMsg').textContent = msg;
+}
+import('three').then(T => {
+  try { start(T); }
+  catch (e) { console.error(e); fail('전시장을 열지 못했어요', '이 브라우저에서는 3D 화면(WebGL)을 쓸 수 없어요. 다른 브라우저로 열어 주세요.'); }
+}).catch(e => {
+  console.error(e);
+  fail('전시장을 열지 못했어요', '3D 엔진(three.js)을 불러오지 못했어요. 인터넷 연결을 확인하고 새로 고침해 주세요.');
+});
+
+function start(T){
+const $ = s => document.querySelector(s);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const damp = (rate, dt) => 1 - Math.exp(-rate * dt);
+const angDiff = (a, b) => { let d = (a - b) % (Math.PI * 2); if (d > Math.PI) d -= Math.PI * 2; if (d < -Math.PI) d += Math.PI * 2; return d; };
+const pad2 = n => String(n).padStart(2, '0');
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const coarse = matchMedia('(pointer: coarse)').matches;
+const mqSheet = matchMedia('(max-width: 720px)');
+const FONT = '"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif';
+const ACCENT = '#d8661f';
+
+/* ------------------------------------------------------------------
+   전시장: 2025년 3월 아드모 두 번째 전시회 「Colorfull」 (갤러리 미루).
+   구버전(/webapps/ex/)과 같은 평면도 · 같은 좌표(1 = 1 m)를 쓴다.
+     x: 왼쪽(2관) → 오른쪽(5관),  z: 안쪽 벽(-6.1) → 입구(5.2)
+   관람 동선: 입구 → 1관 → 3관 → 2관 → 4관 → 5관 → 1관 방명록
+   ------------------------------------------------------------------ */
+const H = 3.2;                                   // 천장 높이
+const IMG = '/webapps/drawing/img/';
+const EX = '/webapps/ex/img/';
+const SHOT = EX + '20250304/';                   // 전시 현장 벽 사진
+
+// 박원빈 펭귄 그림 다섯 점: 4관 왼쪽 벽에 현장 사진(tmp_4_4)과 같은 배치로 건다.
+// u = 벽을 마주 봤을 때 가운데에서 오른쪽으로 떨어진 거리, row 0 = 윗줄
+const ART_WALL = { x: 0.06, z: -2.8, n: [1, 0] };
+const ROW_Y = [1.74, 1.06];
+const ART = [
+  { key: '001_PenguinWings', title: '펭귄의 날개', sub: '완벽하고 완전하고 허술한', ar: 353 / 247, u: 0, row: 0, size: 0.72 },
+  { key: '004_Structure', title: '구조, 계단 나무 온도', sub: '삶에 형태가 있다면', ar: 358 / 509, u: 0.74, row: 0, size: 0.52 },
+  { key: '005_Animation', title: '움직임', sub: '단어에 담기지 않는 언어', ar: 352 / 249, u: 0.41, row: 1, size: 0.62 },
+  { key: '002_Aspect', title: '관점, 점 선 면 분화', sub: '같은 대상 다른 맥락', ar: 361 / 512, u: -0.74, row: 0, size: 0.52 },
+  { key: '003_Daily', title: '일상', sub: '기억하고 재현하는 과정', ar: 347 / 250, u: -0.41, row: 1, size: 0.62 },
+].map((a, k) => ({ ...a, kind: 'art', room: '4관', group: '4관 · 박원빈의 펭귄 그림', no: k + 1 }));
+
+const PHOTO_NOTE = '<p>2025년 3월 4일부터 9일까지 갤러리 미루에서 열린 아드모(i.d.mo) 두 번째 전시회 「Colorfull」의 현장 사진이에요.</p>';
+const HOW_NOTE = coarse
+  ? '<p class="muted">핀치로 확대하고, 누른 곳을 가까이 볼 수 있어요.</p>'
+  : '<p class="muted">휠로 확대하고 드래그로 옮겨요. 누른 곳을 가까이 볼 수도 있어요.</p>';
+// 벽 사진: at = 사진이 붙는 벽면 위의 가운데 [x, z], n = 사진이 바라보는 쪽, w = 사진 폭(m)
+const photo = (room, title, sub, file, px, at, n, w, extra) =>
+  ({ kind: 'photo', room, title, sub, src: SHOT + file, ar: px[0] / px[1], at, n, w, ...extra });
+
+const ITEMS = [
+  { kind: 'map', room: '1관', group: '1관 · 들어가며', title: '전시장 안내도', sub: '갤러리 미루 평면도 · 1관 사무실 벽',
+    src: EX + 'miru.jpg', ar: 800 / 948, at: [1.35, 1.36], n: [0, 1], w: 0.74, cy: 1.5,
+    note: '<p>입구로 들어와 1관을 지나 <b>3관 → 2관 → 4관 → 5관</b> 순서로 둘러보면 돼요. 박원빈의 펭귄 그림 다섯 점은 <b>4관 왼쪽 벽</b>에 있어요.</p><p class="muted">실평수 28평 · 천장 높이 3.2 m. 가운데 사무실에는 들어갈 수 없어요.</p>' },
+  photo('3관', '전시 제목 「Colorfull」', '3관 안쪽 벽', 'tmp_3_1.jpg', [1868, 1788], [-1.3, -6.1], [0, 1], 2.4),
+  photo('3관', 'Beyond Time.', '3관 오른쪽 벽 · 그림 다섯 점', 'tmp_3_2.jpg', [1802, 1219], [-0.06, -2.84], [-1, 0], 3.18),
+  photo('3관', '풀꽃 그림 네 점', '3관 왼쪽 벽', 'tmp_3_4.jpg', [1200, 903], [-2.54, -2.84], [1, 0], 3.18),
+  photo('2관', '작가 소개 · 박원빈', '2관 안쪽 벽 · 프로젝터 화면', 'tmp_2_1.jpg', [1181, 1217], [-3.8, -6.1], [0, 1], 2.15,
+    { note: '<p>박원빈 작가를 소개하는 프로젝터 화면이에요. 펭귄 그림 다섯 점은 4관 왼쪽 벽에 걸려 있어요.</p>' }),
+  photo('2관', '얼굴 그림 네 점', '2관 왼쪽 벽', 'tmp_2_4.jpg', [869, 620], [-5.05, -4.4], [1, 0], 3.22),
+  photo('2관', '전시 포스터 두 장', '2관 앞쪽 벽', 'tmp_2_3.jpg', [1195, 1383], [-3.8, -2.7], [0, -1], 2.15),
+  ...ART,
+  photo('4관', '눈물 방울 그림 세 점', '4관 안쪽 벽', 'tmp_4_1.jpg', [1169, 952], [1.35, -6.1], [0, 1], 2.5),
+  photo('4관', '인물 일러스트 열 점', '4관 오른쪽 벽', 'tmp_4_2.jpg', [1525, 1112], [2.64, -2.84], [-1, 0], 3.3),
+  photo('4관', 'yes and', '4관 앞쪽 벽 · 그림 여섯 점', 'tmp_4_3.jpg', [1860, 1612], [1.35, -1.16], [0, -1], 2.5),
+  photo('5관', '얼굴 그림 네 점과 불꽃 엽서', '5관 왼쪽 벽', 'tmp_5_4.jpg', [2002, 1238], [2.76, -2.84], [1, 0], 3.3),
+  photo('5관', '동물 드로잉 열여섯 점', '5관 안쪽 벽', 'tmp_5_1.jpg', [1868, 1644], [4.055, -6.1], [0, 1], 2.5),
+  photo('5관', '나무 · 발레 · 동물 그림', '5관 오른쪽 벽', 'tmp_5_2.jpg', [1504, 802], [5.35, -3.63], [-1, 0], 4.8),
+  photo('5관', '일러스트 포스터 모음', '5관 앞쪽 벽', 'tmp_5_3.jpg', [2107, 1870], [4.055, -1.16], [0, -1], 2.5),
+  photo('1관', '방명록', '1관 갈바 벽', 'tmp_.jpg', [1552, 1094], [-0.22, 1.17], [-1, 0], 2.14,
+    { group: '1관 · 나가며', y0: 0.55, keepDark: true, note: '<p>전시를 보러 온 분들이 갈바 벽에 붙이고 간 쪽지예요.</p>' }),
+];
+ITEMS.forEach((a, i) => {
+  a.i = i;
+  a.group = a.group || a.room;
+  if (a.kind === 'art'){
+    a.at = [ART_WALL.x, ART_WALL.z]; a.n = ART_WALL.n;
+    a.image = IMG + a.key + '_web.webp';
+    a.thumb = IMG + a.key + '_thm.png';
+    a.original = IMG + a.key + '.png';
+    a.page = IMG + a.key + '/';
+    if (a.ar >= 1){ a.w = a.size; a.h = a.w / a.ar; } else { a.h = a.size; a.w = a.h * a.ar; }
+    a.cy = ROW_Y[a.row];
+  } else {
+    a.thumb = a.original = a.src;
+    a.h = a.w / a.ar;
+    if (a.cy == null) a.cy = (a.y0 || 0) + a.h / 2;
+    a.body = (a.note || '') + (a.kind === 'photo' ? PHOTO_NOTE : '') + HOW_NOTE;
+  }
+  const [nx, nz] = a.n;
+  a.n = new T.Vector3(nx, 0, nz);                  // 바라보는 쪽
+  a.t = new T.Vector3(nz, 0, -nx);                 // 마주 봤을 때 오른쪽
+});
+
+/* ---------------- renderer · scene ---------------- */
+const canvas = $('#scene');
+const renderer = new T.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.outputColorSpace = T.SRGBColorSpace;
+renderer.toneMapping = T.NeutralToneMapping;
+renderer.toneMappingExposure = 1;
+const maxAniso = renderer.capabilities.getMaxAnisotropy();
+const scene = new T.Scene();
+scene.background = new T.Color(0xe9e5de);
+const camera = new T.PerspectiveCamera(55, 1, 0.05, 120);
+
+const manager = new T.LoadingManager();
+let loaded = false;
+function finishLoading(){
+  if (loaded) return;
+  loaded = true; loaderEl.classList.add('done');
+  setTimeout(() => { if (loaded) loaderEl.hidden = true; }, 600);
+}
+manager.onProgress = (url, done, total) => { $('#loadMsg').textContent = `사진을 거는 중… ${done} / ${total}`; };
+manager.onLoad = finishLoading;
+setTimeout(finishLoading, 9000);
+const texLoader = new T.TextureLoader(manager);
+const imgLoader = new T.ImageLoader(manager);
+
+scene.add(new T.HemisphereLight(0xffffff, 0xd9d2c6, 1.8));
+const sun = new T.DirectionalLight(0xfff3e2, 0.4);
+sun.position.set(-4, 12, 6);
+scene.add(sun);
+
+function canvasTexture(w, h, draw){
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const tex = new T.CanvasTexture(c);
+  tex.colorSpace = T.SRGBColorSpace; tex.anisotropy = maxAniso;
+  return tex;
+}
+function textPlane(w, h, worldW, draw, transparent){
+  return new T.Mesh(
+    new T.PlaneGeometry(worldW, worldW * h / w),
+    new T.MeshBasicMaterial({ map: canvasTexture(w, h, draw), transparent: !!transparent, toneMapped: false }));
+}
+function fitFont(g, s, weight, size, maxW){
+  do { g.font = `${weight} ${size}px ${FONT}`; size -= 2; } while (g.measureText(s).width > maxW && size > 12);
+}
+
+/* ---------------- 벽 · 바닥 · 천장 ---------------- */
+const occluders = [];   // 3인칭 카메라가 넘어가지 않는 면
+const pickables = [];   // 눌렀을 때 반응하는 것
+const obstacles = [];   // 펭귄이 지나가지 못하는 곳 (바닥에서 본 사각형)
+
+// 벽 사진 속 벽과 밝기를 맞추려고 살짝 스스로 빛나게 한다
+const wallMat = new T.MeshStandardMaterial({ color: 0xf1efeb, roughness: 0.95, emissive: 0xffffff, emissiveIntensity: 0.14 });
+const galvaMat = new T.MeshStandardMaterial({ color: 0x34363a, roughness: 0.55, metalness: 0.35 });
+const darkMat = new T.MeshStandardMaterial({ color: 0x2c2b29, roughness: 0.6 });
+const glassMat = new T.MeshStandardMaterial({ color: 0xcfe1e8, roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.2, depthWrite: false });
+
+// 안쪽 칸막이(fade)는 3인칭 카메라와 펭귄 사이에 끼면 반투명해진다. 바깥벽은 카메라를 앞으로 당긴다.
+const fadeWalls = [];
+function solid(x0, x1, z0, z1, mat, h = H, y0 = 0, block = true, fade = false){
+  if (fade){ mat = mat.clone(); mat.transparent = true; }
+  const m = new T.Mesh(new T.BoxGeometry(x1 - x0, h, z1 - z0), mat);
+  m.position.set((x0 + x1) / 2, y0 + h / 2, (z0 + z1) / 2);
+  m.userData.wall = true;
+  if (fade){
+    const f = { mesh: m, box: { x0, x1, z0, z1 }, o: 1, last: 1, mats: [mat] };
+    m.userData.fade = true; m.userData.fader = f; fadeWalls.push(f);
+  }
+  scene.add(m); occluders.push(m); pickables.push(m);
+  if (block) obstacles.push({ x0, x1, z0, z1 });
+  return m;
+}
+// 벽 [x0, x1, z0, z1, 안쪽 칸막이] — 평면도(실평수 28평, 천장 3.2 m)를 따른다
+[
+  [-5.25, 5.55, -6.3, -6.1],        // 안쪽 벽
+  [-5.25, -5.05, -6.3, -2.5],       // 2관 왼쪽 벽
+  [-5.25, -2.54, -2.7, -2.5],       // 2관 앞쪽 벽 (뒤는 2층 계단실)
+  [-2.66, -2.54, -6.1, -5.5, 1],    // 2관 | 3관 짧은 벽 (사이가 2관 문)
+  [-2.66, -2.54, -4.5, -2.7, 1],    // 2관 | 3관 칸막이
+  [-2.66, -2.54, -2.7, 5.4],        // 1관 왼쪽 벽 (뒤는 계단실)
+  [5.35, 5.55, -6.3, 5.4],          // 오른쪽 벽
+  [-0.06, 0.06, -6.1, -5.5, 1],     // 3관 | 4관 짧은 벽
+  [-0.06, 0.06, -4.5, -1.04, 1],    // 3관 | 4관 칸막이
+  [2.64, 2.76, -6.1, -5.5, 1],      // 4관 | 5관 짧은 벽
+  [2.64, 2.76, -4.5, -1.04, 1],     // 4관 | 5관 칸막이
+  [-2.54, -1.9, -1.16, -1.04, 1],   // 3관 앞 (왼쪽)
+  [-0.7, -0.06, -1.16, -1.04, 1],   // 3관 앞 (오른쪽, 갈바)
+  [2.76, 5.35, -1.16, -1.04, 1],    // 5관 앞
+  [4.75, 5.35, -1.04, -0.55, 1],    // 기둥
+  [2.64, 2.76, 3.49, 5.4, 1],       // 윈도우관 왼쪽 벽
+  [2.76, 4.35, 3.49, 3.61, 1],      // 윈도우관 안쪽 벽 (오른쪽 끝이 문)
+  [5.05, 5.35, 4.9, 5.2],           // 윈도우관 모서리 기둥
+  [-2.66, -2.2, 5.2, 5.4],          // 입구 왼쪽 벽
+  [-0.2, 0.06, 5.2, 5.4],           // 입구 오른쪽 기둥
+  [5.05, 5.55, 5.2, 5.4],           // 오른쪽 끝 기둥
+].forEach(([x0, x1, z0, z1, fade]) => solid(x0, x1, z0, z1, wallMat, H, 0, true, !!fade));
+solid(-0.06, 2.76, -1.16, 1.36, wallMat, H, 0, true, true);    // 사무실 (4관 앞쪽 벽 포함, 들어갈 수 없음)
+solid(-0.22, -0.16, 0.1, 2.24, galvaMat, 2.3, 0, true, true);  // 1관 갈바 벽 (방명록)
+// 앞쪽 유리: 입구 문 · 디자인 윈도우 · 윈도우관 통유리, 위는 벽
+for (const [x0, x1] of [[-2.2, -0.2], [0.06, 2.64], [2.76, 5.05]]){
+  const g = solid(x0, x1, 5.2, 5.25, glassMat, 2.7);
+  g.renderOrder = 2;
+  solid(x0, x1, 5.2, 5.4, wallMat, H - 2.7, 2.7, false);
+  for (const x of [x0, x1]){
+    const f = new T.Mesh(new T.BoxGeometry(0.05, 2.7, 0.06), darkMat);
+    f.position.set(x, 1.35, 5.225); scene.add(f);
+  }
+  const top = new T.Mesh(new T.BoxGeometry(x1 - x0, 0.05, 0.06), darkMat);
+  top.position.set((x0 + x1) / 2, 2.7, 5.225); scene.add(top);
+}
+// 입구 문 손잡이
+for (const x of [-1.27, -1.13]){
+  const hd = new T.Mesh(new T.BoxGeometry(0.025, 0.9, 0.04), darkMat);
+  hd.position.set(x, 1.05, 5.18); scene.add(hd);
+}
+
+function woodTexture(){
+  const S = 1024, rows = 8, rh = S / rows;
+  const tex = canvasTexture(S, S, g => {
+    for (let r = 0; r < rows; r++){
+      // 한 줄의 널빤지 길이 합을 S 로 맞춰서 이음매 없이 반복되게 한다
+      const lens = []; let sum = 0;
+      while (sum < S){ const l = 260 + Math.random() * 420; lens.push(l); sum += l; }
+      const f = S / sum; let x = Math.random() * S;
+      for (const l0 of lens){
+        const l = l0 * f, tone = (Math.random() - 0.5) * 22;
+        const col = `rgb(${170 + tone | 0},${136 + tone * 0.9 | 0},${100 + tone * 0.8 | 0})`;
+        for (const ox of [0, -S]){
+          g.fillStyle = col; g.fillRect(x + ox, r * rh, l, rh);
+          g.fillStyle = 'rgba(60,40,24,.55)'; g.fillRect(x + ox, r * rh, 2, rh); g.fillRect(x + ox, r * rh, l, 3);
+        }
+        x += l;
+      }
+    }
+  });
+  tex.wrapS = tex.wrapT = T.RepeatWrapping;
+  return tex;
+}
+function concreteTexture(){
+  const S = 1024;
+  const tex = canvasTexture(S, S, g => {
+    g.fillStyle = '#a19d96'; g.fillRect(0, 0, S, S);
+    for (let i = 0; i < 240; i++){
+      const x = Math.random() * S, y = Math.random() * S, r = 30 + Math.random() * 150, light = Math.random() < 0.5;
+      for (const ox of [-S, 0, S]) for (const oy of [-S, 0, S]){
+        const gr = g.createRadialGradient(x + ox, y + oy, 0, x + ox, y + oy, r);
+        gr.addColorStop(0, light ? 'rgba(255,252,246,.07)' : 'rgba(50,44,36,.07)');
+        gr.addColorStop(1, 'rgba(0,0,0,0)');
+        g.fillStyle = gr; g.fillRect(x + ox - r, y + oy - r, r * 2, r * 2);
+      }
+    }
+    const im = g.getImageData(0, 0, S, S), d = im.data;
+    for (let k = 0; k < d.length; k += 4){ const n = (Math.random() - 0.5) * 12; d[k] += n; d[k + 1] += n; d[k + 2] += n; }
+    g.putImageData(im, 0, 0);
+  });
+  tex.wrapS = tex.wrapT = T.RepeatWrapping;
+  return tex;
+}
+// 바닥: 전시장 모양 그대로 (2층 계단실 자리는 비운다)
+const fp = new T.Shape();
+[[-5.05, -6.1], [5.35, -6.1], [5.35, 5.2], [-2.54, 5.2], [-2.54, -2.7], [-5.05, -2.7]]
+  .forEach(([x, z], k) => (k ? fp.lineTo(x, -z) : fp.moveTo(x, -z)));
+const floorTex = concreteTexture();
+floorTex.repeat.set(1 / 3.2, 1 / 3.2);
+const floor = new T.Mesh(new T.ShapeGeometry(fp), new T.MeshStandardMaterial({ map: floorTex, roughness: 0.5 }));
+floor.rotation.x = -Math.PI / 2; floor.userData.floor = true;
+scene.add(floor); pickables.push(floor);
+// 바깥: 길 · 데크
+const ground = new T.Mesh(new T.PlaneGeometry(60, 60), new T.MeshStandardMaterial({ color: 0xcdc7bc, roughness: 1 }));
+ground.rotation.x = -Math.PI / 2; ground.position.set(0, -0.03, 0); scene.add(ground);
+const deckTex = woodTexture(); deckTex.repeat.set(5.5 / 3, 1.4 / 3);
+const deck = new T.Mesh(new T.PlaneGeometry(5.5, 1.4), new T.MeshStandardMaterial({ map: deckTex, roughness: 0.8 }));
+deck.rotation.x = -Math.PI / 2; deck.position.set(2.8, 0.01, 6.1); scene.add(deck);
+const doormat = new T.Mesh(new T.PlaneGeometry(1.5, 0.7), new T.MeshStandardMaterial({ color: 0x4a4741, roughness: 1 }));
+doormat.rotation.x = -Math.PI / 2; doormat.position.set(-1.2, 0.006, 4.75); scene.add(doormat);
+
+// 천장: 아래에서만 보이는 면. 카메라가 벽 위로 올라가면 지붕을 뗀 모형처럼 내려다본다.
+const ceil = new T.Mesh(new T.PlaneGeometry(10.4, 11.3), new T.MeshStandardMaterial({ color: 0xf6f5f2, roughness: 1, emissive: 0xffffff, emissiveIntensity: 0.22 }));
+ceil.rotation.x = Math.PI / 2; ceil.position.set(0.15, H, -0.45);
+scene.add(ceil);
+
+// 사무실 문 (1관 오른쪽에서 보이는 면)
+const door = new T.Mesh(new T.PlaneGeometry(0.85, 2.1), new T.MeshStandardMaterial({ color: 0x8b8378, roughness: 0.7 }));
+door.position.set(2.765, 1.05, 0.55); door.rotation.y = Math.PI / 2; scene.add(door);
+const knob = new T.Mesh(new T.SphereGeometry(0.03, 12, 8), darkMat);
+knob.position.set(2.79, 1.0, 0.22); scene.add(knob);
+
+// 전시 소개 (1관 왼쪽 벽)
+const intro = textPlane(2048, 1100, 2.7, (g, w) => {
+  const x = 60;
+  g.fillStyle = ACCENT; g.font = `700 54px ${FONT}`; g.fillText('i.d.mo Second Exhibition', x, 90);
+  const word = 'Colorfull', cols = ['#e2262b', '#f0a20f', '#6b36c6', '#ec3d97', '#2541c4', '#2541c4', '#e0287f', '#1d8a3c', '#1d8a3c'];
+  g.font = `italic 800 230px ${FONT}`;
+  let cx = x;
+  [...word].forEach((ch, k) => { g.fillStyle = cols[k]; g.fillText(ch, cx, 330); cx += g.measureText(ch).width + 4; });
+  g.fillStyle = '#1c1e22'; g.font = `800 76px ${FONT}`; g.fillText('아드모 두 번째 전시회', x, 470);
+  g.fillStyle = '#4a4d55'; g.font = `600 56px ${FONT}`; g.fillText('2025. 3. 4 – 3. 9  ·  갤러리 미루', x, 570);
+  g.fillStyle = '#55585f'; g.font = `400 48px ${FONT}`;
+  fitFont(g, '평면도대로 옮긴 전시장을 펭귄과 함께 걸어 보세요.', 400, 48, w - 120);
+  g.fillText('평면도대로 옮긴 전시장을 펭귄과 함께 걸어 보세요.', x, 720);
+  g.fillText('박원빈의 펭귄 그림 다섯 점은 4관에 있어요.', x, 790);
+  g.fillStyle = ACCENT; g.font = `700 54px ${FONT}`; g.fillText('관람은 3관부터  →', x, 950);
+}, true);
+intro.position.set(-2.534, 1.62, 2.45); intro.rotation.y = Math.PI / 2;
+scene.add(intro);
+const introSpot = new T.SpotLight(0xfff0d8, 9, 0, 0.7, 0.8, 2);
+introSpot.position.set(-1.0, H - 0.15, 2.45); introSpot.target.position.set(-2.54, 1.6, 2.45);
+scene.add(introSpot, introSpot.target);
+
+/* ---------------- 천장 조명 (모양만) ---------------- */
+const fixMat = new T.MeshStandardMaterial({ color: 0xe9e7e2, roughness: 0.5, metalness: 0.2 });
+const lensMat = new T.MeshBasicMaterial({ color: 0xfff6e2, toneMapped: false });
+const fixGeo = new T.CylinderGeometry(0.06, 0.07, 0.2, 16).rotateX(Math.PI / 2);
+const lensGeo = new T.CircleGeometry(0.052, 16);
+const rodGeo = new T.CylinderGeometry(0.01, 0.01, 0.14, 6);
+function fixture(x, z, target){
+  const p = new T.Vector3(x, H - 0.2, z);
+  const f = new T.Mesh(fixGeo, fixMat); f.position.copy(p); f.lookAt(target); scene.add(f);
+  const l = new T.Mesh(lensGeo, lensMat); l.position.copy(p); l.lookAt(target); l.translateZ(0.101); scene.add(l);
+  const r = new T.Mesh(rodGeo, fixMat); r.position.set(x, H - 0.07, z); scene.add(r);
+}
+
+/* ---------------- 벽 사진 다듬기 ----------------
+   사진을 반듯하게 펴면서 생긴 어두운 격자 바탕(가장자리에 붙은 곳)을 지우고,
+   테두리를 흐리게 해서 사진이 벽에 스며들듯 붙게 한다. */
+function boxBlur(a, w, h, r){
+  const tmp = new Float32Array(a.length), n = 2 * r + 1;
+  for (let y = 0; y < h; y++){
+    const o = y * w; let s = 0;
+    for (let x = -r; x <= r; x++) s += a[o + clamp(x, 0, w - 1)];
+    for (let x = 0; x < w; x++){ tmp[o + x] = s / n; s += a[o + Math.min(w - 1, x + r + 1)] - a[o + Math.max(0, x - r)]; }
+  }
+  for (let x = 0; x < w; x++){
+    let s = 0;
+    for (let y = -r; y <= r; y++) s += tmp[clamp(y, 0, h - 1) * w + x];
+    for (let y = 0; y < h; y++){ a[y * w + x] = s / n; s += tmp[Math.min(h - 1, y + r + 1) * w + x] - tmp[Math.max(0, y - r) * w + x]; }
+  }
+}
+function photoCanvas(img, cutDark){
+  const maxD = coarse ? 1280 : 1800;
+  const s = Math.min(1, maxD / Math.max(img.width, img.height));
+  const W = Math.round(img.width * s), Hh = Math.round(img.height * s);
+  const c = document.createElement('canvas'); c.width = W; c.height = Hh;
+  const g = c.getContext('2d'); g.drawImage(img, 0, 0, W, Hh);
+  const mw = 256, mh = Math.max(8, Math.round(mw * Hh / W));
+  const m = document.createElement('canvas'); m.width = mw; m.height = mh;
+  const mg = m.getContext('2d', { willReadFrequently: true });
+  mg.drawImage(img, 0, 0, mw, mh);
+  const im = mg.getImageData(0, 0, mw, mh), d = im.data, N = mw * mh;
+  const a = new Float32Array(N).fill(1);
+  if (cutDark){
+    const dark = k => { const r = d[k * 4], gg = d[k * 4 + 1], b = d[k * 4 + 2], mx = Math.max(r, gg, b); return mx < 80 && mx - Math.min(r, gg, b) < 26; };
+    const st = [];
+    for (let x = 0; x < mw; x++) st.push(x, (mh - 1) * mw + x);
+    for (let y = 0; y < mh; y++) st.push(y * mw, y * mw + mw - 1);
+    while (st.length){
+      const k = st.pop();
+      if (!a[k] || !dark(k)) continue;
+      a[k] = 0;
+      const x = k % mw, y = (k / mw) | 0;
+      if (x > 0) st.push(k - 1); if (x < mw - 1) st.push(k + 1);
+      if (y > 0) st.push(k - mw); if (y < mh - 1) st.push(k + mw);
+    }
+  }
+  for (let x = 0; x < mw; x++){ a[x] = 0; a[(mh - 1) * mw + x] = 0; }
+  for (let y = 0; y < mh; y++){ a[y * mw] = 0; a[y * mw + mw - 1] = 0; }
+  boxBlur(a, mw, mh, 3); boxBlur(a, mw, mh, 3);
+  for (let k = 0; k < N; k++){ d[k * 4] = d[k * 4 + 1] = d[k * 4 + 2] = 0; d[k * 4 + 3] = Math.round(clamp((a[k] - 0.06) * 1.4, 0, 1) * 255); }
+  mg.putImageData(im, 0, 0);
+  g.globalCompositeOperation = 'destination-in';
+  g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+  g.drawImage(m, 0, 0, W, Hh);
+  return c;
+}
+
+/* ---------------- 사진 · 그림 · 안내도 걸기 ---------------- */
+const frameMat = new T.MeshStandardMaterial({ color: 0x1f1d1b, roughness: 0.55 });
+function drawLabel(g, w, h, a){
+  g.fillStyle = '#f7f5f0'; g.fillRect(0, 0, w, h);
+  g.fillStyle = ACCENT; g.font = `700 34px ${FONT}`; g.fillText(pad2(a.no), 28, 54);
+  g.fillStyle = '#1c1e22'; fitFont(g, a.title, 800, 56, w - 56); g.fillText(a.title, 28, 126);
+  g.fillStyle = '#6a6e77'; fitFont(g, a.sub, 400, 32, w - 56); g.fillText(a.sub, 28, 178);
+  g.fillStyle = '#9a9ea6'; g.font = `500 26px ${FONT}`; g.fillText('박원빈 · 2025', 28, 228);
+}
+function loadPlainTexture(a, url){
+  texLoader.load(url, tex => {
+    tex.colorSpace = T.SRGBColorSpace; tex.anisotropy = maxAniso;
+    a.img.material.map = tex; a.img.material.color.set(0xffffff); a.img.material.needsUpdate = true;
+  });
+}
+ITEMS.forEach(a => {
+  const ry = Math.atan2(a.n.x, a.n.z);
+  if (a.kind === 'photo'){
+    const m = new T.Mesh(new T.PlaneGeometry(a.w, a.h), new T.MeshBasicMaterial({
+      color: 0xffffff, transparent: true, opacity: 0, toneMapped: false,
+      polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+    }));
+    m.material.userData.base = 0;          // 사진을 다 불러오면 1
+    m.position.set(a.at[0] + a.n.x * 0.006, a.cy, a.at[1] + a.n.z * 0.006);
+    m.rotation.y = ry; m.userData.art = a.i;
+    scene.add(m); pickables.push(m);
+    a.img = m;
+    a.center = m.position.clone();
+    imgLoader.load(a.src, img => {
+      const tex = new T.CanvasTexture(photoCanvas(img, !a.keepDark));
+      tex.colorSpace = T.SRGBColorSpace; tex.anisotropy = maxAniso;
+      m.material.map = tex; m.material.userData.base = 1; m.material.needsUpdate = true;
+      m.material.opacity = m.userData.fader ? m.userData.fader.o : 1;
+    });
+    const k = a.w > 3.6 ? 3 : a.w > 2.6 ? 2 : 1;
+    for (let j = 0; j < k; j++){
+      const off = (j - (k - 1) / 2) * a.w / k;
+      const tgt = a.center.clone().addScaledVector(a.t, off).setY(Math.min(a.cy, 1.6));
+      fixture(a.center.x + a.n.x * 0.95 + a.t.x * off, a.center.z + a.n.z * 0.95 + a.t.z * off, tgt);
+    }
+  } else {
+    // 액자: 펭귄 그림 · 안내도
+    const g = new T.Group();
+    const u = a.u || 0, border = a.kind === 'map' ? 0.04 : 0.025;
+    g.position.set(a.at[0] + a.t.x * u, 0, a.at[1] + a.t.z * u);
+    g.rotation.y = ry; scene.add(g);
+    const frame = new T.Mesh(new T.BoxGeometry(a.w + border * 2, a.h + border * 2, 0.035), frameMat);
+    frame.position.set(0, a.cy, 0.0175);
+    const img = new T.Mesh(new T.PlaneGeometry(a.w, a.h), new T.MeshBasicMaterial({ color: 0xdcd6cc, toneMapped: false }));
+    img.position.set(0, a.cy, 0.036);
+    g.add(frame, img);
+    a.img = img;
+    for (const o of [frame, img]){ o.userData.art = a.i; pickables.push(o); }
+    if (a.kind === 'art'){
+      const label = textPlane(512, 256, 0.2, (c, w, h) => drawLabel(c, w, h, a));
+      label.position.set(a.w / 2 + border - 0.1, a.cy - a.h / 2 - border - 0.065, 0.004);
+      label.userData.art = a.i; pickables.push(label);
+      g.add(label);
+      loadPlainTexture(a, a.image);
+    } else loadPlainTexture(a, a.src);
+    g.updateMatrixWorld(true);
+    a.center = new T.Vector3(0, a.cy, 0.036).applyMatrix4(g.matrixWorld);
+  }
+  a.base = new T.Vector3(a.center.x, 0, a.center.z);
+});
+
+// 4관 왼쪽 벽: 박원빈 소개 글 · 조명
+{
+  const w = ART_WALL, n = new T.Vector3(w.n[0], 0, w.n[1]), t = new T.Vector3(w.n[1], 0, -w.n[0]);
+  const plate = textPlane(1024, 620, 0.56, (g, W) => {
+    const x = 40;
+    g.fillStyle = ACCENT; g.font = `700 44px ${FONT}`; g.fillText('4관', x, 70);
+    g.fillStyle = '#1c1e22'; g.font = `800 120px ${FONT}`; g.fillText('박원빈', x, 210);
+    g.fillStyle = '#2e3036'; g.font = `700 60px ${FONT}`; g.fillText('펭귄 그림 다섯 점', x, 310);
+    g.fillStyle = '#6a6e77'; g.font = `400 40px ${FONT}`;
+    g.fillText('그림을 누르면 담은 이야기를', x, 430);
+    g.fillText('볼 수 있어요.', x, 485);
+  }, true);
+  plate.position.set(w.x + 0.008, 1.62, w.z).addScaledVector(t, -1.33);
+  plate.rotation.y = Math.atan2(n.x, n.z); plate.userData.plate = true;
+  scene.add(plate);
+  const spot = new T.SpotLight(0xfff0d8, 14, 0, 0.62, 0.75, 2);
+  spot.position.set(w.x + 1.5, H - 0.2, w.z);
+  spot.target.position.set(w.x, 1.4, w.z);
+  scene.add(spot, spot.target);
+  for (const off of [-0.55, 0.55]) fixture(w.x + 1.0, w.z + off, new T.Vector3(w.x, 1.45, w.z + off * 0.6));
+}
+{ const mp = ITEMS[0]; fixture(mp.center.x, mp.center.z + 0.9, mp.center); }
+
+// 칸막이에 붙은 사진 · 액자 · 글도 칸막이와 함께 반투명해지게 묶는다
+function attachToWall(obj, x, z){
+  const f = fadeWalls.find(w => x > w.box.x0 - 0.05 && x < w.box.x1 + 0.05 && z > w.box.z0 - 0.05 && z < w.box.z1 + 0.05);
+  if (!f) return;
+  obj.traverse(o => {
+    if (!o.isMesh) return;
+    if (!o.material.userData.own){ o.material = o.material.clone(); o.material.userData.own = true; }
+    o.material.transparent = true;
+    o.userData.fader = f; f.mats.push(o.material);
+  });
+}
+ITEMS.forEach(a => attachToWall(a.kind === 'photo' ? a.img : a.img.parent, a.at[0], a.at[1]));
+for (const o of [door, knob]) attachToWall(o, o.position.x, o.position.z);
+scene.traverse(o => { if (o.userData.plate) attachToWall(o, o.position.x, o.position.z); });
+function updateFades(want, dt){
+  const k = damp(9, dt);
+  for (const f of fadeWalls){
+    const target = want.has(f.mesh) ? 0.12 : 1;
+    f.o += (target - f.o) * k;
+    if (Math.abs(f.o - target) < 0.004) f.o = target;
+    if (f.o === f.last) continue;
+    f.last = f.o;
+    for (const m of f.mats){ m.opacity = (m.userData.base ?? 1) * f.o; m.depthWrite = f.o > 0.97; }
+  }
+}
+
+/* ---------------- 의자 ---------------- */
+const BENCH_TOP = 0.46;
+const BENCHES = [
+  { x: 1.35, z: 2.95, face: -1, len: 1.5, depth: 0.42 },   // 1관: 안내도를 보는 의자
+  { x: 3.55, z: 3.98, face: 1, len: 1.3, depth: 0.4 },     // 윈도우관: 바깥을 보는 의자
+];
+const seatMat = new T.MeshStandardMaterial({ color: 0x9a7a58, roughness: 0.6 });
+const legMat = new T.MeshStandardMaterial({ color: 0x2b2926, roughness: 0.5, metalness: 0.4 });
+BENCHES.forEach((b, i) => {
+  const g = new T.Group(); g.position.set(b.x, 0, b.z); scene.add(g);
+  const seat = new T.Mesh(new T.BoxGeometry(b.len, 0.07, b.depth), seatMat);
+  seat.position.y = BENCH_TOP - 0.035; g.add(seat);
+  seat.userData.bench = i; pickables.push(seat);
+  for (const sx of [-b.len / 2 + 0.16, b.len / 2 - 0.16]){
+    const leg = new T.Mesh(new T.BoxGeometry(0.05, BENCH_TOP - 0.07, b.depth - 0.08), legMat);
+    leg.position.set(sx, (BENCH_TOP - 0.07) / 2, 0); g.add(leg);
+    leg.userData.bench = i; pickables.push(leg);
+  }
+  b.seats = [-b.len / 4, b.len / 4].map(dx => ({ x: b.x + dx, z: b.z }));
+  obstacles.push({ x0: b.x - b.len / 2, x1: b.x + b.len / 2, z0: b.z - b.depth / 2, z1: b.z + b.depth / 2 });
+});
+
+/* ---------------- 펭귄 (나) ---------------- */
+const PENG = 0.8;
+function makePenguin(){
+  const black = new T.MeshStandardMaterial({ color: 0x22262d, roughness: 0.55 });
+  const white = new T.MeshStandardMaterial({ color: 0xf6f4ef, roughness: 0.7 });
+  const orange = new T.MeshStandardMaterial({ color: 0xf08a3a, roughness: 0.5 });
+  const sph = new T.SphereGeometry(1, 32, 24);
+  const root = new T.Group(), body = new T.Group();
+  root.add(body);
+  const blob = (mat, sx, sy, sz, x, y, z, parent = body) => {
+    const m = new T.Mesh(sph, mat); m.scale.set(sx, sy, sz); m.position.set(x, y, z); parent.add(m); return m;
+  };
+  blob(black, 0.34, 0.46, 0.31, 0, 0.5, 0);        // 몸
+  blob(white, 0.27, 0.37, 0.2, 0, 0.48, 0.13);     // 배
+  blob(black, 0.21, 0.2, 0.2, 0, 1.06, 0.01);      // 머리
+  for (const s of [-1, 1]){
+    blob(white, 0.045, 0.05, 0.03, s * 0.085, 1.11, 0.165);
+    blob(black, 0.022, 0.026, 0.02, s * 0.086, 1.112, 0.19);
+  }
+  const beak = new T.Mesh(new T.ConeGeometry(0.045, 0.15, 16), orange);
+  beak.rotation.x = Math.PI / 2; beak.position.set(0, 1.03, 0.26); body.add(beak);
+  const flipper = s => {
+    const pv = new T.Group(); pv.position.set(s * 0.31, 0.82, 0); body.add(pv);
+    blob(black, 0.06, 0.3, 0.15, 0, -0.26, 0, pv);
+    return pv;
+  };
+  const flL = flipper(1), flR = flipper(-1);
+  const footL = blob(orange, 0.09, 0.035, 0.14, 0.12, 0.03, 0.11, root);
+  const footR = blob(orange, 0.09, 0.035, 0.14, -0.12, 0.03, 0.11, root);
+  root.scale.setScalar(PENG);
+  root.traverse(o => { if (o.isMesh) o.userData.me = true; });
+  return { root, body, flL, flR, footL, footR };
+}
+const peng = makePenguin();
+scene.add(peng.root);
+const shadow = new T.Mesh(new T.PlaneGeometry(0.9, 0.9), new T.MeshBasicMaterial({
+  map: canvasTexture(128, 128, (g, w) => {
+    const r = g.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2);
+    r.addColorStop(0, 'rgba(30,24,18,.42)'); r.addColorStop(1, 'rgba(30,24,18,0)');
+    g.fillStyle = r; g.fillRect(0, 0, w, w);
+  }),
+  transparent: true, depthWrite: false, toneMapped: false,
+}));
+shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.008;
+scene.add(shadow);
+
+const marker = new T.Mesh(new T.RingGeometry(0.16, 0.22, 40),
+  new T.MeshBasicMaterial({ color: ACCENT, transparent: true, opacity: 0, depthWrite: false, toneMapped: false }));
+marker.rotation.x = -Math.PI / 2; marker.position.y = 0.012;
+scene.add(marker);
+let markerT = 0;
+function showMarker(x, z){ marker.position.x = x; marker.position.z = z; markerT = 1; }
+
+const START = { x: -1.3, z: 2.9 };
+const player = {
+  x: START.x, z: START.z, vx: START.x, vz: START.z, sy: 0,
+  rot: Math.PI, faceRot: Math.PI, speed: 0,
+  path: null, onArrive: null, sitting: null, flap: 0,
+};
+
+/* ------------------------------------------------------------------
+   걸을 수 있는 곳 (0.125 m 칸) + A* 길찾기. 칸막이 · 문 · 의자를 돌아서 간다.
+   ------------------------------------------------------------------ */
+const R = 0.28, CELL = 0.125;
+const B = { x0: -5.05, x1: 5.35, z0: -6.1, z1: 5.2 };
+const GX = Math.ceil((B.x1 - B.x0) / CELL), GZ = Math.ceil((B.z1 - B.z0) / CELL);
+const cellX = i => B.x0 + (i + 0.5) * CELL, cellZ = j => B.z0 + (j + 0.5) * CELL;
+const colOf = x => clamp(Math.floor((x - B.x0) / CELL), 0, GX - 1);
+const rowOf = z => clamp(Math.floor((z - B.z0) / CELL), 0, GZ - 1);
+function blockedAt(x, z){
+  if (x < B.x0 + R || x > B.x1 - R || z < B.z0 + R || z > B.z1 - R) return true;
+  if (x < -2.54 + R && z > -2.7 - R) return true;            // 2층 계단실
+  for (const o of obstacles) if (x > o.x0 - R && x < o.x1 + R && z > o.z0 - R && z < o.z1 + R) return true;
+  return false;
+}
+const grid = new Uint8Array(GX * GZ);
+for (let j = 0; j < GZ; j++) for (let i = 0; i < GX; i++) grid[j * GX + i] = blockedAt(cellX(i), cellZ(j)) ? 1 : 0;
+
+function segClear(ax, az, bx, bz){
+  const n = Math.max(1, Math.ceil(Math.hypot(bx - ax, bz - az) / 0.05));
+  for (let s = 0; s <= n; s++){ const u = s / n; if (blockedAt(ax + (bx - ax) * u, az + (bz - az) * u)) return false; }
+  return true;
+}
+function nearestFreeCell(x, z){
+  let best = -1, bd = Infinity;
+  for (let j = 0; j < GZ; j++) for (let i = 0; i < GX; i++){
+    if (grid[j * GX + i]) continue;
+    const d = (cellX(i) - x) ** 2 + (cellZ(j) - z) ** 2;
+    if (d < bd){ bd = d; best = j * GX + i; }
+  }
+  return best;
+}
+function nearestFree(x, z){
+  if (!blockedAt(x, z)) return { x, z };
+  const k = nearestFreeCell(x, z);
+  return k < 0 ? null : { x: cellX(k % GX), z: cellZ((k / GX) | 0) };
+}
+class MinHeap {
+  constructor(){ this.k = []; this.p = []; }
+  get size(){ return this.k.length; }
+  push(key, pri){
+    const k = this.k, p = this.p; let i = k.length; k.push(key); p.push(pri);
+    while (i > 0){ const u = (i - 1) >> 1; if (p[u] <= pri) break; k[i] = k[u]; p[i] = p[u]; i = u; }
+    k[i] = key; p[i] = pri;
+  }
+  pop(){
+    const k = this.k, p = this.p, top = k[0], lk = k.pop(), lp = p.pop(), n = k.length;
+    if (n){
+      let i = 0;
+      for (;;){
+        let c = 2 * i + 1; if (c >= n) break;
+        if (c + 1 < n && p[c + 1] < p[c]) c++;
+        if (p[c] >= lp) break;
+        k[i] = k[c]; p[i] = p[c]; i = c;
+      }
+      k[i] = lk; p[i] = lp;
+    }
+    return top;
+  }
+}
+function findPath(sx, sz, tx, tz){
+  const t = nearestFree(tx, tz), s0 = nearestFree(sx, sz);
+  if (!t || !s0) return null;
+  const pre = (s0.x !== sx || s0.z !== sz) ? [s0] : [];
+  if (segClear(s0.x, s0.z, t.x, t.z)) return [...pre, t];
+
+  let start = rowOf(s0.z) * GX + colOf(s0.x), goal = rowOf(t.z) * GX + colOf(t.x);
+  if (grid[start]) start = nearestFreeCell(s0.x, s0.z);
+  if (grid[goal]) goal = nearestFreeCell(t.x, t.z);
+  const gi = goal % GX, gj = (goal / GX) | 0;
+  const h = k => { const dx = Math.abs(k % GX - gi), dz = Math.abs(((k / GX) | 0) - gj); return dx + dz + (Math.SQRT2 - 2) * Math.min(dx, dz); };
+  const N = GX * GZ, g = new Float32Array(N).fill(Infinity), came = new Int32Array(N).fill(-1), closed = new Uint8Array(N);
+  const heap = new MinHeap();
+  g[start] = 0; heap.push(start, h(start));
+  while (heap.size){
+    const k = heap.pop();
+    if (k === goal) break;
+    if (closed[k]) continue;
+    closed[k] = 1;
+    const i = k % GX, j = (k / GX) | 0;
+    for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++){
+      if (!di && !dj) continue;
+      const ni = i + di, nj = j + dj;
+      if (ni < 0 || nj < 0 || ni >= GX || nj >= GZ) continue;
+      const nk = nj * GX + ni;
+      if (grid[nk] || closed[nk]) continue;
+      if (di && dj && (grid[j * GX + ni] || grid[nj * GX + i])) continue;   // 모서리를 비스듬히 뚫지 않는다
+      const ng = g[k] + (di && dj ? Math.SQRT2 : 1);
+      if (ng < g[nk]){ g[nk] = ng; came[nk] = k; heap.push(nk, ng + h(nk)); }
+    }
+  }
+  if (goal !== start && came[goal] < 0) return null;
+  const cells = [];
+  for (let k = goal; k !== start && k >= 0; k = came[k]) cells.push({ x: cellX(k % GX), z: cellZ((k / GX) | 0) });
+  cells.reverse();
+  const pts = [s0, ...cells, t];
+  // 보이는 지점끼리는 곧장 잇는다 (지그재그 없이)
+  const out = [];
+  for (let a = 0; a < pts.length - 1;){
+    let b = pts.length - 1;
+    while (b > a + 1 && !segClear(pts[a].x, pts[a].z, pts[b].x, pts[b].z)) b--;
+    out.push(pts[b]); a = b;
+  }
+  return [...pre, ...out];
+}
+function moveBy(dx, dz){
+  // 축마다 따로 막혀 있는지 보면 벽을 따라 미끄러지듯 걷는다
+  if (!blockedAt(player.x + dx, player.z)) player.x += dx;
+  if (!blockedAt(player.x, player.z + dz)) player.z += dz;
+}
+
+/* ------------------------------------------------------------------
+   카메라: 펭귄 뒤 3인칭 / 펭귄 눈높이 1인칭 / 벽 정면(감상)
+   yaw 하나를 두 시점이 같이 쓴다: 보는 방향 = (-sin yaw, -cos yaw)
+   ------------------------------------------------------------------ */
+let view = 'third';
+let yaw = 0.45, pitch = 0.4, dist = 3.4;
+let fpPitch = 0, fpZoom = 1;
+let focus = null;                    // { i, zoom, panX, panY }
+const camPos = new T.Vector3(START.x, 6.5, START.z + 7), camLook = new T.Vector3(START.x, 1.4, START.z - 1);
+const wantPos = new T.Vector3(), wantLook = new T.Vector3(), tmp = new T.Vector3();
+const camRay = new T.Raycaster();
+const inset = { l: 0, r: 0, t: 0, b: 0 };   // 화면에서 버튼 · 설명 칸이 가린 비율
+
+// 감상할 때 카메라가 물러날 수 있는 거리 (맞은편 벽까지)
+scene.updateMatrixWorld(true);
+ITEMS.forEach(a => {
+  const o = a.center.clone().setY(Math.min(a.cy, 1.6)).addScaledVector(a.n, 0.02);
+  camRay.set(o, a.n); camRay.far = 40;
+  const hit = camRay.intersectObjects(occluders, false)[0];
+  a.avail = hit ? Math.max(0.8, hit.distance - 0.15) : 12;
+});
+
+function baseFov(){ return camera.aspect < 0.8 ? 70 : 55; }
+function topInset(){ return clamp(($('.topbar').getBoundingClientRect().bottom + 8) / innerHeight, 0, 0.3); }
+function measureInset(){
+  inset.t = topInset(); inset.l = 0; inset.r = 0; inset.b = 0;
+  if (!info.hidden){
+    const r = info.getBoundingClientRect();
+    if (mqSheet.matches) inset.b = clamp((innerHeight - r.top) / innerHeight, 0, 0.65);
+    else inset.r = clamp((innerWidth - r.left + 8) / innerWidth, 0, 0.6);
+  }
+}
+function expectedInset(){
+  return mqSheet.matches
+    ? { l: 0, r: 0, t: topInset(), b: 0.46 }
+    : { l: 0, r: clamp(392 / innerWidth, 0, 0.6), t: topInset(), b: 0 };
+}
+// 그림이 가려지지 않은 화면 안에 여백과 함께 들어오는 거리
+function fitDist(a, ins, fov){
+  const tanV = Math.tan(T.MathUtils.degToRad(fov) / 2), tanH = tanV * camera.aspect;
+  const fw = Math.max(0.3, 1 - ins.l - ins.r), fh = Math.max(0.3, 1 - ins.t - ins.b);
+  return Math.max((a.w / 2 + 0.25) / (fw * tanH), (a.h / 2 + 0.2) / (fh * tanV));
+}
+// 방이 좁아 그만큼 물러날 수 없으면 화각을 넓혀서 담는다 (정면이라 평면 사진은 휘지 않는다)
+function focusFov(a, ins){
+  const base = baseFov(), d0 = fitDist(a, ins, base);
+  if (d0 <= a.avail) return base;
+  const tv = Math.tan(T.MathUtils.degToRad(base) / 2) * d0 / a.avail;
+  return Math.min(100, T.MathUtils.radToDeg(2 * Math.atan(tv)));
+}
+function focusDist(){
+  const a = ITEMS[focus.i];
+  return clamp(fitDist(a, inset, focusFov(a, inset)) * focus.zoom, 0.3, a.avail);
+}
+function panLimits(a){
+  const d = focusDist(), tanV = Math.tan(T.MathUtils.degToRad(focusFov(a, inset)) / 2), tanH = tanV * camera.aspect;
+  const fw = Math.max(0.3, 1 - inset.l - inset.r), fh = Math.max(0.3, 1 - inset.t - inset.b);
+  return { x: Math.max(0, a.w / 2 + 0.1 - d * tanH * fw), y: Math.max(0, a.h / 2 + 0.1 - d * tanV * fh) };
+}
+
+const fadeNow = new Set();
+function updateCamera(dt){
+  let fovWant = baseFov() * (view === 'first' && !focus ? fpZoom : 1);
+  let rate;
+  fadeNow.clear();
+  if (focus){
+    const a = ITEMS[focus.i];
+    fovWant = focusFov(a, inset);
+    const tanV = Math.tan(T.MathUtils.degToRad(fovWant) / 2), tanH = tanV * camera.aspect;
+    const d = focusDist();
+    // 가려지지 않은 칸의 가운데에 그림이 오도록 카메라를 옆 · 아래로 민다
+    const offX = (inset.r - inset.l) * d * tanH, offY = (inset.t - inset.b) * d * tanV;
+    wantLook.copy(a.center).addScaledVector(a.n, 0.03).addScaledVector(a.t, offX + focus.panX);
+    wantLook.y += offY + focus.panY;
+    wantPos.copy(wantLook).addScaledVector(a.n, d);
+    if (wantPos.y < 0.2){ const up = 0.2 - wantPos.y; wantPos.y += up; wantLook.y += up; }
+    rate = reduceMotion ? 30 : 3.2;
+  } else if (view === 'first'){
+    const eye = player.sitting ? 1.05 : 1.5, cp = Math.cos(fpPitch);
+    wantPos.set(player.vx, eye, player.vz);
+    wantLook.set(player.vx - Math.sin(yaw) * cp, eye + Math.sin(fpPitch), player.vz - Math.cos(yaw) * cp);
+    rate = 16;
+  } else {
+    wantLook.set(player.vx, (player.sitting ? 1.0 : 1.15) + 0.3, player.vz);
+    tmp.set(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
+    let d = dist;
+    camRay.set(wantLook, tmp); camRay.far = dist + 0.3;
+    for (const hit of camRay.intersectObjects(occluders, false)){
+      if (hit.object.userData.fade){ if (hit.distance < dist) fadeNow.add(hit.object); continue; }   // 칸막이는 비쳐 보이게
+      d = Math.max(0.6, Math.min(d, hit.distance - 0.25));          // 바깥벽 뒤로는 넘어가지 않게 당겨 온다
+      break;
+    }
+    wantPos.copy(wantLook).addScaledVector(tmp, d);
+    // 좁은 방에서 당겨 왔으면 조금 위로 올려 펭귄 너머가 보이게 한다
+    if (d < dist - 0.2 && wantPos.y < H - 0.3) wantPos.y = Math.min(H - 0.3, wantPos.y + Math.min(0.9, (dist - d) * 0.3));
+    wantPos.x = clamp(wantPos.x, B.x0 + 0.05, B.x1 - 0.05);
+    wantPos.z = clamp(wantPos.z, B.z0 + 0.05, B.z1 - 0.05);
+    wantPos.y = clamp(wantPos.y, 0.35, 9);
+    rate = 6;
+  }
+  const k = damp(rate, dt);
+  camPos.lerp(wantPos, k); camLook.lerp(wantLook, k);
+  camera.position.copy(camPos); camera.lookAt(camLook);
+  if (Math.abs(camera.fov - fovWant) > 0.05){ camera.fov += (fovWant - camera.fov) * k; camera.updateProjectionMatrix(); }
+  // 1인칭: 카메라가 머리 안으로 들어가면 / 감상: 펭귄이 카메라와 그림 사이에 서면 숨긴다
+  let hide = view === 'first' && !focus && camPos.distanceTo(wantPos) < 0.9;
+  if (focus){
+    const a = ITEMS[focus.i];
+    const pd = (player.vx - a.center.x) * a.n.x + (player.vz - a.center.z) * a.n.z;
+    const cd = (camPos.x - a.center.x) * a.n.x + (camPos.z - a.center.z) * a.n.z;
+    if (pd < cd + 0.2) hide = true;
+  }
+  peng.root.visible = !hide; shadow.visible = !hide;
+  updateFades(fadeNow, dt);
+}
+
+/* ---------------- 펭귄 움직임 ---------------- */
+const keys = new Set();
+const MOVE = {
+  KeyW: [0, 1], ArrowUp: [0, 1], KeyS: [0, -1], ArrowDown: [0, -1],
+  KeyA: [-1, 0], ArrowLeft: [-1, 0], KeyD: [1, 0], ArrowRight: [1, 0],
+};
+function updatePlayer(dt){
+  let ix = 0, iz = 0;
+  for (const c of keys){ const m = MOVE[c]; if (m){ ix += m[0]; iz += m[1]; } }
+  if (ix || iz){
+    if (focus || !info.hidden) leaveArt();
+    standUp(); player.path = null; player.onArrive = null;
+    const fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
+    let dx = fx * iz + rx * ix, dz = fz * iz + rz * ix;
+    const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l;
+    const sp = keys.has('ShiftLeft') || keys.has('ShiftRight') ? 4.2 : 2.4;
+    moveBy(dx * sp * dt, dz * sp * dt);
+    player.faceRot = Math.atan2(dx, dz);
+  } else if (player.path){
+    const wp = player.path[0];
+    const dx = wp.x - player.x, dz = wp.z - player.z, l = Math.hypot(dx, dz);
+    const step = (tour.active ? 2.1 : 2.6) * dt;
+    if (l <= step){
+      player.x = wp.x; player.z = wp.z; player.path.shift();
+      if (!player.path.length){
+        player.path = null;
+        const cb = player.onArrive; player.onArrive = null;
+        if (cb) cb();
+      }
+    } else {
+      player.x += dx / l * step; player.z += dz / l * step;
+      player.faceRot = Math.atan2(dx, dz);
+      // 1인칭이나 자동 관람 중에는 걸어가는 쪽으로 시점을 천천히 돌린다
+      if ((view === 'first' || tour.active) && !(drag && drag.moved)){
+        yaw += angDiff(Math.atan2(-dx, -dz), yaw) * damp(view === 'first' ? 4 : 1.8, dt);
+      }
+    }
+  }
+  // 보이는 위치는 실제 위치를 부드럽게 따라간다 (앉고 일어설 때 툭 끊기지 않게)
+  const k = damp(18, dt), pvx = player.vx, pvz = player.vz;
+  player.vx += (player.x - player.vx) * k; player.vz += (player.z - player.vz) * k;
+  player.speed = Math.hypot(player.vx - pvx, player.vz - pvz) / Math.max(dt, 1e-4);
+  player.rot += angDiff(player.faceRot, player.rot) * damp(10, dt);
+  player.sy += ((player.sitting ? BENCH_TOP - 0.02 : 0) - player.sy) * damp(10, dt);
+}
+
+let walkPhase = 0;
+function animatePenguin(dt, t){
+  const sitting = !!player.sitting, moving = player.speed > 0.25 && !sitting;
+  if (moving) walkPhase += dt * (7.5 + player.speed * 1.8);
+  const k = damp(12, dt), wobble = moving && !reduceMotion;
+  peng.body.rotation.z += ((wobble ? Math.sin(walkPhase) * 0.12 : 0) - peng.body.rotation.z) * k;
+  peng.body.rotation.x += ((sitting ? -0.12 : moving ? 0.06 : 0) - peng.body.rotation.x) * k;
+  const bob = wobble ? Math.abs(Math.sin(walkPhase)) * 0.035 : Math.sin(t * 1.8) * 0.005;
+
+  player.flap = Math.max(0, player.flap - dt);
+  const flapA = player.flap > 0 ? 0.6 + Math.sin(player.flap * 34) * 0.55 : 0;
+  const hop = player.flap > 0.5 && !sitting ? Math.sin((1.1 - player.flap) / 0.6 * Math.PI) * 0.08 : 0;
+  const rest = moving ? 0.32 + Math.sin(walkPhase) * 0.12 : 0.12 + Math.sin(t * 1.3) * 0.02;
+  const fl = Math.max(rest, flapA), kf = damp(20, dt);
+  peng.flL.rotation.z += (fl - peng.flL.rotation.z) * kf;
+  peng.flR.rotation.z += (-fl - peng.flR.rotation.z) * kf;
+  const step = wobble ? Math.sin(walkPhase) * 0.09 : 0;
+  peng.footL.position.z = (sitting ? 0.2 : 0.11) + step;
+  peng.footR.position.z = (sitting ? 0.2 : 0.11) - step;
+
+  peng.root.position.set(player.vx, player.sy + bob + hop, player.vz);
+  peng.root.rotation.y = player.rot;
+  shadow.position.x = player.vx; shadow.position.z = player.vz;
+  const ss = 1 - hop * 2; shadow.scale.set(ss, ss, ss);
+}
+function flap(){ player.flap = 1.1; }
+
+/* ---------------- 걷기 · 앉기 · 그림 앞으로 ---------------- */
+function walkTo(x, z, onArrive){
+  standUp();
+  const path = findPath(player.x, player.z, x, z);
+  if (!path){ toast('거기로는 갈 수 없어요'); return false; }
+  player.path = path; player.onArrive = onArrive || null;
+  const end = path[path.length - 1]; showMarker(end.x, end.z);
+  return true;
+}
+function sitOn(bi, p){
+  leaveArt();
+  const b = BENCHES[bi];
+  const s = b.seats.reduce((best, c) => (Math.abs(c.x - p.x) < Math.abs(best.x - p.x) ? c : best));
+  const front = { x: s.x, z: b.z + b.face * (b.depth / 2 + R + 0.12) };
+  walkTo(front.x, front.z, () => {
+    player.sitting = { front }; player.x = s.x; player.z = s.z;
+    player.faceRot = b.face > 0 ? 0 : Math.PI;
+  });
+}
+function standUp(){
+  if (!player.sitting) return;
+  const f = player.sitting.front;
+  player.sitting = null; player.x = f.x; player.z = f.z;
+}
+function standSpot(a){
+  const ins = expectedInset();
+  let d = clamp(fitDist(a, ins, focusFov(a, ins)) + 0.8, 1.2, 7);
+  d = Math.max(0.6, Math.min(d, a.avail - R - 0.1));
+  const p = a.base.clone().addScaledVector(a.n, d);
+  return nearestFree(p.x, p.z);
+}
+function goToArt(i, fromTour){
+  if (!fromTour) stopTour();
+  closeList();
+  const a = ITEMS[(i + ITEMS.length) % ITEMS.length];
+  const keepPanel = !info.hidden;
+  focus = null;
+  if (keepPanel) showInfo(a.i);        // 이전 · 다음으로 옮길 땐 설명 칸을 열어 둔 채 걸어간다
+  if (tour.active){ tour.idx = a.i; tour.phase = 'walk'; tour.t = 0; }
+  const s = standSpot(a);
+  if (Math.hypot(s.x - player.x, s.z - player.z) < 0.3 && !player.sitting){ arriveArt(a); return; }
+  walkTo(s.x, s.z, () => arriveArt(a));
+}
+function arriveArt(a){
+  player.faceRot = Math.atan2(-a.n.x, -a.n.z);
+  yaw = Math.atan2(a.n.x, a.n.z);       // 감상을 마치면 그림을 등진 펭귄 뒤에서 다시 본다
+  focus = { i: a.i, zoom: 1, panX: 0, panY: 0 };
+  if (info.hidden || infoIdx !== a.i) showInfo(a.i);
+  if (tour.active){ tour.phase = 'view'; tour.t = 0; }
+}
+function leaveArt(){
+  focus = null;
+  if (!info.hidden){ info.hidden = true; infoIdx = -1; measureInset(); }
+}
+function zoomToPoint(p){
+  if (focus.zoom < 0.8){ focus.zoom = 1; focus.panX = focus.panY = 0; return; }
+  const a = ITEMS[focus.i], v = p.clone().sub(a.center);
+  focus.zoom = a.kind === 'art' ? 0.4 : 0.34; focus.panX = v.dot(a.t); focus.panY = v.y;
+}
+
+/* ---------------- 자동 관람 ---------------- */
+const TOUR_VIEW = 8;
+const tour = { active: false, idx: 0, phase: 'walk', t: 0 };
+const btnTour = $('#btnTour'), btnView = $('#btnView'), btnList = $('#btnList');
+function startTour(){
+  tour.active = true;
+  btnTour.setAttribute('aria-pressed', 'true'); btnTour.textContent = '관람 멈추기';
+  toast(`자동 관람을 시작해요 · 한 곳에 ${TOUR_VIEW}초`);
+  goToArt(0, true);
+}
+function stopTour(silent){
+  if (!tour.active) return;
+  tour.active = false;
+  btnTour.setAttribute('aria-pressed', 'false'); btnTour.textContent = '자동 관람';
+  $('#tourBar').hidden = true;
+  if (!silent) toast('자동 관람을 멈췄어요');
+}
+function updateTour(dt){
+  if (!tour.active || tour.phase !== 'view') return;
+  tour.t += dt;
+  $('#tourFill').style.width = `${Math.min(100, tour.t / TOUR_VIEW * 100)}%`;
+  if (tour.t < TOUR_VIEW) return;
+  if (tour.idx >= ITEMS.length - 1){ stopTour(true); leaveArt(); toast('관람을 마쳤어요. 와 주셔서 고마워요!'); }
+  else goToArt(tour.idx + 1, true);
+}
+
+/* ---------------- 설명 칸 ---------------- */
+const info = $('#info');
+let infoIdx = -1;
+const bodyCache = new Map();
+function showInfo(i){
+  const a = ITEMS[i];
+  infoIdx = i;
+  $('#infoNo').textContent = `${pad2(i + 1)} / ${pad2(ITEMS.length)} · ${a.room}`;
+  $('#infoTitle').textContent = a.title;
+  $('#infoSub').textContent = a.kind === 'art' ? `${a.sub} · 박원빈` : a.sub;
+  const pg = $('#infoPage'), og = $('#infoOrig');
+  pg.hidden = a.kind !== 'art';
+  if (a.kind === 'art') pg.href = a.page;
+  og.href = a.original;
+  og.textContent = a.kind === 'art' ? '원본 크기로 보기' : a.kind === 'map' ? '안내도 원본 보기' : '사진 원본 보기';
+  $('#tourBar').hidden = !tour.active; $('#tourFill').style.width = '0';
+  const body = $('#infoBody');
+  info.hidden = false; $('#infoScroll').scrollTop = 0;
+  measureInset();
+  if (a.kind !== 'art'){ body.innerHTML = a.body; return; }
+  body.innerHTML = '<p class="muted">그림에 담은 이야기를 불러오는 중…</p>';
+  loadBody(a).then(html => {
+    if (infoIdx !== i) return;
+    body.innerHTML = html || '<p class="muted">이 그림은 글 없이 걸려 있어요. 작품 페이지에서 더 볼 수 있어요.</p>';
+  });
+}
+function loadBody(a){
+  if (!bodyCache.has(a.i)) bodyCache.set(a.i, fetchBody(a));
+  return bodyCache.get(a.i);
+}
+async function fetchBody(a){
+  // 블로그(Jekyll)가 만든 작품 페이지를 읽는다. 로컬 미리보기처럼 그 페이지가 없으면 실제 사이트에서 읽는다.
+  const bases = [location.href];
+  if (location.hostname !== 'wbpark.app') bases.push('https://wbpark.app/');
+  for (const base of bases){
+    try {
+      const url = new URL(a.page, base);
+      const res = await fetch(url, { credentials: 'omit' });
+      if (!res.ok) continue;
+      const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+      const body = doc.querySelector('.artwork-body');
+      if (body) return cleanBody(doc, body, url);
+    } catch (e) { /* 다음 주소로 */ }
+  }
+  return '';
+}
+function cleanBody(doc, body, url){
+  body.querySelectorAll('script, style, iframe, link, meta, object, embed').forEach(n => n.remove());
+  body.querySelectorAll('blockquote.instagram-media').forEach(b => {
+    const href = b.getAttribute('data-instgrm-permalink') || (b.querySelector('a[href]') || {}).href;
+    const p = doc.createElement('p');
+    if (href){ const l = doc.createElement('a'); l.setAttribute('href', href); l.textContent = '인스타그램에서 영상 보기 →'; p.append(l); }
+    b.replaceWith(p);
+  });
+  const walker = doc.createTreeWalker(body, NodeFilter.SHOW_COMMENT), comments = [];
+  while (walker.nextNode()) comments.push(walker.currentNode);
+  comments.forEach(c => c.remove());
+  body.querySelectorAll('*').forEach(el => {
+    for (const at of [...el.attributes]){
+      const n = at.name.toLowerCase();
+      if (n.startsWith('on') || n === 'style' || n === 'id' || n === 'class') el.removeAttribute(at.name);
+    }
+    for (const attr of ['src', 'href']){
+      if (!el.hasAttribute(attr)) continue;
+      const u = new URL(el.getAttribute(attr), url);
+      if (u.protocol === 'http:' || u.protocol === 'https:') el.setAttribute(attr, u.href); else el.removeAttribute(attr);
+    }
+    if (el.tagName === 'A'){ el.setAttribute('target', '_blank'); el.setAttribute('rel', 'noopener'); }
+    if (el.tagName === 'IMG'){ el.setAttribute('loading', 'lazy'); if (!el.hasAttribute('alt')) el.setAttribute('alt', ''); }
+  });
+  for (;;){   // 글 앞쪽의 빈 줄 · 구분선은 뺀다
+    const f = body.firstChild;
+    if (!f) break;
+    if (f.nodeType === 3 && !f.textContent.trim()){ f.remove(); continue; }
+    if (f.nodeType === 1 && /^(BR|HR)$/.test(f.tagName)){ f.remove(); continue; }
+    break;
+  }
+  return body.innerHTML.trim();
+}
+$('#infoClose').addEventListener('click', () => { stopTour(true); leaveArt(); canvas.focus({ preventScroll: true }); });
+function stepArt(d){
+  const ni = ((infoIdx < 0 ? 0 : infoIdx) + d + ITEMS.length) % ITEMS.length;
+  goToArt(ni, tour.active);
+}
+$('#infoPrev').addEventListener('click', () => stepArt(-1));
+$('#infoNext').addEventListener('click', () => stepArt(1));
+$('#infoHow').textContent = coarse ? '핀치 · 누르기로 확대' : '휠 확대 · 드래그 이동';
+new ResizeObserver(measureInset).observe(info);
+
+/* ---------------- 목록 · 버튼 ---------------- */
+const listEl = $('#list');
+let lastGroup = '';
+ITEMS.forEach(a => {
+  if (a.group !== lastGroup){
+    const h3 = document.createElement('h3'); h3.textContent = a.group; listEl.append(h3); lastGroup = a.group;
+  }
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.innerHTML = `<img alt="" loading="lazy"><span><span class="no">${pad2(a.i + 1)}</span><strong></strong><small></small></span>`;
+  b.querySelector('img').src = a.thumb;
+  b.querySelector('strong').textContent = a.title;
+  b.querySelector('small').textContent = a.kind === 'art' ? a.sub : a.sub.replace(/^\d관 /, '');
+  b.addEventListener('click', () => goToArt(a.i));
+  listEl.append(b);
+});
+function closeList(){ listEl.hidden = true; btnList.setAttribute('aria-expanded', 'false'); }
+function toggleList(){
+  const open = listEl.hidden;
+  listEl.hidden = !open; btnList.setAttribute('aria-expanded', String(open));
+  if (open) listEl.querySelector('button').focus({ preventScroll: true });
+}
+btnList.addEventListener('click', toggleList);
+document.addEventListener('pointerdown', e => {
+  if (!listEl.hidden && !listEl.contains(e.target) && !btnList.contains(e.target)) closeList();
+});
+btnTour.addEventListener('click', () => (tour.active ? stopTour() : startTour()));
+function toggleView(){
+  view = view === 'first' ? 'third' : 'first';
+  if (view === 'first') fpPitch = 0;
+  btnView.setAttribute('aria-pressed', String(view === 'first'));
+  btnView.textContent = view === 'first' ? '3인칭' : '1인칭';
+  toast(view === 'first' ? '1인칭: 펭귄 눈높이로 봐요' : '3인칭: 펭귄 뒤에서 봐요');
+}
+btnView.addEventListener('click', toggleView);
+
+/* ---------------- 안내 · 알림 ---------------- */
+const hint = $('#hint');
+hint.innerHTML = coarse
+  ? '바닥을 누르면 걸어가요 · 드래그로 둘러보기 · 벽 사진이나 그림을 누르면 감상'
+  : '바닥 클릭으로 걷기 · 드래그로 둘러보기 · 사진·그림 클릭으로 감상 · <kbd>WASD</kbd> 이동 · <kbd>V</kbd> 1인칭';
+let hintGone = false;
+function dropHint(){ if (!hintGone){ hintGone = true; hint.classList.add('gone'); } }
+setTimeout(dropHint, 12000);
+const toastEl = $('#toast');
+let toastTimer = 0;
+function toast(msg){
+  toastEl.textContent = msg; toastEl.classList.remove('gone');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.add('gone'), 2400);
+}
+
+/* ---------------- 입력: 누르기 · 드래그 · 휠 · 핀치 · 키보드 ---------------- */
+const ndc = new T.Vector2(), pickRay = new T.Raycaster();
+function pick(x, y){
+  const r = canvas.getBoundingClientRect();
+  ndc.set((x - r.left) / r.width * 2 - 1, -((y - r.top) / r.height) * 2 + 1);
+  pickRay.setFromCamera(ndc, camera);
+  const hits = pickRay.intersectObjects(peng.root.visible ? [...pickables, peng.root] : pickables, true);
+  // 반투명해진 칸막이 · 사진은 지나쳐서 그 너머를 누른다
+  return hits.find(h => !(h.object.userData.fader && h.object.userData.fader.o < 0.5)) || null;
+}
+function tapAt(x, y){
+  const h = pick(x, y);
+  if (!h) return;
+  const u = h.object.userData;
+  stopTour();
+  dropHint();
+  if (u.me){ flap(); return; }
+  if (u.art != null){
+    if (focus && focus.i === u.art) zoomToPoint(h.point);
+    else goToArt(u.art);
+    return;
+  }
+  if (u.bench != null){ sitOn(u.bench, h.point); return; }
+  if (u.floor){ leaveArt(); walkTo(h.point.x, h.point.z); return; }
+  if (u.wall && h.face){
+    const n = h.face.normal.clone().transformDirection(h.object.matrixWorld);
+    leaveArt(); walkTo(h.point.x + n.x * 0.7, h.point.z + n.z * 0.7);
+  }
+}
+function zoomBy(f){
+  if (focus) focus.zoom = clamp(focus.zoom * f, 0.2, 1.25);
+  else if (view === 'first') fpZoom = clamp(fpZoom * f, 0.45, 1.15);
+  else dist = clamp(dist * f, 1.4, 10);
+}
+
+const pointers = new Map();
+let drag = null, pinchD = 0;
+canvas.addEventListener('pointerdown', e => {
+  canvas.focus({ preventScroll: true });
+  try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* 무시 */ }
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  pop.hidden = true;
+  if (pointers.size === 1) drag = { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, moved: false };
+  else if (pointers.size === 2){ drag = null; const [a, b] = [...pointers.values()]; pinchD = Math.hypot(a.x - b.x, a.y - b.y); }
+});
+canvas.addEventListener('pointermove', e => {
+  if (!pointers.has(e.pointerId)){ hover(e); return; }
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pointers.size === 2){
+    const [a, b] = [...pointers.values()], d = Math.hypot(a.x - b.x, a.y - b.y);
+    if (pinchD > 0 && d > 0){ zoomBy(pinchD / d); stopTour(); dropHint(); }
+    pinchD = d; return;
+  }
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  drag.x = e.clientX; drag.y = e.clientY;
+  if (!drag.moved && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) > 6){
+    drag.moved = true; canvas.classList.add('dragging'); stopTour(); dropHint();
+  }
+  if (!drag.moved) return;
+  if (focus){
+    // 감상 중 드래그: 그림을 잡고 끄는 것처럼 화면을 옮긴다
+    const wpp = 2 * focusDist() * Math.tan(T.MathUtils.degToRad(camera.fov) / 2) / innerHeight;
+    focus.panX -= dx * wpp; focus.panY += dy * wpp;
+  } else if (view === 'first'){
+    yaw += dx * 0.0042; fpPitch = clamp(fpPitch + dy * 0.0032, -0.75, 0.75);
+  } else {
+    yaw -= dx * 0.006; pitch = clamp(pitch + dy * 0.004, -0.05, 1.2);
+  }
+});
+function endPointer(e, cancelled){
+  if (!pointers.has(e.pointerId)) return;
+  pointers.delete(e.pointerId);
+  if (drag && !drag.moved && !cancelled && pointers.size === 0) tapAt(e.clientX, e.clientY);
+  if (!pointers.size){ drag = null; pinchD = 0; canvas.classList.remove('dragging'); }
+}
+canvas.addEventListener('pointerup', e => endPointer(e, false));
+canvas.addEventListener('pointercancel', e => endPointer(e, true));
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  zoomBy(1 + clamp(e.deltaY, -100, 100) * 0.0015);
+  stopTour(); dropHint();
+}, { passive: false });
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+// 마우스를 올리면: 누를 수 있는 것에 손 모양 + 이름
+const pop = $('#pop');
+let hoverAt = 0;
+function hover(e){
+  if (e.pointerType !== 'mouse') return;
+  const now = performance.now();
+  if (now - hoverAt < 70) return;
+  hoverAt = now;
+  const h = pick(e.clientX, e.clientY), u = h ? h.object.userData : {};
+  let label = '';
+  if (u.art != null){
+    if (focus && focus.i === u.art) label = focus.zoom < 0.8 ? '눌러서 전체 보기' : '눌러서 확대';
+    else label = `${ITEMS[u.art].title} · 눌러서 감상`;
+  } else if (u.bench != null) label = '앉기';
+  else if (u.me) label = '날갯짓';
+  canvas.classList.toggle('pick', !!label);
+  pop.hidden = !label;
+  if (label){ pop.textContent = label; pop.style.left = e.clientX + 'px'; pop.style.top = e.clientY + 'px'; }
+}
+canvas.addEventListener('pointerleave', () => { pop.hidden = true; canvas.classList.remove('pick'); });
+
+window.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target && e.target.closest && e.target.closest('input, textarea, select')) return;
+  if (e.code === 'Escape'){
+    if (!listEl.hidden){ closeList(); return; }
+    if (tour.active) stopTour();
+    if (focus || !info.hidden) leaveArt();
+    return;
+  }
+  const onButton = e.target && e.target.closest && e.target.closest('button, a');
+  if (onButton && (e.code === 'Enter' || e.code === 'Space')) return;
+  if ((focus || !info.hidden) && (e.code === 'ArrowLeft' || e.code === 'ArrowRight')){
+    e.preventDefault(); if (!e.repeat) stepArt(e.code === 'ArrowLeft' ? -1 : 1); return;
+  }
+  if (e.repeat && !MOVE[e.code]) return;
+  if (e.code === 'KeyV'){ toggleView(); return; }
+  if (e.code === 'KeyT'){ tour.active ? stopTour() : startTour(); return; }
+  if (e.code === 'KeyL'){ toggleList(); return; }
+  if (e.code === 'Digit1'){ flap(); return; }
+  if (MOVE[e.code] || e.code === 'ShiftLeft' || e.code === 'ShiftRight'){
+    if (MOVE[e.code]){ stopTour(); dropHint(); }
+    keys.add(e.code);
+    if (e.code.startsWith('Arrow')) e.preventDefault();
+  }
+});
+window.addEventListener('keyup', e => keys.delete(e.code));
+window.addEventListener('blur', () => keys.clear());
+document.addEventListener('visibilitychange', () => keys.clear());
+
+/* ---------------- 화면 크기 · 반복 ---------------- */
+function resize(){
+  renderer.setSize(innerWidth, innerHeight, false);
+  camera.aspect = innerWidth / innerHeight;
+  camera.fov = baseFov();
+  camera.updateProjectionMatrix();
+  measureInset();
+}
+window.addEventListener('resize', resize);
+resize();
+
+const clock = new T.Clock();
+let elapsed = 0;
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  step(dt, elapsed += dt);
+  renderer.render(scene, camera);
+});
+function step(dt, t){
+  updatePlayer(dt);
+  updateTour(dt);
+  if (focus){
+    const lim = panLimits(ITEMS[focus.i]);
+    focus.panX = clamp(focus.panX, -lim.x, lim.x);
+    focus.panY = clamp(focus.panY, -lim.y, lim.y);
+  }
+  animatePenguin(dt, t);
+  updateCamera(dt);
+  if (markerT > 0){
+    markerT = Math.max(0, markerT - dt * 0.9);
+    marker.material.opacity = markerT * 0.9;
+    const s = 1 + (1 - markerT) * 0.6; marker.scale.set(s, s, s);
+  }
+}
+
+// 확인용 (개발자 도구에서 __gallery 로 상태를 본다. advance(초)는 화면이 멈춘 탭에서도 시간을 흘려 보낸다)
+window.__gallery = {
+  T, ITEMS, player, tour, get focus(){ return focus; }, get view(){ return view; }, goToArt, walkTo, findPath, camera, scene, renderer,
+  advance(sec){ for (let s = 0; s < sec; s += 1 / 30) step(1 / 30, elapsed += 1 / 30); renderer.render(scene, camera); },
+};
+}
+</script>
+</body>
+</html>
