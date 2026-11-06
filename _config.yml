@@ -29,24 +29,31 @@ nav:
 
 # ── 웹앱 카테고리 (홈 화면에 이 순서대로 나옵니다) ──────────
 # 앱 목록 자체는 _data/apps.yml 에 있습니다.
+#   id      apps.yml 의 category 값. 카드 색은 assets/css/site.css 의 --<id> · --<id>-soft
+#   legacy  (선택) 예전 분류 id — wbpark.app/#<예전 id> 링크도 이 분류로 열린다
 app_categories:
-  - id: info
-    label: 정보
-    title: 📌 공익 목적 정보글
-  - id: tech
-    label: 기술 도구
-    title: 🛠️ 기술 도구
-  - id: art
-    label: 예술 도구
-    title: 🎨 예술 도구
-  - id: game
-    label: 게임
-    title: 🎲 게임
-  - id: test
-    label: 테스트
-    title: 🧪 테스트 · 실험
+  - id: learn
+    label: 배우기
+    title: 📚 배우기
+    desc: 읽고 배우는 자료와 시각화
+    legacy: [info]
+  - id: make
+    label: 만들기
+    title: 🛠️ 만들기
+    desc: 이미지 · 색 · 효과 · 파일을 만드는 도구와 3D 전시
+    legacy: [tech, art, demo]
+  - id: play
+    label: 놀기
+    title: 🎲 놀기
+    desc: 게임과 게임 보조 도구
+    legacy: [game]
+  - id: lab
+    label: 실험실
+    title: 🧪 실험실
+    desc: 공부하며 만든 기술 실험
+    legacy: [test]
 
-# 이 기간(일) 안에 추가된 앱에는 NEW 표시
+# 이 기간(일) 안에 추가된 앱에는 NEW, 업데이트된 앱에는 '업데이트' 표시
 new_badge_days: 30
 
 # ── 푸터 링크 ──────────────────────────────────────────────
@@ -91,6 +98,11 @@ sass:
   style: compressed
 
 defaults:
+  # 모든 페이지의 기본 공유 미리보기 이미지 (node tools/thumbs.js --og 로 다시 만들 수 있음)
+  - scope:
+      path: ""
+    values:
+      image: /assets/images/og-default.jpg
   # 글: _posts/YYYY-MM-DD-제목.md → /posts/제목/
   - scope:
       path: ""
@@ -102,6 +114,8 @@ defaults:
 exclude:
   - README.md
   - CLAUDE.md
+  - TODO.md
+  - tools/
   - serve.bat
   - Gemfile
   - Gemfile.lock

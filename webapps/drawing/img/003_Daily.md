@@ -4,7 +4,8 @@ title: "일상"
 subtitle: "기억하고 재현하는 과정"
 order: 5
 thumbnail: /webapps/drawing/img/003_Daily_thm.png
-image: /webapps/drawing/img/003_Daily_web.webp
+figure: /webapps/drawing/img/003_Daily_web.webp
+image: /webapps/drawing/img/003_Daily_og.jpg      # 공유 미리보기 (카카오톡 · SNS)
 original: /webapps/drawing/img/003_Daily.png
 ---
 

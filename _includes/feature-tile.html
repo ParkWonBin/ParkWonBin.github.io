@@ -1,0 +1,16 @@
+{%- comment -%}
+  홈 '대표작' 줄의 타일. 사용: {% include feature-tile.html app=app %}  (apps.yml 의 featured: true)
+{%- endcomment -%}
+{%- assign app = include.app -%}
+{%- include app-resolve.html app=app -%}
+{%- assign catinfo = site.app_categories | where: "id", app.category | first -%}
+{%- assign cat = app.category | escape -%}
+<a class="feature-tile" href="{{ href | relative_url }}" style="--cat: var(--{{ cat }}, var(--make)); --cat-soft: var(--{{ cat }}-soft, var(--make-soft))"{% if external %} target="_blank" rel="noopener"{% endif %}>
+  {%- if thumb %}
+  <span class="app-thumb"><img src="{{ thumb | relative_url }}" alt="" width="640" height="400" loading="lazy" decoding="async"></span>
+  {%- endif %}
+  <span class="feature-meta">
+    <small>{{ catinfo.label | default: app.category }}{% if app.series %} · {{ app.series | escape }}{% endif %}</small>
+    <strong>{{ app.title | escape }}</strong>
+  </span>
+</a>

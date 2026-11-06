@@ -2,6 +2,7 @@
 layout: default
 ---
 {%- assign apps = site.data.apps | where_exp: "a", "a.hidden != true" -%}
+{%- assign featured = apps | where: "featured", true -%}
 {%- assign arts = site.pages | where: "layout", "artwork" | sort: "order" -%}
 
 <section class="hero">
@@ -16,6 +17,15 @@ layout: default
   </ul>
 </section>
 
+{%- if featured.size > 0 %}
+<section class="featured" aria-labelledby="featured-title">
+  <h2 id="featured-title">⭐ 대표작</h2>
+  <div class="featured-grid">
+    {%- for app in featured -%}{%- include feature-tile.html app=app -%}{%- endfor -%}
+  </div>
+</section>
+{%- endif %}
+
 <div class="catalog" data-filterable>
   <div class="toolbar">
     <label class="search">
@@ -29,10 +39,14 @@ layout: default
       {%- for c in site.app_categories -%}
         {%- assign n = apps | where: "category", c.id | size -%}
         {%- if n > 0 %}
-      <a class="chip" href="#{{ c.id }}" data-filter="{{ c.id }}">{{ c.label }} <span>{{ n }}</span></a>
+      <a class="chip" href="#{{ c.id }}" data-filter="{{ c.id }}"{% if c.legacy %} data-aliases="{{ c.legacy | join: ' ' }}"{% endif %}>{{ c.label }} <span>{{ n }}</span></a>
         {%- endif -%}
       {%- endfor %}
     </nav>
+    <p class="active-tag" data-active-tag hidden>
+      <span>모아 보기: <strong data-active-tag-label></strong></span>
+      <button type="button" data-active-tag-clear aria-label="모아 보기 해제">✕</button>
+    </p>
   </div>
 
   {%- for c in site.app_categories -%}
@@ -40,6 +54,7 @@ layout: default
     {%- if group.size > 0 %}
   <section class="section app-section" id="{{ c.id }}" data-group>
     <h2>{{ c.title }}</h2>
+    {%- if c.desc %}<p class="section-desc">{{ c.desc }}</p>{% endif %}
     <div class="app-grid">
       {%- for app in group -%}{%- include app-card.html app=app -%}{%- endfor -%}
     </div>
@@ -49,6 +64,8 @@ layout: default
 
   <p class="empty-state" data-empty hidden>검색 결과가 없어요. 다른 단어로 찾아보세요.</p>
 </div>
+
+{% include share-dialog.html %}
 
 <section class="section">
   <div class="section-head">

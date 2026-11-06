@@ -4,7 +4,8 @@ title: "관점, 점 선 면 분화"
 subtitle: "같은 대상 다른 맥락"
 order: 4
 thumbnail: /webapps/drawing/img/002_Aspect_thm.png
-image: /webapps/drawing/img/002_Aspect_web.webp
+figure: /webapps/drawing/img/002_Aspect_web.webp
+image: /webapps/drawing/img/002_Aspect_og.jpg      # 공유 미리보기 (카카오톡 · SNS)
 original: /webapps/drawing/img/002_Aspect.png
 ---
 

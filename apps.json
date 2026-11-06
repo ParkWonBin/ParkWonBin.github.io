@@ -1,0 +1,15 @@
+---
+# 앱 목록을 JSON 으로 내보낸다 — tools/ 의 썸네일 · 점검 스크립트가 읽는다.
+# 원본은 _data/apps.yml · _data/redirects.yml (여기는 고칠 필요 없음)
+permalink: /apps.json
+sitemap: false
+---
+{
+  "apps": [
+    {%- for app in site.data.apps -%}
+      {%- if app.url -%}{%- assign href = app.url -%}{%- else -%}{%- capture href -%}/webapps/{{ app.slug }}/{%- endcapture -%}{%- endif %}
+    { "slug": {{ app.slug | jsonify }}, "title": {{ app.title | jsonify }}, "category": {{ app.category | jsonify }}, "url": {{ href | jsonify }}, "alias": {{ app.alias | jsonify }}, "hidden": {{ app.hidden | default: false | jsonify }} }{% unless forloop.last %},{% endunless %}
+    {%- endfor %}
+  ],
+  "redirects": {{ site.data.redirects | jsonify }}
+}

@@ -15,6 +15,19 @@ layout: default
     {{ content }}
   </div>
 
+  {%- if page.apps.size > 0 %}
+  <section class="section post-apps" aria-labelledby="post-apps-title">
+    <h2 id="post-apps-title">이 글에서 다룬 앱</h2>
+    <div class="app-grid">
+      {%- for slug in page.apps -%}
+        {%- assign a = site.data.apps | where: "slug", slug | first -%}
+        {%- if a %}{% include app-card.html app=a %}{% endif -%}
+      {%- endfor -%}
+    </div>
+  </section>
+  {% include share-dialog.html %}
+  {%- endif %}
+
   {%- if page.tags.size > 0 %}
   <ul class="tags post-tags">{% for t in page.tags %}<li>{{ t }}</li>{% endfor %}</ul>
   {%- endif %}

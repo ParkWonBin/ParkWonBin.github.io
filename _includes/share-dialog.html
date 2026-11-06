@@ -1,0 +1,21 @@
+{%- comment -%}
+  카드의 '공유' 버튼이 여는 창 (assets/js/site.js). 앱 카드가 있는 페이지에 한 번만 넣는다.
+  QR 은 열 때 /assets/js/lib/qrcode.min.js 를 불러와 그린다.
+{%- endcomment -%}
+<dialog class="share-dialog" id="share-dialog" aria-labelledby="share-title">
+  <form method="dialog">
+    <h2 id="share-title">공유하기</h2>
+    <p data-share-name></p>
+    <div class="share-url">
+      <input type="text" readonly data-share-input aria-label="공유할 주소">
+      <button type="button" class="btn btn-primary" data-share-copy>복사</button>
+    </div>
+    <div class="share-qr" data-share-qr role="img" aria-label="이 주소의 QR 코드"></div>
+    <div class="share-status" data-share-status role="status" aria-live="polite"></div>
+    <div class="share-actions">
+      <a class="btn" data-share-download download="qr.png" hidden>QR 저장</a>
+      <button type="button" class="btn" data-share-native hidden>다른 앱으로</button>
+      <button class="btn" value="close">닫기</button>
+    </div>
+  </form>
+</dialog>

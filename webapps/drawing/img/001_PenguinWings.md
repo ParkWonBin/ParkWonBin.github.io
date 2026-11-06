@@ -4,7 +4,8 @@ title: "펭귄의 날개"
 subtitle: "완벽하고 완전하고 허술한"
 order: 1
 thumbnail: /webapps/drawing/img/001_PenguinWings_thm.png
-image: /webapps/drawing/img/001_PenguinWings_web.webp
+figure: /webapps/drawing/img/001_PenguinWings_web.webp
+image: /webapps/drawing/img/001_PenguinWings_og.jpg      # 공유 미리보기 (카카오톡 · SNS)
 original: /webapps/drawing/img/001_PenguinWings.png
 ---
 

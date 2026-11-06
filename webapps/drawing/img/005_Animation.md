@@ -4,7 +4,8 @@ title: "움직임"
 subtitle: "단어에 담기지 않는 언어"
 order: 3
 thumbnail: /webapps/drawing/img/005_Animation_thm.png
-image: /webapps/drawing/img/005_Animation_web.webp
+figure: /webapps/drawing/img/005_Animation_web.webp
+image: /webapps/drawing/img/005_Animation_og.jpg      # 공유 미리보기 (카카오톡 · SNS)
 original: /webapps/drawing/img/005_Animation.png
 ---
 

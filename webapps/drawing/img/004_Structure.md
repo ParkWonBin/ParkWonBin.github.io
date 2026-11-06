@@ -4,7 +4,8 @@ title: "구조, 계단 나무 온도"
 subtitle: "삶에 형태가 있다면"
 order: 2
 thumbnail: /webapps/drawing/img/004_Structure_thm.png
-image: /webapps/drawing/img/004_Structure_web.webp
+figure: /webapps/drawing/img/004_Structure_web.webp
+image: /webapps/drawing/img/004_Structure_og.jpg      # 공유 미리보기 (카카오톡 · SNS)
 original: /webapps/drawing/img/004_Structure.png
 ---
 

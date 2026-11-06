@@ -19,10 +19,10 @@ layout: default
     {%- if page.subtitle %}<p class="lead">{{ page.subtitle | escape }}</p>{% endif %}
   </header>
 
-  {%- if page.image %}
+  {%- if page.figure %}
   <figure class="artwork-figure">
-    <a href="{{ page.original | default: page.image | relative_url }}" title="원본 크기로 보기">
-      <img src="{{ page.image | relative_url }}" alt="{{ page.title | escape }}">
+    <a href="{{ page.original | default: page.figure | relative_url }}" title="원본 크기로 보기">
+      <img src="{{ page.figure | relative_url }}" alt="{{ page.title | escape }}">
     </a>
     {%- if page.original %}<figcaption><a href="{{ page.original | relative_url }}">원본 크기로 보기</a></figcaption>{% endif %}
   </figure>

@@ -1,0 +1,35 @@
+{%- comment -%}
+  앱 한 개의 주소 · 썸네일 · 소스 · 공유 주소를 계산한다 (app-card, feature-tile 공용)
+  사용: {% include app-resolve.html app=app %}  → href, external, thumb, repo, share_url 이 정해진다
+{%- endcomment -%}
+{%- assign _app = include.app -%}
+
+{%- if _app.url -%}
+  {%- assign href = _app.url -%}
+{%- else -%}
+  {%- capture href -%}/webapps/{{ _app.slug }}/{%- endcapture -%}
+{%- endif -%}
+{%- assign external = false -%}
+{%- if href contains '://' -%}{%- assign external = true -%}{%- endif -%}
+
+{%- assign repo = _app.repo -%}
+{%- if repo == nil and _app.slug -%}
+  {%- capture repo -%}https://github.com/{{ site.repository }}/tree/{{ site.source_branch }}/webapps/{{ _app.slug }}{%- endcapture -%}
+{%- endif -%}
+
+{%- comment -%} 썸네일: 직접 지정 > assets/thumbs/<slug>.webp (파일이 있을 때만) {%- endcomment -%}
+{%- assign thumb = _app.thumbnail -%}
+{%- if thumb == nil and _app.slug -%}
+  {%- capture thumb_path -%}/assets/thumbs/{{ _app.slug }}.webp{%- endcapture -%}
+  {%- assign thumb_file = site.static_files | where: "path", thumb_path | first -%}
+  {%- if thumb_file -%}{%- assign thumb = thumb_path -%}{%- endif -%}
+{%- endif -%}
+
+{%- comment -%} 공유 주소: 단축 주소가 있으면 그것 (wbpark.app/finance) {%- endcomment -%}
+{%- if _app.alias and _app.alias.size > 0 -%}
+  {%- capture share_url -%}{{ site.url }}/{{ _app.alias | first }}{%- endcapture -%}
+{%- elsif external -%}
+  {%- assign share_url = href -%}
+{%- else -%}
+  {%- capture share_url -%}{{ site.url }}{{ href }}{%- endcapture -%}
+{%- endif -%}

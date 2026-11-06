@@ -3,49 +3,75 @@
   데이터는 _data/apps.yml 항목 그대로.
 {%- endcomment -%}
 {%- assign app = include.app -%}
+{%- include app-resolve.html app=app -%}
 
-{%- if app.url -%}
-  {%- assign href = app.url -%}
-{%- else -%}
-  {%- capture href -%}/webapps/{{ app.slug }}/{%- endcapture -%}
-{%- endif -%}
-{%- assign external = false -%}
-{%- if href contains '://' -%}{%- assign external = true -%}{%- endif -%}
-
-{%- assign repo = app.repo -%}
-{%- if repo == nil and app.slug -%}
-  {%- capture repo -%}https://github.com/{{ site.repository }}/tree/{{ site.source_branch }}/webapps/{{ app.slug }}{%- endcapture -%}
-{%- endif -%}
-
-{%- assign is_new = false -%}
+{%- comment -%} NEW (추가 후 30일) / 업데이트 (updated 후 30일) {%- endcomment -%}
+{%- assign now_s = site.time | date: "%s" | plus: 0 -%}
+{%- assign limit_s = site.new_badge_days | default: 30 | times: 86400 -%}
+{%- assign badge = nil -%}
 {%- if app.date -%}
-  {%- assign now_s = site.time | date: "%s" | plus: 0 -%}
-  {%- assign app_s = app.date | date: "%s" | plus: 0 -%}
-  {%- assign limit_s = site.new_badge_days | default: 30 | times: 86400 -%}
-  {%- assign age_s = now_s | minus: app_s -%}
-  {%- if age_s < limit_s -%}{%- assign is_new = true -%}{%- endif -%}
+  {%- assign day_s = app.date | date: "%s" | plus: 0 -%}
+  {%- assign age_s = now_s | minus: day_s -%}
+  {%- if age_s < limit_s -%}{%- assign badge = "new" -%}{%- assign badge_day = app.date -%}{%- assign badge_until = day_s | plus: limit_s -%}{%- endif -%}
+{%- endif -%}
+{%- if badge == nil and app.updated -%}
+  {%- assign day_s = app.updated | date: "%s" | plus: 0 -%}
+  {%- assign age_s = now_s | minus: day_s -%}
+  {%- if age_s < limit_s -%}{%- assign badge = "upd" -%}{%- assign badge_day = app.updated -%}{%- assign badge_until = day_s | plus: limit_s -%}{%- endif -%}
 {%- endif -%}
 
-{%- capture search -%}{{ app.title }} {{ app.desc }} {{ app.tags | join: " " }} {{ app.slug }} {{ app.alias | join: " " }}{%- endcapture -%}
+{%- comment -%} 이 앱을 다룬 글: 글 front matter 의 apps: [slug] {%- endcomment -%}
+{%- assign story = nil -%}
+{%- for p in site.posts -%}
+  {%- if p.apps contains app.slug -%}{%- assign story = p -%}{%- break -%}{%- endif -%}
+{%- endfor -%}
 
-<article class="app-card" data-item data-cat="{{ app.category }}" style="--cat: var(--{{ app.category | escape }}, var(--tech)); --cat-soft: var(--{{ app.category | escape }}-soft, var(--tech-soft))" data-search="{{ search | downcase | strip_newlines | escape }}">
-  <div class="app-card-top">
+{%- capture tagkeys -%}|{% for t in app.tags %}{{ t | downcase }}|{% endfor %}{% if app.series %}{{ app.series | downcase }}|{% endif %}{%- endcapture -%}
+{%- capture search -%}{{ app.title }} {{ app.desc }} {{ app.tags | join: " " }} {{ app.series }} {{ app.slug }} {{ app.alias | join: " " }}{%- endcapture -%}
+{%- assign cat = app.category | escape -%}
+
+<article class="app-card" data-item data-cat="{{ cat }}" data-tags="{{ tagkeys | escape }}" data-search="{{ search | downcase | strip_newlines | escape }}" style="--cat: var(--{{ cat }}, var(--make)); --cat-soft: var(--{{ cat }}-soft, var(--make-soft))">
+  {%- if thumb %}
+  <div class="app-media">
+    <span class="app-thumb"><img src="{{ thumb | relative_url }}" alt="" width="640" height="400" loading="lazy" decoding="async"></span>
+  {%- else %}
+  <div class="app-media app-media--icon">
     <span class="app-icon" aria-hidden="true">{{ app.icon | default: "🧩" }}</span>
-    {%- if is_new %}<span class="badge-new" title="{{ app.date | date: '%Y.%m.%d' }} 추가" data-new-until="{{ app_s | plus: limit_s }}">NEW</span>{% endif %}
-  </div>
-  <h3 class="app-title">
-    <a class="card-link" href="{{ href | relative_url }}"{% if external %} target="_blank" rel="noopener"{% endif %}>{{ app.title | escape }}</a>
-  </h3>
-  <p class="app-desc">{{ app.desc | escape }}</p>
-  {%- if app.tags %}
-  <ul class="tags" aria-label="기술 · 키워드">
-    {%- for t in app.tags %}<li>{{ t | escape }}</li>{% endfor -%}
-  </ul>
   {%- endif %}
-  <div class="app-actions">
-    <span class="open-hint" aria-hidden="true">{% if external %}새 창에서 열기 ↗{% else %}열기 →{% endif %}</span>
-    {%- if repo %}
-    <a class="src-link" href="{{ repo }}" target="_blank" rel="noopener" aria-label="{{ app.title | escape }} 소스 코드">소스</a>
+    {%- if badge %}
+    <span class="app-badges"><span class="{% if badge == 'new' %}badge-new{% else %}badge-upd{% endif %}" title="{{ badge_day | date: '%Y.%m.%d' }} {% if badge == 'new' %}추가{% else %}업데이트{% endif %}" data-new-until="{{ badge_until }}">{% if badge == 'new' %}NEW{% else %}업데이트{% endif %}</span></span>
     {%- endif %}
+  </div>
+  <div class="app-body">
+    <h3 class="app-title">
+      <a class="card-link" href="{{ href | relative_url }}"{% if external %} target="_blank" rel="noopener"{% endif %}>{{ app.title | escape }}</a>
+    </h3>
+    {%- if app.series %}
+    <button type="button" class="series-pill" data-tag="{{ app.series | downcase | escape }}" data-tag-label="{{ app.series | escape }} 시리즈">🔗 {{ app.series | escape }} 시리즈</button>
+    {%- endif %}
+    <p class="app-desc">{{ app.desc | escape }}</p>
+    {%- if app.tags %}
+    <div class="tags" role="group" aria-label="같은 태그끼리 모아 보기">
+      {%- for t in app.tags %}<button type="button" class="tag" data-tag="{{ t | downcase | escape }}" data-tag-label="{{ t | escape }}">{{ t | escape }}</button>{% endfor -%}
+    </div>
+    {%- endif %}
+    {%- if app.usage %}
+    <details class="usage">
+      <summary>사용법</summary>
+      <ol>{% for u in app.usage %}<li>{{ u | escape }}</li>{% endfor %}</ol>
+    </details>
+    {%- endif %}
+    <div class="app-actions">
+      <span class="open-hint" aria-hidden="true">{% if external %}새 창에서 열기 ↗{% else %}열기 →{% endif %}</span>
+      <span class="card-tools">
+        {%- if story %}
+        <a class="tool-link" href="{{ story.url | relative_url }}">만든 이야기</a>
+        {%- endif %}
+        <button type="button" class="tool-link" data-share="{{ share_url | escape }}" data-share-title="{{ app.title | escape }}" aria-label="{{ app.title | escape }} 공유">공유</button>
+        {%- if repo %}
+        <a class="tool-link" href="{{ repo }}" target="_blank" rel="noopener" aria-label="{{ app.title | escape }} 소스 코드">소스</a>
+        {%- endif %}
+      </span>
+    </div>
   </div>
 </article>
