@@ -10,6 +10,7 @@
 //   · 화면보다 긴 본문이 끝까지 스크롤해도 투명한 채로 남음 (나타나기 효과가 안 풀리는 버그)
 //   · 단축 주소 · 옛 주소 (apps.json) 가 제 위치로 가지 않음
 // 경고만 하는 것: 외부(CDN 등) 요청 실패 — 남의 서버 사정일 수 있어서
+//                 한 페이지가 90초 안에 끝나지 않음 — 점검이 멈추지 않게 다음 페이지로 넘어간다
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
@@ -25,6 +26,8 @@ const PORT = +opt('port', 4321);
 const BASE = `http://127.0.0.1:${PORT}`;
 const SETUP = opt('setup', '') ? require(path.resolve(opt('setup'))) : null;
 const ONLY = opt('only', '');
+const PAGE_BUDGET = 90000; // 한 페이지에 쓰는 최대 시간 (ms)
+
 
 function listPages(dir, rel = '') {
   let out = [];
@@ -38,7 +41,7 @@ function listPages(dir, rel = '') {
 
 async function checkPage(ctx, url, isNotFound) {
   const page = await ctx.newPage();
-  const r = { url, status: 0, fail: [], warn: [] };
+  const r = { url, status: 0, fail: [], warn: [], slow: false };
   const host = new URL(BASE).host;
   const allowErr = Object.entries(ALLOW.pageErrors).filter(([p]) => url.startsWith(p)).flatMap(([, v]) => v);
   page.on('pageerror', e => {
@@ -57,7 +60,9 @@ async function checkPage(ctx, url, isNotFound) {
     if (u.host === host) r.fail.push(`요청 실패: ${u.pathname} (${why})`);
     else r.warn.push(`외부 요청 실패: ${u.host}${u.pathname.slice(0, 60)} (${why})`);
   });
-  try {
+  let timer;
+  const budget = new Promise(z => { timer = setTimeout(() => z('timeout'), PAGE_BUDGET); });
+  const run = (async () => {
     const res = await page.goto(BASE + url, { waitUntil: 'load', timeout: 45000 });
     r.status = res ? res.status() : 0;
     if (!isNotFound && r.status !== 200) r.fail.push(`응답 ${r.status}`);
@@ -72,17 +77,19 @@ async function checkPage(ctx, url, isNotFound) {
     const found = await page.evaluate(async (hiddenOk) => {
       const out = { broken: [], hidden: [] };
       // 깨진 이미지: 같은 사이트의 <img> 가 디코딩되지 않으면
-      for (const img of document.querySelectorAll('img')) {
+      //   decode() 는 아직 안 불러온 이미지(숨긴 목록 안의 loading="lazy" 등)면 끝없이 기다리므로 3초만 기다리고,
+      //   그래도 안 되면 같은 주소를 새로 불러 본다 (화면을 다시 그리느라 요소가 바뀐 순간일 수도 있어서)
+      const settle = (p, ms) => Promise.race([p.then(() => 'ok', () => 'err'), new Promise(z => setTimeout(() => z('wait'), ms))]);
+      await Promise.all([...document.querySelectorAll('img')].map(async img => {
         const src = img.currentSrc || img.getAttribute('src') || '';
-        if (!src || src.startsWith('data:') || new URL(src, location.href).host !== location.host) continue;
-        try { await img.decode(); } catch (e) {
-          if (img.complete && img.naturalWidth > 0) continue;
-          // 화면을 다시 그리느라 요소가 바뀐 순간일 수 있다 → 같은 주소를 새로 불러 봐서 그래도 안 되면 깨진 것
-          const fresh = new Image(); fresh.src = new URL(src, location.href).href;
-          const ok = await fresh.decode().then(() => fresh.naturalWidth > 0, () => false);
-          if (!ok) out.broken.push(new URL(src, location.href).pathname);
-        }
-      }
+        if (!src || src.startsWith('data:')) return;
+        const abs = new URL(src, location.href);
+        if (abs.host !== location.host) return;
+        if (await settle(img.decode(), 3000) === 'ok' || (img.complete && img.naturalWidth > 0)) return;
+        const fresh = new Image(); fresh.src = abs.href;
+        const st = await settle(fresh.decode(), 15000);
+        if (st === 'err' || (st === 'ok' && !fresh.naturalWidth)) out.broken.push(abs.pathname);
+      }));
       // 끝까지 봤는데도 투명한 긴 본문 (opacity 거의 0, 글자가 많고 화면 높이 이상)
       const vh = innerHeight;
       for (const el of document.querySelectorAll('body *')) {
@@ -99,12 +106,20 @@ async function checkPage(ctx, url, isNotFound) {
     }, ALLOW.hiddenOk);
     found.broken.forEach(b => r.fail.push('깨진 이미지: ' + b));
     found.hidden.forEach(h => r.fail.push('본문이 보이지 않음: ' + h));
+  })();
+  try {
+    if (await Promise.race([run, budget]) === 'timeout') {
+      r.slow = true;
+      r.warn.push(`점검 시간 초과: ${PAGE_BUDGET / 1000}초 안에 끝까지 보지 못함`);
+      run.catch(() => {}); // 페이지를 닫으면서 나는 오류는 무시
+    }
   } catch (e) {
     r.fail.push('열기 실패: ' + e.message.split('\n')[0]);
   }
+  clearTimeout(timer);
   r.fail = [...new Set(r.fail)];
   r.warn = [...new Set(r.warn)];
-  await page.close();
+  await page.close({ runBeforeUnload: false }).catch(() => {});
   return r;
 }
 
@@ -146,9 +161,9 @@ async function checkRedirects(ctx, data) {
     results.push(r);
     // 외부 요청 경고는 호스트별로 묶어 짧게
     const byHost = {};
-    r.warn.forEach(w => { const h = (w.match(/외부 요청 실패: ([^/ ]+)/) || [])[1] || '?'; byHost[h] = (byHost[h] || 0) + 1; });
+    r.warn.forEach(w => { const h = (w.match(/외부 요청 실패: ([^/ ]+)/) || [])[1]; if (h) byHost[h] = (byHost[h] || 0) + 1; });
     r.warnShort = Object.entries(byHost).map(([h, n]) => `${h} ${n}건`);
-    console.log(`${r.fail.length ? '✗' : '✓'} ${p}${r.fail.length ? '\n    ' + r.fail.join('\n    ') : ''}${r.warnShort.length ? '\n    (외부 요청 실패) ' + r.warnShort.join(', ') : ''}`);
+    console.log(`${r.fail.length ? '✗' : '✓'} ${p}${r.fail.length ? '\n    ' + r.fail.join('\n    ') : ''}${r.slow ? '\n    (시간 초과) ' + PAGE_BUDGET / 1000 + '초 안에 끝까지 보지 못함' : ''}${r.warnShort.length ? '\n    (외부 요청 실패) ' + r.warnShort.join(', ') : ''}`);
   }
 
   let redirects = { count: 0, fails: [] };
@@ -161,15 +176,17 @@ async function checkRedirects(ctx, data) {
   server.close();
 
   const bad = results.filter(r => r.fail.length);
-  const warned = results.filter(r => r.warn.length);
+  const warned = results.filter(r => r.warnShort.length);
+  const slow = results.filter(r => r.slow);
   const summary = [
     `## 사이트 점검 결과`,
     ``,
-    `- 페이지 ${results.length}개: 문제 ${bad.length}개, 외부 요청 경고 ${warned.length}개`,
+    `- 페이지 ${results.length}개: 문제 ${bad.length}개, 외부 요청 경고 ${warned.length}개${slow.length ? `, 시간 초과 ${slow.length}개` : ''}`,
     `- 단축 · 옛 주소 ${redirects.count}개: 실패 ${redirects.fails.length}개`,
     ``,
     ...(bad.length ? ['| 페이지 | 문제 |', '|---|---|', ...bad.map(r => `| \`${r.url}\` | ${r.fail.join('<br>').replace(/\|/g, '\\|')} |`), ''] : []),
     ...(redirects.fails.length ? ['**주소 이동 실패**', '', ...redirects.fails.map(f => `- \`${f}\``), ''] : []),
+    ...(slow.length ? [`**시간 초과** — ${PAGE_BUDGET / 1000}초 안에 끝까지 보지 못한 페이지 (열기 · JS 오류 · 요청 오류는 그때까지 본 것만)`, '', ...slow.map(r => `- \`${r.url}\``), ''] : []),
     ...(warned.length ? ['<details><summary>외부 요청 경고 (CDN · 지도 타일 등)</summary>', '', ...warned.map(r => `- \`${r.url}\`: ${r.warnShort.join(', ')}`), '', '</details>'] : []),
   ].join('\n');
   if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary + '\n');
