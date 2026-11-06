@@ -1,0 +1,51 @@
+# 사이트 점검 — push / PR 마다 GitHub Pages 와 같은 방식으로 빌드하고, 모든 페이지를 실제 브라우저로 열어 본다.
+#   깨진 이미지 · 사이트 안의 404 · 페이지 JS 오류 · 안 보이는 본문 · 단축 주소 이동을 검사한다 (tools/check/check.js)
+#   결과 표는 Actions 실행 화면의 Summary 에 나온다. 배포(Pages)와는 별개라 실패해도 사이트 배포는 막지 않는다.
+name: 사이트 점검
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      BUNDLE_GEMFILE: ${{ github.workspace }}/tools/check/Gemfile
+      JEKYLL_ENV: production
+      PAGES_REPO_NWO: ${{ github.repository }}
+      JEKYLL_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+
+      - name: 사이트 빌드 (github-pages gem)
+        run: bundle exec jekyll build -d _site
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tools/check/package-lock.json
+
+      - name: 점검 도구 설치
+        working-directory: tools/check
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: 모든 페이지 점검
+        run: node tools/check/check.js _site
