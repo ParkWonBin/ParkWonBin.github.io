@@ -1,0 +1,12 @@
+{
+  "name": "wbpark-site-check",
+  "private": true,
+  "description": "사이트 점검 · 썸네일 도구 (tools/check/check.js, tools/thumbs.js)",
+  "scripts": {
+    "check": "node check.js ../../_site",
+    "thumbs": "node ../thumbs.js"
+  },
+  "dependencies": {
+    "playwright": "1.63.0"
+  }
+}

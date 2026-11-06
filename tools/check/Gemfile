@@ -1,0 +1,6 @@
+# GitHub Pages 기본 빌드와 같은 환경으로 빌드하기 위한 Gemfile (점검용)
+#   BUNDLE_GEMFILE=tools/check/Gemfile bundle exec jekyll build
+# 로컬에서 쓰는 루트의 Gemfile (jekyll 4.3) 과는 따로 둔다.
+source "https://rubygems.org"
+gem "github-pages", group: :jekyll_plugins
+gem "faraday-retry"
