@@ -5,16 +5,18 @@
 //   2) 썸네일을 만든다:        node tools/thumbs.js
 //      몇 개만:               node tools/thumbs.js --only finance,qrcode   (slug 또는 단축 주소)
 //      다른 주소:             node tools/thumbs.js --base http://127.0.0.1:4000
-//      공유 미리보기 이미지:   node tools/thumbs.js --og       (assets/images/og-default.jpg)
+//      공유 미리보기 이미지:   node tools/thumbs.js --og       (assets/images/og-default.jpg 만. --only 를 같이 주면 그 앱들도)
 //      저장 위치 바꾸기:       node tools/thumbs.js --out /tmp/thumbs
 //
-// 필요: Node 18+, Playwright (npm i -g playwright && npx playwright install chromium)
+// 필요: Node 20+, Playwright — 사이트 점검 도구와 같이 쓴다: cd tools/check && npm ci && npx playwright install chromium
 // 앱을 보기 좋게 만들려고 누르거나 파일을 올려야 하면 tools/thumbs.hooks.js 에 적는다.
+// 내용이 화면 구석에 작게 있는 앱은 훅에서 page.setViewportSize({ width: 640, height: 400 }) 로 크게 찍는다.
 // --setup <파일.js> : 브라우저 컨텍스트를 받는 함수를 내보내는 모듈 (예: 오프라인 CDN 미러 연결)
 
 const fs = require('fs');
 const path = require('path');
-const { chromium } = require('playwright');
+// tools/check 에 설치한 Playwright 를 쓴다 (없으면 이 폴더 · 전역 설치)
+const { chromium } = require(require.resolve('playwright', { paths: [path.join(__dirname, 'check'), __dirname] }));
 
 const ROOT = path.resolve(__dirname, '..');
 const args = process.argv.slice(2);
@@ -65,6 +67,7 @@ async function toWebp(page, png, w, h, type = 'image/webp', quality = 0.82) {
     fs.writeFileSync(path.join(ROOT, 'assets', 'images', 'og-default.jpg'), Buffer.from(jpg, 'base64'));
     console.log('og  assets/images/og-default.jpg');
     await p.close();
+    if (!ONLY) { await browser.close(); return; } // --og 만 주면 공유 이미지만 만든다
   }
 
   const data = await (await fetch(BASE + '/apps.json')).json();
@@ -83,7 +86,8 @@ async function toWebp(page, png, w, h, type = 'image/webp', quality = 0.82) {
       await page.waitForTimeout(1200);
       if (HOOKS[app.slug]) await HOOKS[app.slug](page, { root: ROOT, base: BASE });
       await page.waitForTimeout(800);
-      await page.mouse.move(W - 2, H - 2); // 마우스 hover 효과가 찍히지 않게
+      const vp = page.viewportSize(); // 훅이 화면 크기를 바꿨을 수 있다
+      await page.mouse.move(vp.width - 2, vp.height - 2); // 마우스 hover 효과가 찍히지 않게
       await page.addStyleTag({ content: '.wbpark-appbar{display:none!important}' }); // 블로그로 돌아가기 표시는 빼고
       const png = await page.screenshot();
       const webp = await toWebp(enc, png, TW, TH);

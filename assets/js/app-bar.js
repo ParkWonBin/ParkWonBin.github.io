@@ -27,7 +27,7 @@
     '.wbpark-appbar.is-mini:hover,.wbpark-appbar.is-mini:focus-visible{max-width:140px;padding:0 11px 0 7px;opacity:1}' +
     '.wbpark-appbar__logo{all:initial;flex:0 0 16px;width:16px;height:16px;background:#fff;' +
     '-webkit-mask:url(/assets/images/logo.svg) center/contain no-repeat;mask:url(/assets/images/logo.svg) center/contain no-repeat}' +
-    '.wbpark-appbar__text{all:initial;color:inherit;font:inherit}' +
+    '.wbpark-appbar__text{all:initial;color:#fff;font:inherit;white-space:nowrap}' +   /* 앱의 a:hover 색이 스며들지 않게 */
     '.wbpark-appbar--tl,.wbpark-appbar--tr{top:calc(12px + env(safe-area-inset-top,0px))}' +
     '.wbpark-appbar--bl,.wbpark-appbar--br{bottom:calc(12px + env(safe-area-inset-bottom,0px))}' +
     '.wbpark-appbar--tl,.wbpark-appbar--bl{left:calc(12px + env(safe-area-inset-left,0px))}' +

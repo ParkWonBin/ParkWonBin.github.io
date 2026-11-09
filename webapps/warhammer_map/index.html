@@ -154,6 +154,9 @@ h3 { margin: 4px 0 0; font-size: 13px; color: var(--sub); font-weight: 600; }
   main { grid-template-columns: 1fr 380px; }
   #panel { max-height: none; border-top: none; border-left: 1px solid var(--line); grid-row: 1; grid-column: 2; }
 }
+/* 왼쪽 아래 '← wbpark' 표시(app-bar.js)와 겹치지 않게: 좁은 화면은 패널 끝에 여유, 넓은 화면은 범례를 그 위로 */
+#panel { padding-bottom: 48px; }
+@media (min-width: 900px) { #panel { padding-bottom: 0; } #legend { bottom: 50px; } }
 </style>
   <script src="/assets/js/analytics.js" defer></script>
   <script src="/assets/js/app-bar.js" defer data-pos="bl"></script>
@@ -1099,7 +1102,7 @@ function renderLegend() {
 // 범례 자리 — 판 높이 1/3 이하, 툴바 밑에 그만한 자리가 없으면 툴바 오른쪽으로(툴바를 가리지 않게)
 function lgPlace() {
   const lg = $('legend'), st = $('stage'), tb = $('toolbar'), sh = st.getBoundingClientRect().height; if (!sh) return;
-  const lim = sh / 3, below = sh - 8 - (tb.offsetTop + tb.offsetHeight) - 6, side = below < Math.min(lim, 80);
+  const lim = sh / 3, below = sh - (parseFloat(getComputedStyle(lg).bottom) || 8) - (tb.offsetTop + tb.offsetHeight) - 6, side = below < Math.min(lim, 80);
   lg.classList.toggle('side', side); lg.style.maxHeight = Math.max(30, side ? lim : Math.min(lim, below)) + 'px';
 }
 function closestPair(u, v) {

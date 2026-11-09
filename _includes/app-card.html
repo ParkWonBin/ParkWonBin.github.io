@@ -1,6 +1,6 @@
 {%- comment -%}
   웹앱 카드 하나. 사용: {% include app-card.html app=app %}
-  데이터는 _data/apps.yml 항목 그대로.
+  데이터는 _data/apps.yml 항목 그대로. 글 안에서 쓸 때는 here=page.url 을 넘겨 그 글 자신은 '만든 이야기'로 걸지 않는다.
 {%- endcomment -%}
 {%- assign app = include.app -%}
 {%- include app-resolve.html app=app -%}
@@ -23,7 +23,7 @@
 {%- comment -%} 이 앱을 다룬 글: 글 front matter 의 apps: [slug] {%- endcomment -%}
 {%- assign story = nil -%}
 {%- for p in site.posts -%}
-  {%- if p.apps contains app.slug -%}{%- assign story = p -%}{%- break -%}{%- endif -%}
+  {%- if p.apps contains app.slug and p.url != include.here -%}{%- assign story = p -%}{%- break -%}{%- endif -%}
 {%- endfor -%}
 
 {%- capture tagkeys -%}|{% for t in app.tags %}{{ t | downcase }}|{% endfor %}{% if app.series %}{{ app.series | downcase }}|{% endif %}{%- endcapture -%}
@@ -33,7 +33,7 @@
 <article class="app-card" data-item data-cat="{{ cat }}" data-tags="{{ tagkeys | escape }}" data-search="{{ search | downcase | strip_newlines | escape }}" style="--cat: var(--{{ cat }}, var(--make)); --cat-soft: var(--{{ cat }}-soft, var(--make-soft))">
   {%- if thumb %}
   <div class="app-media">
-    <span class="app-thumb"><img src="{{ thumb | relative_url }}" alt="" width="640" height="400" loading="lazy" decoding="async"></span>
+    <span class="app-thumb"{% if app.thumb_pos %} style="--thumb-pos: {{ app.thumb_pos | escape }}"{% endif %}><img src="{{ thumb | relative_url }}" alt="" width="640" height="400" loading="lazy" decoding="async"></span>
   {%- else %}
   <div class="app-media app-media--icon">
     <span class="app-icon" aria-hidden="true">{{ app.icon | default: "🧩" }}</span>

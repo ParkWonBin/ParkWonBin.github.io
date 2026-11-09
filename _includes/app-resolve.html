@@ -25,10 +25,11 @@
   {%- if thumb_file -%}{%- assign thumb = thumb_path -%}{%- endif -%}
 {%- endif -%}
 
-{%- comment -%} 공유 주소: 단축 주소가 있으면 그것 (wbpark.app/finance) {%- endcomment -%}
-{%- if _app.alias and _app.alias.size > 0 -%}
-  {%- capture share_url -%}{{ site.url }}/{{ _app.alias | first }}{%- endcapture -%}
-{%- elsif external -%}
+{%- comment -%}
+  공유 주소: 앱의 실제 주소 (wbpark.app/webapps/finance/).
+  단축 주소(wbpark.app/finance)는 404.html 의 스크립트로만 이동해서, 카카오톡 같은 링크 미리보기에는 '페이지를 찾을 수 없어요'로 나온다.
+{%- endcomment -%}
+{%- if external -%}
   {%- assign share_url = href -%}
 {%- else -%}
   {%- capture share_url -%}{{ site.url }}{{ href }}{%- endcapture -%}

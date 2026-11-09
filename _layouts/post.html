@@ -21,7 +21,7 @@ layout: default
     <div class="app-grid">
       {%- for slug in page.apps -%}
         {%- assign a = site.data.apps | where: "slug", slug | first -%}
-        {%- if a %}{% include app-card.html app=a %}{% endif -%}
+        {%- if a %}{% include app-card.html app=a here=page.url %}{% endif -%}
       {%- endfor -%}
     </div>
   </section>

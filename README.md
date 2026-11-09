@@ -16,7 +16,7 @@ _data/
   drawing.yml          그림 페이지 문구
   redirects.yml        앱이 아닌 옛 주소 → 새 주소
 _layouts/              default · page · post · artwork · redirect
-_includes/             head · header · footer · app-card · feature-tile · art-card · post-item · share-dialog · resolver
+_includes/             head · header · footer · app-card · app-resolve · feature-tile · art-card · post-item · share-dialog · resolver
 _posts/                글 (YYYY-MM-DD-제목.md) — 첫 글을 쓸 때 폴더를 만들면 됩니다
 pages/                 그림(/drawing/) · 글 목록(/posts/) · About(/about/)
 index.html             홈 = 대표작 + 웹앱 목록 (검색 · 카테고리 · 태그 모아 보기 · 공유)
@@ -81,6 +81,7 @@ TODO.md                할 일 · 새 프로젝트 메모 (블로그에는 올�
 | `featured: true` | 홈 맨 위 '⭐ 대표작' 줄에도 나옴 (3~4개 권장) |
 | `updated` | 기능을 크게 바꾼 날짜. 30일 동안 '업데이트' 표시 |
 | `thumbnail` | 카드 이미지를 직접 지정. 생략하면 `assets/thumbs/<slug>.webp` 가 있으면 그것, 없으면 아이콘 |
+| `thumb_pos` | 휴대폰 카드(썸네일이 좁은 세로 띠)에서 보일 부분. CSS `object-position` 값 (예: `left top`). 기본 `top center` |
 | `url` | 다른 곳에 있는 앱이면 그 주소 (slug 대신 이 주소로 연결) |
 | `repo` | 소스 링크. 생략하면 이 저장소의 `webapps/<slug>/` 로 자동 연결 |
 | `hidden: true` | 목록에서만 숨김. 앱 주소 · 단축 주소는 그대로 동작 |
@@ -90,17 +91,20 @@ TODO.md                할 일 · 새 프로젝트 메모 (블로그에는 올�
 - 카테고리의 이름 · 설명 · 순서는 `_config.yml` 의 `app_categories`, 카드 색은 `assets/css/site.css` 의 `--<id>` · `--<id>-soft`
   (라이트 `:root` 와 다크 `:root[data-theme="dark"]` 둘 다). 새 카테고리는 이 두 곳만 추가하면 됩니다.
   카테고리 id 를 바꿀 때는 `legacy: [옛 id]` 를 남겨 두면 예전 `wbpark.app/#옛id` 링크가 새 분류로 열립니다.
-- 카드의 **공유** 버튼은 단축 주소(없으면 앱 주소)를 복사하거나 QR 로 보여 줍니다. 따로 할 일은 없습니다.
+- 카드의 **공유** 버튼은 앱 주소(`wbpark.app/webapps/<slug>/`)를 복사하거나 QR 로 보여 줍니다. 따로 할 일은 없습니다.
+  (단축 주소는 404.html 의 스크립트로만 이동해서 카카오톡 같은 링크 미리보기에 '페이지를 찾을 수 없어요'로 나오므로 공유에는 쓰지 않습니다.)
 
 ### 3. (선택) 썸네일 만들기
 
 ```sh
+cd tools/check && npm ci && npx playwright install chromium && cd ../..   # 처음 한 번 (사이트 점검과 같이 씀, Node 20+)
 bundle exec jekyll serve              # 사이트를 띄워 두고
-node tools/thumbs.js --only my_app    # assets/thumbs/my_app.webp 생성 (Playwright 필요)
+node tools/thumbs.js --only my_app    # assets/thumbs/my_app.webp 생성
 ```
 
 첫 화면이 비어 있는 앱은 `tools/thumbs.hooks.js` 에 '찍기 전에 누를 것'을 적어 두면 됩니다 (예: 시작 버튼, 예시 이미지 올리기).
-공유 미리보기 이미지(카카오톡 등)는 `node tools/thumbs.js --og` 로 다시 만듭니다 → `assets/images/og-default.jpg`.
+내용이 화면 구석에 작게 있는 앱은 같은 곳에서 `page.setViewportSize({ width: 640, height: 400 })` 로 크게 찍습니다.
+공유 미리보기 이미지(카카오톡 등)는 `node tools/thumbs.js --og` 로 다시 만듭니다 → `assets/images/og-default.jpg` (앱 썸네일은 그대로).
 
 ---
 
@@ -174,8 +178,8 @@ GitHub Pages 는 없는 주소에 `404.html` 을 보여주는데, 그 `<head>` �
 push 할 때마다 GitHub Actions 가 GitHub Pages 와 같은 `github-pages` gem 으로 빌드한 뒤,
 `tools/check/check.js` 로 모든 페이지를 실제 브라우저(Chromium)로 열어 봅니다.
 
-- **실패로 치는 것**: 깨진 이미지, 사이트 안의 404, 페이지 JS 오류, 끝까지 스크롤해도 투명한 채인 긴 본문, 단축 · 옛 주소가 제 위치로 안 감
-- **경고만**: 외부(CDN · 지도 타일 등) 요청 실패, 90초 안에 끝까지 못 본 페이지(시간 초과 — 점검이 멈추지 않게 다음으로 넘어감)
+- **실패로 치는 것**: 깨진 이미지, 사이트 안의 404, 페이지 JS 오류, 끝까지 스크롤해도 투명한 채인 긴 본문, 단축 · 옛 주소가 제 위치로 안 가거나 간 곳이 없는 페이지
+- **경고만**: 외부(CDN · 지도 타일 등) 요청 실패나 멈춤, 90초 안에 끝까지 못 본 페이지(시간 초과 — 점검이 멈추지 않게 다음으로 넘어감)
 - 결과 표는 Actions 실행 화면의 Summary 에 나옵니다. 일부러 넘어갈 항목은 `tools/check/allow.js` 에 이유와 함께 적습니다.
 
 로컬에서 돌리기:

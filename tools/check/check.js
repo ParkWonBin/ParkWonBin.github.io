@@ -8,8 +8,8 @@
 //   · 사이트 안의 깨진 이미지, 사이트 안 요청의 4xx/5xx
 //   · 페이지 JS 오류 (allow.js 의 예외 제외)
 //   · 화면보다 긴 본문이 끝까지 스크롤해도 투명한 채로 남음 (나타나기 효과가 안 풀리는 버그)
-//   · 단축 주소 · 옛 주소 (apps.json) 가 제 위치로 가지 않음
-// 경고만 하는 것: 외부(CDN 등) 요청 실패 — 남의 서버 사정일 수 있어서
+//   · 단축 주소 · 옛 주소 (apps.json) 가 제 위치로 가지 않거나, 간 곳이 200 이 아님
+// 경고만 하는 것: 외부(CDN 등) 요청 실패 · 외부 요청이 멈춰 45초 안에 다 못 불러옴 — 남의 서버 사정일 수 있어서
 //                 한 페이지가 90초 안에 끝나지 않음 — 점검이 멈추지 않게 다음 페이지로 넘어간다
 const fs = require('fs');
 const path = require('path');
@@ -41,7 +41,7 @@ function listPages(dir, rel = '') {
 
 async function checkPage(ctx, url, isNotFound) {
   const page = await ctx.newPage();
-  const r = { url, status: 0, fail: [], warn: [], slow: false };
+  const r = { url, status: 0, fail: [], warn: [], slow: '' }; // slow: 시간 초과 사유 (경고)
   const host = new URL(BASE).host;
   const allowErr = Object.entries(ALLOW.pageErrors).filter(([p]) => url.startsWith(p)).flatMap(([, v]) => v);
   page.on('pageerror', e => {
@@ -63,8 +63,10 @@ async function checkPage(ctx, url, isNotFound) {
   let timer;
   const budget = new Promise(z => { timer = setTimeout(() => z('timeout'), PAGE_BUDGET); });
   const run = (async () => {
-    const res = await page.goto(BASE + url, { waitUntil: 'load', timeout: 45000 });
+    // 문서 자체가 오면 연 것으로 친다. 외부(CDN) 요청이 멈춰 load 가 늦어지는 건 남의 서버 사정이라 '시간 초과' 경고로만.
+    const res = await page.goto(BASE + url, { waitUntil: 'commit', timeout: 45000 });
     r.status = res ? res.status() : 0;
+    await page.waitForLoadState('load', { timeout: 45000 }).catch(() => { r.slow = '45초 안에 다 불러오지 못함 (외부 요청이 멈췄을 수 있음)'; });
     if (!isNotFound && r.status !== 200) r.fail.push(`응답 ${r.status}`);
     await page.waitForTimeout(800);
     // 끝까지 천천히 스크롤해서 지연 로딩 이미지 · 나타나기 효과까지 모두 일으킨다
@@ -109,8 +111,7 @@ async function checkPage(ctx, url, isNotFound) {
   })();
   try {
     if (await Promise.race([run, budget]) === 'timeout') {
-      r.slow = true;
-      r.warn.push(`점검 시간 초과: ${PAGE_BUDGET / 1000}초 안에 끝까지 보지 못함`);
+      r.slow = `${PAGE_BUDGET / 1000}초 안에 끝까지 보지 못함`;
       run.catch(() => {}); // 페이지를 닫으면서 나는 오류는 무시
     }
   } catch (e) {
@@ -134,13 +135,16 @@ async function checkRedirects(ctx, data) {
   const fails = [];
   for (const [from, to] of cases) {
     const page = await ctx.newPage();
-    let external = null;
+    let external = null, status = 0;
+    // 마지막으로 연 문서의 응답 (404.html 의 스크립트가 옮겨 간 페이지)
+    page.on('response', res => { if (res.request().isNavigationRequest() && res.frame() === page.mainFrame()) status = res.status(); });
     await page.route(u => !u.href.startsWith(BASE), route => { if (route.request().isNavigationRequest()) { external = route.request().url(); } route.abort(); });
     try { await page.goto(BASE + from, { waitUntil: 'load', timeout: 20000 }); } catch (e) { /* 외부로 나가면 abort */ }
     await page.waitForTimeout(400);
     const got = external || page.url().replace(BASE, '');
     const norm = s => s.replace(/\/(?=[?#]|$)/, '');
     if (norm(got) !== norm(to)) fails.push(`${from} → ${got}  (기대: ${to})`);
+    else if (!external && status !== 200) fails.push(`${from} → ${got}  (도착한 페이지 응답 ${status})`);
     await page.close();
   }
   return { count: cases.length, fails };
@@ -163,7 +167,7 @@ async function checkRedirects(ctx, data) {
     const byHost = {};
     r.warn.forEach(w => { const h = (w.match(/외부 요청 실패: ([^/ ]+)/) || [])[1]; if (h) byHost[h] = (byHost[h] || 0) + 1; });
     r.warnShort = Object.entries(byHost).map(([h, n]) => `${h} ${n}건`);
-    console.log(`${r.fail.length ? '✗' : '✓'} ${p}${r.fail.length ? '\n    ' + r.fail.join('\n    ') : ''}${r.slow ? '\n    (시간 초과) ' + PAGE_BUDGET / 1000 + '초 안에 끝까지 보지 못함' : ''}${r.warnShort.length ? '\n    (외부 요청 실패) ' + r.warnShort.join(', ') : ''}`);
+    console.log(`${r.fail.length ? '✗' : '✓'} ${p}${r.fail.length ? '\n    ' + r.fail.join('\n    ') : ''}${r.slow ? '\n    (시간 초과) ' + r.slow : ''}${r.warnShort.length ? '\n    (외부 요청 실패) ' + r.warnShort.join(', ') : ''}`);
   }
 
   let redirects = { count: 0, fails: [] };
@@ -186,7 +190,7 @@ async function checkRedirects(ctx, data) {
     ``,
     ...(bad.length ? ['| 페이지 | 문제 |', '|---|---|', ...bad.map(r => `| \`${r.url}\` | ${r.fail.join('<br>').replace(/\|/g, '\\|')} |`), ''] : []),
     ...(redirects.fails.length ? ['**주소 이동 실패**', '', ...redirects.fails.map(f => `- \`${f}\``), ''] : []),
-    ...(slow.length ? [`**시간 초과** — ${PAGE_BUDGET / 1000}초 안에 끝까지 보지 못한 페이지 (열기 · JS 오류 · 요청 오류는 그때까지 본 것만)`, '', ...slow.map(r => `- \`${r.url}\``), ''] : []),
+    ...(slow.length ? ['**시간 초과** — 끝까지 보지 못한 페이지 (열기 · JS 오류 · 요청 오류는 그때까지 본 것만)', '', ...slow.map(r => `- \`${r.url}\`: ${r.slow}`), ''] : []),
     ...(warned.length ? ['<details><summary>외부 요청 경고 (CDN · 지도 타일 등)</summary>', '', ...warned.map(r => `- \`${r.url}\`: ${r.warnShort.join(', ')}`), '', '</details>'] : []),
   ].join('\n');
   if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary + '\n');

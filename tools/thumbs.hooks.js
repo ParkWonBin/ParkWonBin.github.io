@@ -11,6 +11,11 @@ module.exports = {
     await page.waitForTimeout(1500);
   },
 
+  // 꾸밈 없는 실험 앱: 내용이 왼쪽 위에 작게 있어 640x400 화면(2배 크기)으로 찍는다
+  "test_getData_GPS": async (page) => { await page.setViewportSize({ width: 640, height: 400 }); },
+  "test_getData_Motion": async (page) => { await page.setViewportSize({ width: 640, height: 400 }); },
+  "test_Chatbot": async (page) => { await page.setViewportSize({ width: 640, height: 400 }); },
+
   // flood_map
   "flood_map": async (page) => {
     // GeoJSON 11개(2022년은 20MB)를 다 읽을 때까지 로딩 화면이 덮고 있다
@@ -169,6 +174,7 @@ module.exports = {
 
   // game_snake
   "game_snake": async (page, { root, base }) => {
+    await page.setViewportSize({ width: 640, height: 400 }); // 판이 왼쪽 위에 작게 있어 크게 찍는다
     // 「Start」를 누른 뒤, 고정 시드 + 자동 조종으로 몇 초어치(틱)를 직접 돌려 먹이를 먹고 길어진 뱀을 보여 준다.
     // 타이머 대신 gameLoop() 를 직접 불러서 늘 같은 화면이 나온다 (마지막 틱 뒤 멈춘 채로 찍힘).
     const ok = await page.evaluate(async () => {

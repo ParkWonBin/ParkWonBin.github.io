@@ -18,6 +18,7 @@
 #   alias     (선택) 단축 주소 목록. wbpark.app/<alias> → 앱으로 이동 (대소문자 무시)
 #   repo      (선택) 소스 링크. 생략하면 이 저장소의 webapps/<slug>/ 로 자동 연결
 #   thumbnail (선택) 카드 이미지. 생략하면 assets/thumbs/<slug>.webp (node tools/thumbs.js 로 생성)
+#   thumb_pos (선택) 휴대폰 카드에서 썸네일의 어느 쪽을 보일지 (CSS object-position, 예: left top). 기본 top center
 #   hidden    (선택) true 면 목록에서만 숨김 (앱 주소 · 단축 주소는 그대로 동작)
 #
 # 같은 카테고리 안에서는 이 파일에 적힌 순서대로 보입니다.
@@ -74,6 +75,7 @@
   category: learn
   series: 과학 시뮬레이션
   icon: 🌀
+  thumb_pos: 12% top
   desc: 단진동 · 진자 · 이중진자 실험과 설명 페이지입니다. 위상 공간(phase diagram)을 실시간으로 보고 데이터를 CSV로 받을 수 있습니다.
   tags: [React, KaTeX, 물리]
   usage:
@@ -239,6 +241,7 @@
   title: QR 코드 생성기
   category: make
   icon: 🔳
+  thumb_pos: left top
   desc: URL을 QR 코드로 바꾸고 색상과 오류 정정 수준을 조절합니다. QR 이미지를 드래그하거나 Ctrl+V로 붙여 넣으면 원문 URL을 읽어 줍니다.
   tags: [QRCode.js, jsQR]
   usage:
@@ -332,6 +335,7 @@
   title: OpenAI API · Assistant
   category: lab
   icon: 🤖
+  thumb_pos: left top
   desc: GPT Assistant API 테스트 페이지입니다. Thread(채팅방) 생성, Assistant(챗봇) 생성 · 수정, Run(AI 응답 생성)을 실행해 봅니다.
   tags: [OpenAI API]
   usage:
@@ -383,6 +387,7 @@
   category: lab
   series: 모바일 센서
   icon: 📱
+  thumb_pos: left top
   desc: 모바일 기기에서 받아올 수 있는 움직임 · 방향 센서 데이터를 확인합니다.
   tags: [DeviceMotion]
   usage:
@@ -396,6 +401,7 @@
   category: lab
   series: 모바일 센서
   icon: 📍
+  thumb_pos: left top
   desc: 모바일 GPS 위치와 속도(m/s)를 받아오는 연습입니다.
   tags: [Geolocation]
   usage:

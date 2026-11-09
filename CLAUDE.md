@@ -13,7 +13,7 @@ Jekyll 블로그 + 정적 웹앱 모음 (GitHub Pages 기본 빌드, Jekyll 3.10
   `redirect/` 폴더, 카테고리별 include, 홈 화면 수정은 필요 없다.
 - 새 앱이면 `date:` 에 오늘 날짜(YYYY-MM-DD)를 적는다 (NEW 표시용). 기능을 크게 바꾸면 `updated:` (업데이트 표시).
 - `usage:` 에 사용법 2~4줄(화면의 실제 버튼 이름을 ‘ ’ 로)을 적는다. 콜론이 들어가면 따옴표로 감싼다.
-- 썸네일: 사이트를 띄우고 `node tools/thumbs.js --only <slug>` → `assets/thumbs/<slug>.webp`. 첫 화면이 비면 `tools/thumbs.hooks.js` 에 절차를 추가.
+- 썸네일: (처음 한 번 `cd tools/check && npm ci && npx playwright install chromium`) 사이트를 띄우고 `node tools/thumbs.js --only <slug>` → `assets/thumbs/<slug>.webp`. 첫 화면이 비거나 내용이 구석에 작으면 `tools/thumbs.hooks.js` 에 절차를 추가. 휴대폰 카드에서 잘리는 쪽이 비면 apps.yml 에 `thumb_pos: left top`.
 
 ## 그 밖에
 

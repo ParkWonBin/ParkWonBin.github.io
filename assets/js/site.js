@@ -122,21 +122,32 @@
     if (updateUrl) { history.replaceState(null, '', url()); }
   }
 
+  // 고정된 검색바 높이를 CSS 에 알려, 앵커 이동 · 키보드 포커스가 검색바 밑으로 숨지 않게 한다
+  var toolbar = root.querySelector('.toolbar');
+  function sticky() { return !!toolbar && getComputedStyle(toolbar).position === 'sticky'; }
+  function measureToolbar() {
+    document.documentElement.style.setProperty('--toolbar-h', (sticky() ? toolbar.offsetHeight : 0) + 'px');
+  }
+  measureToolbar();
+  window.addEventListener('resize', measureToolbar);
+
+  // 거른 결과가 보이게 스크롤: 검색바(모아 보기 표시 포함)와 첫 결과 묶음이 화면에 들어오도록.
+  //   PC 는 검색바가 위에 붙어 있어 검색바로 스크롤해도 소용없으니, 검색바에 가려진 첫 묶음을 끌어내린다.
+  function showResults() {
+    if (!toolbar) { return; }
+    if (!sticky()) { toolbar.scrollIntoView({ block: 'start' }); return; }
+    var first = root.querySelector('[data-group]:not([hidden])');
+    if (first && first.getBoundingClientRect().top < toolbar.getBoundingClientRect().bottom) { first.scrollIntoView({ block: 'start' }); }
+    else if (toolbar.getBoundingClientRect().top > innerHeight * 0.5) { toolbar.scrollIntoView({ block: 'start' }); }
+  }
+
   function setTag(value, label, updateUrl) {
     tag = value || null;
     if (pillLabel) { pillLabel.textContent = label || value || ''; }
     apply();
+    measureToolbar(); // 모아 보기 표시가 나타나거나 사라지면 검색바 높이가 바뀐다
     if (updateUrl) { history.replaceState(null, '', url()); }
   }
-
-  // 고정된 검색바 높이를 CSS 에 알려, 앵커 이동 · 키보드 포커스가 검색바 밑으로 숨지 않게 한다
-  var toolbar = root.querySelector('.toolbar');
-  function measureToolbar() {
-    var h = toolbar && getComputedStyle(toolbar).position === 'sticky' ? toolbar.offsetHeight : 0;
-    document.documentElement.style.setProperty('--toolbar-h', h + 'px');
-  }
-  measureToolbar();
-  window.addEventListener('resize', measureToolbar);
 
   chips.forEach(function (c) {
     c.addEventListener('click', function (e) {
@@ -152,7 +163,7 @@
     e.preventDefault();
     var v = b.getAttribute('data-tag');
     setTag(v === tag ? null : v, b.getAttribute('data-tag-label'), true);
-    if (toolbar && tag) { toolbar.scrollIntoView({ block: 'nearest' }); }
+    if (tag) { showResults(); }
   });
   var clear = root.querySelector('[data-active-tag-clear]');
   if (clear) { clear.addEventListener('click', function () { setTag(null, '', true); }); }
@@ -173,24 +184,32 @@
   }
 
   // wbpark.app/#make 처럼 해시로 들어오면 그 카테고리만 보여준다 (뒤로 가기 · 해시 링크 포함).
+  // 옛 id(#tech, #game …)는 새 칩으로 바꾸고 주소도 새 id 로 고친다. 그 id 의 섹션이 없어 브라우저가 스크롤하지 않으니 직접 내려 준다.
   // 카테고리가 아닌 해시(#main 같은 본문 바로가기 등)는 필터를 건드리지 않는다.
   function fromHash() {
     var id = '';
     try { id = decodeURIComponent(location.hash.slice(1)); } catch (e) {}
-    if (!id) { select('all', false); } else if (resolve(id)) { select(id, false); }
+    var r = id && resolve(id);
+    if (!id) { select('all', false); }
+    else if (r) {
+      select(id, r !== id);
+      if (r !== id) { showResults(); }
+    }
   }
   window.addEventListener('hashchange', fromHash);
 
-  // ?tag=three.js 로 들어오면 그 태그끼리 모아 보기
-  var q = new URLSearchParams(location.search).get('tag');
-  if (q) {
-    q = q.toLowerCase();
+  // ?tag=three.js 로 들어오면 그 태그끼리 모아 보기. 뒤로 · 앞으로 가기로 주소가 바뀌어도 다시 맞춘다.
+  function fromUrl() {
+    var q = (new URLSearchParams(location.search).get('tag') || '').toLowerCase();
     var src = null;
-    root.querySelectorAll('[data-tag]').forEach(function (b) { if (!src && b.getAttribute('data-tag') === q) { src = b; } });
-    setTag(q, src ? src.getAttribute('data-tag-label') : q, false);
+    if (q) { root.querySelectorAll('[data-tag]').forEach(function (b) { if (!src && b.getAttribute('data-tag') === q) { src = b; } }); }
+    setTag(q || null, src ? src.getAttribute('data-tag-label') : q, false);
+    fromHash();
   }
-  apply();
-  fromHash();
+  window.addEventListener('popstate', fromUrl);
+  fromUrl();
+  // 태그 주소로 처음 들어오면 모아 본 결과로 바로 내려 준다 (해시가 있으면 그쪽을 따른다)
+  if (tag && !location.hash) { showResults(); }
 })();
 
 // NEW · 업데이트 표시: 빌드 때 붙인 배지라도 기한(data-new-until, 초)이 지났으면 브라우저에서 뗀다
@@ -202,7 +221,7 @@
   }
 })();
 
-// 카드의 '공유' 버튼: 단축 주소 복사 · QR 보기/저장 · (휴대폰) 다른 앱으로 공유
+// 카드의 '공유' 버튼: 앱 주소 복사 · QR 보기/저장 · (휴대폰) 다른 앱으로 공유
 //   [data-share="주소"] [data-share-title="이름"] → _includes/share-dialog.html 의 창
 (function () {
   var dlg = document.getElementById('share-dialog');
@@ -215,6 +234,7 @@
   var native = dlg.querySelector('[data-share-native]');
   var cur = { url: '', title: '' };
   var qrLib = null;
+  var seq = 0; // 창을 열 때마다 1씩: QR 라이브러리를 기다리는 사이 다시 열면 마지막 것만 그린다
 
   function loadQR() {
     if (window.QRCode) { return Promise.resolve(window.QRCode); }
@@ -240,17 +260,19 @@
     qrBox.textContent = '';
     dl.hidden = true;
     native.hidden = !navigator.share;
-    if (typeof dlg.showModal === 'function') { dlg.showModal(); } else { dlg.setAttribute('open', ''); }
+    if (typeof dlg.showModal === 'function') { if (!dlg.open) { dlg.showModal(); } } else { dlg.setAttribute('open', ''); }
+    var token = ++seq;
     loadQR().then(function (QR) {
       var c = document.createElement('canvas');
       return QR.toCanvas(c, url, { width: 200, margin: 2, errorCorrectionLevel: 'M' }).then(function () {
-        if (cur.url !== url) { return; }
+        if (token !== seq) { return; }
+        qrBox.textContent = '';
         qrBox.appendChild(c);
         dl.href = c.toDataURL('image/png');
-        dl.download = 'qr-' + (url.replace(/^https?:\/\/[^/]+\/?/, '').replace(/[^\w-]+/g, '_').replace(/^_+|_+$/g, '') || 'wbpark') + '.png';
+        dl.download = 'qr-' + (url.replace(/^https?:\/\/[^/]+\/?/, '').replace(/^webapps\//, '').replace(/[^\w-]+/g, '_').replace(/^_+|_+$/g, '') || 'wbpark') + '.png';
         dl.hidden = false;
       });
-    }).catch(function () { qrBox.textContent = 'QR 코드를 만들지 못했어요'; });
+    }).catch(function () { if (token === seq) { qrBox.textContent = 'QR 코드를 만들지 못했어요'; } });
   }
 
   document.addEventListener('click', function (e) {
@@ -272,6 +294,12 @@
   native.addEventListener('click', function () {
     navigator.share({ title: cur.title, url: cur.url }).catch(function () {});
   });
-  // 창 바깥(배경)을 누르면 닫기
-  dlg.addEventListener('click', function (e) { if (e.target === dlg) { dlg.close(); } });
+  // 창 바깥(배경)을 누르면 닫기: 누른 곳과 뗀 곳이 모두 창 밖일 때만 (창 안 여백을 누르거나, 주소를 드래그하다 밖에서 놓으면 안 닫힘)
+  function outside(e) {
+    var r = dlg.getBoundingClientRect();
+    return e.target === dlg && (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom);
+  }
+  var downOutside = false;
+  dlg.addEventListener('pointerdown', function (e) { downOutside = outside(e); });
+  dlg.addEventListener('click', function (e) { if (downOutside && outside(e)) { dlg.close(); } downOutside = false; });
 })();
