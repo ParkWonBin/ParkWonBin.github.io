@@ -165,10 +165,10 @@
     setTag(v === tag ? null : v, b.getAttribute('data-tag-label'), true);
     if (tag) {
       showResults();
-      // 키보드로 눌렀는데 결과로 스크롤하느라 그 버튼이 화면 밖으로 나갔으면, 첫 결과 카드로 포커스를 옮겨 다음 Tab 이 보이는 결과부터 이어지게
+      // 키보드로 눌렀는데(detail 0) 결과로 스크롤하느라 그 버튼이 화면 밖으로 나갔으면, 첫 결과 카드로 포커스를 옮겨 다음 Tab 이 보이는 결과부터 이어지게
       var r = b.getBoundingClientRect(), first = root.querySelector('[data-item]:not([hidden]) .card-link');
       var topEdge = sticky() ? toolbar.getBoundingClientRect().bottom : 0;
-      if (first && document.activeElement === b && (r.bottom > innerHeight || r.top < topEdge)) { first.focus({ preventScroll: true }); }
+      if (first && e.detail === 0 && document.activeElement === b && (r.bottom > innerHeight || r.top < topEdge)) { first.focus({ preventScroll: true }); }
     }
   });
   var clear = root.querySelector('[data-active-tag-clear]');
