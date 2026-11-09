@@ -6,7 +6,7 @@
 // 실패로 치는 것 (exit 1)
 //   · 페이지 응답이 200 이 아님 (404.html 제외)
 //   · 사이트 안의 깨진 이미지, 사이트 안 요청의 4xx/5xx
-//   · 페이지 JS 오류 (allow.js 의 예외 제외)
+//   · 페이지 JS 오류 (allow.js 의 예외 제외), 페이지가 응답하지 않음 (무한 루프 등)
 //   · 화면보다 긴 본문이 끝까지 스크롤해도 투명한 채로 남음 (나타나기 효과가 안 풀리는 버그)
 //   · 단축 주소 · 옛 주소 (apps.json) 가 제 위치로 가지 않거나, 간 곳이 200 이 아님
 // 경고만 하는 것: 외부(CDN 등) 요청 실패 · 외부 요청이 멈춰 45초 안에 다 못 불러옴 — 남의 서버 사정일 수 있어서
@@ -39,6 +39,9 @@ function listPages(dir, rel = '') {
   return out.sort();
 }
 
+// 페이지 메인 스레드가 3초 안에 답하는지 (evaluate 가 실패해도 답한 것으로 친다 — 페이지가 이동한 경우 등)
+const alive = page => Promise.race([page.evaluate(() => 1).then(() => true, () => true), new Promise(z => setTimeout(() => z(false), 3000))]);
+
 async function checkPage(ctx, url, isNotFound) {
   const page = await ctx.newPage();
   const r = { url, status: 0, fail: [], warn: [], slow: '' }; // slow: 시간 초과 사유 (경고)
@@ -68,6 +71,8 @@ async function checkPage(ctx, url, isNotFound) {
     r.status = res ? res.status() : 0;
     await page.waitForLoadState('load', { timeout: 45000 }).catch(() => { r.slow = '45초 안에 다 불러오지 못함 (외부 요청이 멈췄을 수 있음)'; });
     if (!isNotFound && r.status !== 200) r.fail.push(`응답 ${r.status}`);
+    // load 가 늦은 게 외부 요청 탓이면 페이지는 아직 응답한다. JS 가 메인 스레드를 붙잡고 있으면(무한 루프 등) 실패
+    if (r.slow && !(await alive(page))) { r.slow = ''; r.fail.push('페이지가 응답하지 않음 (JS 가 멈춤)'); return; }
     await page.waitForTimeout(800);
     // 끝까지 천천히 스크롤해서 지연 로딩 이미지 · 나타나기 효과까지 모두 일으킨다
     await page.evaluate(async () => {
@@ -111,8 +116,9 @@ async function checkPage(ctx, url, isNotFound) {
   })();
   try {
     if (await Promise.race([run, budget]) === 'timeout') {
-      r.slow = `${PAGE_BUDGET / 1000}초 안에 끝까지 보지 못함`;
       run.catch(() => {}); // 페이지를 닫으면서 나는 오류는 무시
+      if (await alive(page)) r.slow = `${PAGE_BUDGET / 1000}초 안에 끝까지 보지 못함`;
+      else { r.slow = ''; r.fail.push('페이지가 응답하지 않음 (JS 가 멈춤)'); }
     }
   } catch (e) {
     r.fail.push('열기 실패: ' + e.message.split('\n')[0]);

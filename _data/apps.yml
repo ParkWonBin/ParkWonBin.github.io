@@ -17,7 +17,7 @@
 #   updated   (선택) 기능을 크게 바꾼 날짜. 최근 30일 이내면 '업데이트' 표시
 #   alias     (선택) 단축 주소 목록. wbpark.app/<alias> → 앱으로 이동 (대소문자 무시)
 #   repo      (선택) 소스 링크. 생략하면 이 저장소의 webapps/<slug>/ 로 자동 연결
-#   thumbnail (선택) 카드 이미지. 생략하면 assets/thumbs/<slug>.webp (node tools/thumbs.js 로 생성)
+#   thumbnail (선택) 카드 이미지. 생략하면 assets/thumbs/<slug>.webp (node tools/thumbs.js 로 생성). false 면 아이콘 (thumbs.js 도 건너뜀)
 #   thumb_pos (선택) 휴대폰 카드에서 썸네일의 어느 쪽을 보일지 (CSS object-position, 예: left top). 기본 top center
 #   hidden    (선택) true 면 목록에서만 숨김 (앱 주소 · 단축 주소는 그대로 동작)
 #
@@ -374,6 +374,7 @@
   title: 브라우저 음성 인식(STT)
   category: lab
   icon: 🎙️
+  thumbnail: false   # 첫 화면이 버튼 두 개뿐이라 아이콘으로
   desc: 브라우저 Speech API로 음성을 인식해 녹음 · 출력해 봅니다.
   tags: [Web Speech API]
   usage:

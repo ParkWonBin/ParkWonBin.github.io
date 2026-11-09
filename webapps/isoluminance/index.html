@@ -31,6 +31,7 @@
   }
   body.locked { overflow: hidden; }
   body.locked .wbpark-appbar { display: none; } /* 크게 보기 중에는 '← wbpark' 표시가 '원래 크기' 버튼을 가리지 않게 */
+  body.unlocking .wbpark-appbar, body.unlocking .wbpark-appbar * { pointer-events: none; } /* 원래 크기로 돌아온 직후 같은 자리 두 번째 클릭이 표시를 누르지 않게 */
   .wrap { width: min(100%, 1000px); margin: 0 auto; }
   header.top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-bottom: 10px; }
   header.top h1 { font-size: 18px; margin: 0; letter-spacing: -0.01em; }
@@ -1004,6 +1005,8 @@ $('#ghostChk').addEventListener('change', e => { state.ghosts = e.target.checked
 $('#btnUndo').addEventListener('click', undo);
 function setMax(on) {
   state.max = on; editorEl.classList.toggle('max', on); document.body.classList.toggle('locked', on);
+  clearTimeout(setMax.t); document.body.classList.toggle('unlocking', !on);
+  if (!on) setMax.t = setTimeout(() => document.body.classList.remove('unlocking'), 700);
   requestAnimationFrame(() => { fitView(); renderEditorUI(); });
 }
 $('#btnMax').addEventListener('click', () => setMax(!state.max));

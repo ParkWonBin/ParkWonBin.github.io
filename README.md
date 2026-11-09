@@ -80,7 +80,7 @@ TODO.md                할 일 · 새 프로젝트 메모 (블로그에는 올�
 | `series` | 시리즈 이름 (예: `워해머`). 카드에 '🔗 워해머 시리즈' 가 붙고, 누르면 같은 시리즈끼리 모아 봄 |
 | `featured: true` | 홈 맨 위 '⭐ 대표작' 줄에도 나옴 (3~4개 권장) |
 | `updated` | 기능을 크게 바꾼 날짜. 30일 동안 '업데이트' 표시 |
-| `thumbnail` | 카드 이미지를 직접 지정. 생략하면 `assets/thumbs/<slug>.webp` 가 있으면 그것, 없으면 아이콘 |
+| `thumbnail` | 카드 이미지를 직접 지정. 생략하면 `assets/thumbs/<slug>.webp` 가 있으면 그것, 없으면 아이콘. `false` 면 늘 아이콘 (thumbs.js 도 건너뜀) |
 | `thumb_pos` | 휴대폰 카드(썸네일이 좁은 세로 띠)에서 보일 부분. CSS `object-position` 값 (예: `left top`). 기본 `top center` |
 | `url` | 다른 곳에 있는 앱이면 그 주소 (slug 대신 이 주소로 연결) |
 | `repo` | 소스 링크. 생략하면 이 저장소의 `webapps/<slug>/` 로 자동 연결 |

@@ -71,7 +71,8 @@ async function toWebp(page, png, w, h, type = 'image/webp', quality = 0.82) {
   }
 
   const data = await (await fetch(BASE + '/apps.json')).json();
-  const apps = data.apps.filter(a => a.slug && !a.hidden && !/^https?:/.test(a.url))
+  // 썸네일을 직접 정한 앱(thumbnail: false 로 아이콘을 쓰는 앱 포함)은 건너뛴다
+  const apps = data.apps.filter(a => a.slug && !a.hidden && !/^https?:/.test(a.url) && a.thumbnail == null)
     .filter(a => !ONLY || ONLY.includes(a.slug.toLowerCase()) || (a.alias || []).some(x => ONLY.includes(String(x).toLowerCase())));
   fs.mkdirSync(OUT, { recursive: true });
 

@@ -163,7 +163,13 @@
     e.preventDefault();
     var v = b.getAttribute('data-tag');
     setTag(v === tag ? null : v, b.getAttribute('data-tag-label'), true);
-    if (tag) { showResults(); }
+    if (tag) {
+      showResults();
+      // 키보드로 눌렀는데 결과로 스크롤하느라 그 버튼이 화면 밖으로 나갔으면, 첫 결과 카드로 포커스를 옮겨 다음 Tab 이 보이는 결과부터 이어지게
+      var r = b.getBoundingClientRect(), first = root.querySelector('[data-item]:not([hidden]) .card-link');
+      var topEdge = sticky() ? toolbar.getBoundingClientRect().bottom : 0;
+      if (first && document.activeElement === b && (r.bottom > innerHeight || r.top < topEdge)) { first.focus({ preventScroll: true }); }
+    }
   });
   var clear = root.querySelector('[data-active-tag-clear]');
   if (clear) { clear.addEventListener('click', function () { setTag(null, '', true); }); }
@@ -212,6 +218,18 @@
   if (tag && !location.hash) { showResults(); }
 })();
 
+// 휴대폰의 가로로 넘기는 '대표작' 줄: 키보드로 반쯤 보이는 타일에 가면 그 타일이 다 보이게 민다
+//   (마우스 · 터치로 누를 때 움직이면 클릭이 빗나가므로 :focus-visible 일 때만)
+(function () {
+  var row = document.querySelector('.featured-grid');
+  if (!row) { return; }
+  row.addEventListener('focusin', function (e) {
+    var t = e.target;
+    try { if (!t.matches(':focus-visible')) { return; } } catch (err) { return; }
+    if (row.scrollWidth > row.clientWidth) { t.scrollIntoView({ block: 'nearest', inline: 'start' }); }
+  });
+})();
+
 // NEW · 업데이트 표시: 빌드 때 붙인 배지라도 기한(data-new-until, 초)이 지났으면 브라우저에서 뗀다
 (function () {
   var now = Date.now() / 1000;
@@ -251,6 +269,9 @@
   }
 
   function say(msg) { status.textContent = msg; }
+  // 주소가 칸보다 길면 앱 이름이 있는 끝쪽을 보이게 (포커스가 빠지면 브라우저가 맨 앞으로 되돌린다)
+  function showEnd() { input.scrollLeft = input.scrollWidth; }
+  input.addEventListener('blur', function () { requestAnimationFrame(showEnd); });
 
   function open(url, title) {
     cur = { url: url, title: title || '' };
@@ -261,6 +282,7 @@
     dl.hidden = true;
     native.hidden = !navigator.share;
     if (typeof dlg.showModal === 'function') { if (!dlg.open) { dlg.showModal(); } } else { dlg.setAttribute('open', ''); }
+    showEnd();
     var token = ++seq;
     loadQR().then(function (QR) {
       var c = document.createElement('canvas');

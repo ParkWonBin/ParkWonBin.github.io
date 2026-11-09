@@ -155,8 +155,9 @@ h3 { margin: 4px 0 0; font-size: 13px; color: var(--sub); font-weight: 600; }
   #panel { max-height: none; border-top: none; border-left: 1px solid var(--line); grid-row: 1; grid-column: 2; }
 }
 /* 왼쪽 아래 '← wbpark' 표시(app-bar.js)와 겹치지 않게: 좁은 화면은 패널 끝에 여유, 넓은 화면은 범례를 그 위로 */
-#panel { padding-bottom: 48px; }
-@media (min-width: 900px) { #panel { padding-bottom: 0; } #legend { bottom: 50px; } }
+#panel { padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px)); }
+@media (min-width: 900px) { #panel { padding-bottom: 0; } #legend { bottom: calc(50px + env(safe-area-inset-bottom, 0px)); } }
+@media (max-width: 760px) { #share .sheet { padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px)); } }
 </style>
   <script src="/assets/js/analytics.js" defer></script>
   <script src="/assets/js/app-bar.js" defer data-pos="bl"></script>
