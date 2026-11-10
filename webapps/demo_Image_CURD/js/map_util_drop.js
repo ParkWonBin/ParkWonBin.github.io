@@ -14,7 +14,12 @@ document.addEventListener('DOMContentLoaded', function () {
     dropArea.addEventListener('drop', function (e) {
         // FileList를 배열로 변환 : forEach 를 쓰려면 아래처럼 배열로 전환해서 쓰거나
         // let files = [...files] 이렇게 배열 형식으로 다시 저장해야함.
-        Array.from(e.dataTransfer.files).forEach(file =>
+        // 사진 파일만 받는다
+        const files = Array.from(e.dataTransfer.files).filter(file => /^image\//.test(file.type));
+        if (e.dataTransfer.files.length > 0 && files.length === 0) {
+            showStoreMsg('사진 파일만 올릴 수 있어요', true);
+        }
+        files.forEach(file =>
             createImageConainer({
                 'file': file,
                 'dropX': e.clientX,

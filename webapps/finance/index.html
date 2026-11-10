@@ -88,7 +88,8 @@
           💰 그래서, 매월 10만원씩 30년간 넣으면 어떻게 되나요?
         </h3>
         <p style="text-align:center;font-size:.85rem;color:#666;margin-bottom:20px">
-          아래 3개 ETF에 각각 매월 10만원씩, 배당은 나온 만큼 해당 종목에 재투자. 총 360회 납부 기준 (과거 실적 CAGR 기반 시뮬레이션)
+          아래 3개 ETF에 각각 매월 10만원씩, 배당은 나온 만큼 해당 종목에 재투자. 총 360회 납부 기준 (과거 실적 CAGR 기반 시뮬레이션 · 아래
+          <a href="#etf-sim" style="color:inherit">ETF 시뮬레이션</a>과 같은 계산)
         </p>
 
         <div class="etf-summary-grid">
@@ -96,14 +97,15 @@
           <div
             style="background:#fff;border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(0,119,182,0.2);box-shadow:0 2px 8px rgba(0,0,0,0.04)">
             <div style="font-size:.8rem;color:#888;margin-bottom:4px">나스닥100 추종</div>
-            <div style="font-size:1.1rem;font-weight:700;color:#0077b6;margin-bottom:8px">QQQ</div>
+            <div style="font-size:1.1rem;font-weight:700;color:#0077b6;margin-bottom:2px">QQQ</div>
+            <div style="font-size:.7rem;color:#aaa;margin-bottom:8px" data-sim="QQQ.cagr">CAGR 14.9% (2005~2024)</div>
             <div style="font-size:.8rem;color:#888">원금 <b style="color:#333">3,600만원</b></div>
-            <div style="font-size:1.8rem;font-weight:800;color:#0077b6;margin:8px 0">약 6.9억원</div>
-            <div style="font-size:.82rem;color:#888">원금 대비 <b style="color:#0077b6">약 19배</b></div>
+            <div style="font-size:1.8rem;font-weight:800;color:#0077b6;margin:8px 0" data-sim="QQQ.total">약 5.5억원</div>
+            <div style="font-size:.82rem;color:#888">원금 대비 <b style="color:#0077b6" data-sim="QQQ.multiple">약 15배</b></div>
             <div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee">
               <div style="font-size:.78rem;color:#888">예상 월 배당</div>
-              <div style="font-size:1.1rem;font-weight:700;color:#d35400">약 127만원</div>
-              <div style="font-size:.7rem;color:#aaa">연 배당률 2.2% 기준</div>
+              <div style="font-size:1.1rem;font-weight:700;color:#d35400" data-sim="QQQ.monthlyDiv">약 101만원</div>
+              <div style="font-size:.7rem;color:#aaa" data-sim="QQQ.divYield">연 배당률 2.2% 기준</div>
             </div>
           </div>
 
@@ -111,14 +113,15 @@
           <div
             style="background:#fff;border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(39,174,96,0.2);box-shadow:0 2px 8px rgba(0,0,0,0.04)">
             <div style="font-size:.8rem;color:#888;margin-bottom:4px">미국 배당성장주 (분기배당)</div>
-            <div style="font-size:1.1rem;font-weight:700;color:#27ae60;margin-bottom:8px">SCHD</div>
+            <div style="font-size:1.1rem;font-weight:700;color:#27ae60;margin-bottom:2px">SCHD</div>
+            <div style="font-size:.7rem;color:#aaa;margin-bottom:8px" data-sim="SCHD.cagr">CAGR 12.9% (2012~2024)</div>
             <div style="font-size:.8rem;color:#888">원금 <b style="color:#333">3,600만원</b></div>
-            <div style="font-size:1.8rem;font-weight:800;color:#27ae60;margin:8px 0">약 3.5억원</div>
-            <div style="font-size:.82rem;color:#888">원금 대비 <b style="color:#27ae60">약 10배</b></div>
+            <div style="font-size:1.8rem;font-weight:800;color:#27ae60;margin:8px 0" data-sim="SCHD.total">약 3.7억원</div>
+            <div style="font-size:.82rem;color:#888">원금 대비 <b style="color:#27ae60" data-sim="SCHD.multiple">약 10배</b></div>
             <div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee">
               <div style="font-size:.78rem;color:#888">예상 월 배당 (분기÷3)</div>
-              <div style="font-size:1.1rem;font-weight:700;color:#d35400">약 93만원</div>
-              <div style="font-size:.7rem;color:#aaa">연 배당률 3.2% 기준</div>
+              <div style="font-size:1.1rem;font-weight:700;color:#d35400" data-sim="SCHD.monthlyDiv">약 99만원</div>
+              <div style="font-size:.7rem;color:#aaa" data-sim="SCHD.divYield">연 배당률 3.2% 기준</div>
             </div>
           </div>
 
@@ -126,14 +129,15 @@
           <div
             style="background:#fff;border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(108,52,131,0.2);box-shadow:0 2px 8px rgba(0,0,0,0.04)">
             <div style="font-size:.8rem;color:#888;margin-bottom:4px">고배당 저변동 (월배당)</div>
-            <div style="font-size:1.1rem;font-weight:700;color:#6c3483;margin-bottom:8px">SPHD</div>
+            <div style="font-size:1.1rem;font-weight:700;color:#6c3483;margin-bottom:2px">SPHD</div>
+            <div style="font-size:.7rem;color:#aaa;margin-bottom:8px" data-sim="SPHD.cagr">CAGR 10.1% (2013~2024)</div>
             <div style="font-size:.8rem;color:#888">원금 <b style="color:#333">3,600만원</b></div>
-            <div style="font-size:1.8rem;font-weight:800;color:#6c3483;margin:8px 0">약 2.0억원</div>
-            <div style="font-size:.82rem;color:#888">원금 대비 <b style="color:#6c3483">약 6배</b></div>
+            <div style="font-size:1.8rem;font-weight:800;color:#6c3483;margin:8px 0" data-sim="SPHD.total">약 2.1억원</div>
+            <div style="font-size:.82rem;color:#888">원금 대비 <b style="color:#6c3483" data-sim="SPHD.multiple">약 6배</b></div>
             <div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee">
               <div style="font-size:.78rem;color:#888">예상 월 배당</div>
-              <div style="font-size:1.1rem;font-weight:700;color:#d35400">약 73만원</div>
-              <div style="font-size:.7rem;color:#aaa">연 배당률 4.4% 기준</div>
+              <div style="font-size:1.1rem;font-weight:700;color:#d35400" data-sim="SPHD.monthlyDiv">약 78만원</div>
+              <div style="font-size:.7rem;color:#aaa" data-sim="SPHD.divYield">연 배당률 4.4% 기준</div>
             </div>
           </div>
         </div>
@@ -153,7 +157,8 @@
 
         <p style="text-align:center;font-size:.82rem;color:#888;line-height:1.7;margin-bottom:12px">
           ※ 과거 실적(배당 재투자 포함 CAGR) 기반 시뮬레이션이며, 미래 수익을 보장하지 않습니다.<br>
-          ※ 원화 환산은 ₩1,363/$ 기준. 환율 변동에 따라 원화 가치는 달라질 수 있습니다.
+          ※ 예상 월 배당 = 30년 뒤 평가액 × 연 배당률 ÷ 12 (세전). 30년간 재투자하던 배당을 그때부터 받는다고 가정합니다.<br>
+          ※ 달러 수익률을 원화 금액에 그대로 적용 (30년간 환율 ₩1,363/$ 고정 가정). 환율이 오르면 원화 금액은 커지고, 내리면 줄어듭니다.
         </p>
 
         <div style="background:#fff;border-radius:10px;padding:14px 20px;border:1px solid rgba(211,84,0,0.15)">
@@ -175,7 +180,7 @@
       <p>② <a href="#depreciation" style="color:var(--red)">화폐가치 하락</a> — 현금 보유는 매년 7~8%씩 가치 손실. 20년간 <b>실질 가치 절반
           이하</b>로 하락. (계산기로 아무 물건값 넣으면 체감됩니다)</p>
       <p>③ <a href="#etf-sim" style="color:var(--green)">ETF 적립 투자</a> — 매월 <b>10만원씩</b> 3개 인덱스 ETF에 30년 적립하면? 차트 안 보고
-        자동이체만 해도 <b>원금 대비 5~15배</b> 성장.</p>
+        자동이체만 해도 <b>원금 대비 <span data-sim="range.multiple">6~15배</span></b> 성장.</p>
       <p>④ <a href="#top10" style="color:var(--gold)">Top 10 리밸런싱</a> — 시가총액 상위 10개에 넣어두고, <b>1년에 딱 한 번</b> 비율만 맞춰주면?
         20년간 S&P 500 대비 <b>초과 수익</b> 달성.</p>
       <p
@@ -349,31 +354,31 @@
             <th>ETF</th>
             <th>배당 주기</th>
             <th>연 배당률</th>
-            <th>연 성장률</th>
+            <th>실제 CAGR</th>
             <th>설명</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td style="color:var(--cyan);font-weight:600">QQQ</td>
-            <td>연</td>
+            <td>연 배당</td>
             <td>2.2%</td>
-            <td>15%</td>
-            <td>나스닥100 지수추종</td>
+            <td style="color:var(--gold);font-weight:600">14.9%</td>
+            <td>나스닥100 지수추종 <span style="font-size:.7rem;color:var(--text2)">(2005~2024, 20년 실적)</span></td>
           </tr>
           <tr>
             <td style="color:var(--green);font-weight:600">SCHD</td>
-            <td>분기</td>
+            <td>분기 배당</td>
             <td>3.2%</td>
-            <td>12%</td>
-            <td>미국 배당성장주</td>
+            <td style="color:var(--gold);font-weight:600">12.9%</td>
+            <td>미국 배당성장주 (분기배당) <span style="font-size:.7rem;color:var(--text2)">(2012~2024, 13년 실적)</span></td>
           </tr>
           <tr>
             <td style="color:var(--purple);font-weight:600">SPHD</td>
-            <td>월</td>
+            <td>월 배당</td>
             <td>4.4%</td>
-            <td>9.5%</td>
-            <td>고배당 저변동</td>
+            <td style="color:var(--gold);font-weight:600">10.1%</td>
+            <td>고배당 저변동 (월배당) <span style="font-size:.7rem;color:var(--text2)">(2013~2024, 12년 실적)</span></td>
           </tr>
         </tbody>
       </table>
@@ -426,10 +431,12 @@
         <b style="color:var(--gold)">가정:</b> 과거 실제 총수익률(CAGR)이 미래에도 유사하게 유지된다고 가정합니다. 배당금 재투자를 포함한 실적 데이터입니다.<br><br>
         <b style="color:var(--cyan)">월 10만원만 투자해도:</b><br>
         · 30년 총 납입: 360회 × 10만원 = <b>3,600만원</b><br>
-        · QQQ 기준 예상: 약 <b>1.5~2억원</b> (원금의 4~6배)<br>
-        · 같은 돈을 현금으로 보유했다면? 실질 가치 <b>약 700만원</b> (80% 증발)<br><br>
-        <span style="color:var(--red)">현금 보유 → 3,600만원이 700만원으로 축소</span><br>
-        <span style="color:var(--green)">ETF 적립 → 3,600만원이 1.5~2억으로 증가</span><br><br>
+        · QQQ 기준 예상: <b data-sim="QQQ.total">약 5.5억원</b> (원금의 <span data-sim="QQQ.multiple">약 15배</span> ·
+        <span data-sim="QQQ.rate">연 14.9%</span> 가정, 위 시뮬레이션과 같은 계산)<br>
+        · 같은 돈을 현금으로 보유했다면? 실질 가치 <b>약 <span data-sim="cash.real">700만원</span></b>
+        (<span data-sim="cash.loss">80%</span> 증발 · 2005~2024년 화폐가치 하락률을 3,600만원 전체에 적용)<br><br>
+        <span style="color:var(--red)">현금 보유 → 3,600만원이 <span data-sim="cash.real">700만원</span>으로 축소</span><br>
+        <span style="color:var(--green)">ETF 적립(QQQ) → 3,600만원이 <span data-sim="QQQ.eok">5.5억</span>으로 증가</span><br><br>
         차트를 보거나 종목을 고를 필요가 <b>전혀 없습니다.</b>
         증권 앱에서 <b>매월 자동매수</b>만 설정하면 끝입니다.<br><br>
         <span style="color:var(--gold)">💡 연령대별 활용:</span><br>

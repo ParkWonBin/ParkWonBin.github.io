@@ -2,8 +2,13 @@
 const CHATBOTNAME = '도우미'
 const USERNAME = '고객'
 
+// 네이버 지도 검색 주소 만들기.
+// 특정 시설 이름을 지어내지 않고 '서대문구 + 동 + 시설 종류' 로 검색하게 한다. (한글 · 공백은 주소에 맞게 인코딩)
+const naverMapSearch = (query) => 'https://map.naver.com/p/search/' + encodeURIComponent(query)
+
 // 챗봇의 대본
 // TODO : 나중에 백앤드에서 DB 조회 결과로 대본을 만들 예정. DB로 결과 받았다는 전제 하에 아래 형식으로 개발 완료.
+// spotLink : 동을 고르면 보여줄 바로가기 {name: 링크 글자, link: 주소}
 const chatbotDialogDictionary = {
     message : '환영합니다.<br>서대문구 경로당,요양시설 위치 알려드립니다.<br>아래 주제에 대해서 문의해주세요.<br><br>시설을 선택하세요.',
     BtnText : ['경로당', '의료복지시설'],
@@ -14,27 +19,25 @@ const chatbotDialogDictionary = {
             message: '처음으로 돌아가겠습니까?',
             BtnText : ['처음으로'],
             spotLink : [
-                {name: '능안경로당' , link:'https://map.naver.com/p/search/능안경로당'},
-                {name: 'AAAA' , link:'https://map.naver.com/p/search/북아현동주민센터'},
-                {name: 'BBBB' , link:'https://map.naver.com/p/search/아이디어없다'}
+                {name: '능안경로당' , link: naverMapSearch('능안경로당')},
+                {name: '북아현동 경로당 찾기' , link: naverMapSearch('서대문구 북아현동 경로당')},
+                {name: '서대문구 경로당 모두 보기' , link: naverMapSearch('서대문구 경로당')}
             ]
         },
         '창천동': {
             message: '처음으로 돌아가겠습니까?',
             BtnText : ['처음으로'],
             spotLink : [
-                {name: '능안경로당' , link:'https://map.naver.com/p/search/능안경로당'},
-                {name: 'AAAA' , link:'https://map.naver.com/p/search/북아현동주민센터'},
-                {name: 'BBBB' , link:'https://map.naver.com/p/search/아이디어없다'}
+                {name: '창천동 경로당 찾기' , link: naverMapSearch('서대문구 창천동 경로당')},
+                {name: '서대문구 경로당 모두 보기' , link: naverMapSearch('서대문구 경로당')}
             ]
         },
         '홍은동': {
             message: '처음으로 돌아가겠습니까?',
             BtnText : ['처음으로'],
             spotLink : [
-                {name: '능안경로당' , link:'https://map.naver.com/p/search/능안경로당'},
-                {name: 'AAAA' , link:'https://map.naver.com/p/search/북아현동주민센터'},
-                {name: 'BBBB' , link:'https://map.naver.com/p/search/아이디어없다'}
+                {name: '홍은동 경로당 찾기' , link: naverMapSearch('서대문구 홍은동 경로당')},
+                {name: '서대문구 경로당 모두 보기' , link: naverMapSearch('서대문구 경로당')}
             ]
         }
     },
@@ -45,27 +48,24 @@ const chatbotDialogDictionary = {
             message: '처음으로 돌아가겠습니까?',
             BtnText : ['처음으로'],
             spotLink : [
-                {name: '능안경로당' , link:'https://map.naver.com/p/search/능안경로당'},
-                {name: 'AAAA' , link:'https://map.naver.com/p/search/북아현동주민센터'},
-                {name: 'BBBB' , link:'https://map.naver.com/p/search/아이디어없다'}
+                {name: '충정로3가 요양원 찾기' , link: naverMapSearch('서대문구 충정로3가 요양원')},
+                {name: '충정로3가 요양병원 찾기' , link: naverMapSearch('서대문구 충정로3가 요양병원')}
             ]
         },
         '연희동':{
             message: '처음으로 돌아가겠습니까?',
             BtnText : ['처음으로'],
             spotLink : [
-                {name: '능안경로당' , link:'https://map.naver.com/p/search/능안경로당'},
-                {name: 'AAAA' , link:'https://map.naver.com/p/search/북아현동주민센터'},
-                {name: 'BBBB' , link:'https://map.naver.com/p/search/아이디어없다'}
+                {name: '연희동 요양원 찾기' , link: naverMapSearch('서대문구 연희동 요양원')},
+                {name: '연희동 요양병원 찾기' , link: naverMapSearch('서대문구 연희동 요양병원')}
             ]
         },
         '북가좌동':{
             message: '처음으로 돌아가겠습니까?',
             BtnText : ['처음으로'],
             spotLink : [
-                {name: '능안경로당' , link:'https://map.naver.com/p/search/능안경로당'},
-                {name: 'AAAA' , link:'https://map.naver.com/p/search/북아현동주민센터'},
-                {name: 'BBBB' , link:'https://map.naver.com/p/search/아이디어없다'}
+                {name: '북가좌동 요양원 찾기' , link: naverMapSearch('서대문구 북가좌동 요양원')},
+                {name: '북가좌동 요양병원 찾기' , link: naverMapSearch('서대문구 북가좌동 요양병원')}
             ]
         }
     }

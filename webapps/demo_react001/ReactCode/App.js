@@ -9,18 +9,32 @@ import { useState } from 'react';
 // 2. 중괄호 문법(데이터 바인딩) : 변수에 있던 데이터가 jsx안에 표시됨
 // 3. style 속성 쓸 때는 object 형식으로 써야한다. (카멜 써야함)
 
+// Base64로 인코딩된 공유 데이터(?data=)를 디코딩 (페이지를 열 때 한 번만)
+// - URLSearchParams 는 '+' 를 공백으로 바꾼다. 제목에 '~' 등이 있으면 base64 에 '+' 가 생겨
+//   예전엔 빈 화면이 됐다. base64 에는 공백이 없으니 공백을 '+' 로 되돌린다 (예전에 만든 링크 호환).
+// - 읽지 못하는 링크면 빈 화면 대신 기본 게시글을 보여준다.
+const sharedPosts = (() => {
+  const base64Encoded = new URLSearchParams(window.location.search).get('data');
+  if (!base64Encoded) return null;
+  try {
+    // base64 -> ascii
+    const base64Decoded = atob(base64Encoded.replace(/ /g, '+'));
+    const decodedURIComponent = decodeURIComponent(base64Decoded);
+    const parsed = JSON.parse(decodedURIComponent);
+    if (!Array.isArray(parsed)) throw new Error('not an array');
+    const str = (v) => (v == null ? '' : String(v));
+    return parsed
+      .filter((p) => p && typeof p === 'object')
+      .map((p) => ({ title: str(p.title), date: str(p.date), contents: str(p.contents), like: Number(p.like) || 0 }));
+  } catch (e) {
+    console.warn('[demo_react001] 공유 주소의 data 를 읽지 못해 기본 글을 보여줍니다.', e);
+    return null;
+  }
+})();
+
 function App() {
 
-  // Base64로 인코딩된 데이터를 디코딩
-  let data;
-  const urlParams = new URLSearchParams(window.location.search);
-  const base64Encoded = urlParams.get('data')
-  if(base64Encoded){
-    // base64 -> ascii
-    const base64Decoded = atob(base64Encoded);
-    const decodedURIComponent = decodeURIComponent(base64Decoded);
-    data = JSON.parse(decodedURIComponent)
-  }
+  let data = sharedPosts;
 
   // 1. Data 가져오는 영역 ==============
   // URL query를 통해 데이터 가져왔으면 해당 데이터 사용, 아니면 기본값 사용
@@ -98,7 +112,8 @@ function App() {
     const base64Encoded = btoa(encodedURIComponent);
 
     // url 로 데이터 내보내기
-    const url = `${baseURL}?data=${base64Encoded}`;
+    // base64 의 '+' '/' '=' 는 주소에서 다른 뜻이 되므로 퍼센트 인코딩한다. ('+' 가 공백으로 읽히던 문제)
+    const url = `${baseURL}?data=${encodeURIComponent(base64Encoded)}`;
     setShareURL(prevUrl => ({
       visible : !prevUrl.visible,
       url : url
@@ -113,11 +128,10 @@ function App() {
       // 수정 중이 아닐 떄
       const btnEdit = ()=>{props.setIsEditing(true)}
       const btnDelete = () => {
+        // 제목으로 찾으면 같은 제목의 다른 글까지 지워지므로, 모달에 담아 둔 그 글(객체)만 뺀다.
+        const target = props.modal.post;
         props.setModal(initModalData)
-        props.setPosts(prevPosts => {
-          // 제목이 일치하지 않는 게시글만 필터링하여 새 배열을 생성
-          return prevPosts.filter(post => post.title !== props.modal.title);
-        });
+        props.setPosts(prevPosts => prevPosts.filter(post => post !== target));
       };
       
       return (
@@ -135,19 +149,15 @@ function App() {
       const [localContents, setLocalContents] = useState(props.modal.contents);
       // 수정 내용 적용
       const btnEditConfirm = ()=>{
-        props.setPosts(prevPosts=>{
-          props.setIsEditing(false)
-          props.setModal(prevData => ({...prevData, visible:false }))
-          return prevPosts.map((post) => {
-            if(post.title === props.modal.title){
-              // 수정전 제목과 일치 건은 수정된 내용으로 표시
-              return {...post, title:localTitle, contents:localContents}
-            }else{
-              // 수정전 제목과 불일치 건은 기존 내용대로 표시
-              return post
-            }
-          })
-        })
+        // 제목이 아니라 모달에 담아 둔 그 글(객체)만 고친다. (같은 제목의 다른 글은 그대로)
+        const target = props.modal.post;
+        const edited = target ? {...target, title:localTitle, contents:localContents} : null;
+        props.setPosts(prevPosts => prevPosts.map(post => post === target ? edited : post))
+        props.setIsEditing(false)
+        // 모달도 고친 글을 가리키게 한다 ('모달 토글' 로 다시 열면 고친 내용이 보이도록)
+        props.setModal(prevData => edited
+          ? {...prevData, title:edited.title, contents:edited.contents, post:edited, visible:false}
+          : {...prevData, visible:false})
       }
       // 수정 취소 버튼
       const btnEditCencle = ()=>{
@@ -246,7 +256,8 @@ function App() {
           const newModalData = {
             title: post.title, 
             date: post.date,
-            contents: post.contents
+            contents: post.contents,
+            post: post // 수정 · 삭제할 글을 제목 대신 이 객체로 찾는다
           }
 
           // ======== 게시글 별 버튼 기능 정의 ========
@@ -254,7 +265,7 @@ function App() {
           const openModal = ()=>{ 
             setIsEditing(false)
             setModal(prevModalData => ({...newModalData, 
-              visible: prevModalData.title === newModalData.title ? !prevModalData.visible : true
+              visible: prevModalData.post === newModalData.post ? !prevModalData.visible : true
             })) 
             // 동일한 게시글을 다시 클릭하면 모달창이 토글되고,
             // 다른 게시글을 클릭하면 해당 게시물을 보여주도록

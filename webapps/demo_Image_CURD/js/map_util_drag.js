@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     let elem_selected = null;
     let offsetX = 0; // 마우스 클릭 위치와 이미지의 x 위치 차이
     let offsetY = 0; // 마우스 클릭 위치와 이미지의 y 위치 차이
+    let startPos = ''; // 끌기 전 위치 (옮겼는지 알아보기용)
 
     // PC버전에서 드래그 기능 사용을 위한 설정입니다.
     document.addEventListener('mousedown', act_drag_start);
@@ -19,10 +20,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     // 클릭 및 터치 시작
     function act_drag_start(e) {
+        // 사진 위의 버튼([등록] [이동] [삭제])은 끌기를 시작하지 않는다
+        // : 버튼을 잡고 끌다 놓았을 때 삭제 · 저장이 눌리지 않고, 터치로 누르면 브라우저가 click 을 만들어 준다
+        if (e.target.closest && e.target.closest('button')) { return }
         const elems_draggable = e.target.closest('.draggable'); // 클릭된 요소에서 가장 가까운 .draggable 요소를 찾습니다.
         if (elems_draggable) {
             elem_selected = elems_draggable; // dragable 클래스를 가진 div를 선택합니다.
             elem_selected.style.zIndex = 1000; // 선택된 요소를 최상위로
+            startPos = elem_selected.style.left + ',' + elem_selected.style.top; // 끌기 전 위치
             // 하이라이트 이미지
             elems_draggable.getElementsByTagName('img')[0].classList.add('selectedImg');
 
@@ -55,7 +60,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
     function act_drag_end() {
         if (elem_selected) {
             elem_selected.style.zIndex = ''; // 드래그 종료 시 zIndex 초기화
-            elem_selected.getElementsByTagName('img')[0].classList.remove('selectedImg');
+            const img = elem_selected.getElementsByTagName('img')[0];
+            img.classList.remove('selectedImg');
+            // 옮겼다면 저장하는 방법 안내 (위치는 [이동] · [등록]을 눌러야 저장된다)
+            if (startPos !== elem_selected.style.left + ',' + elem_selected.style.top && typeof showStoreMsg === 'function') {
+                showStoreMsg(img.getAttribute('data-id') ? '‘이동’을 누르면 이 위치가 저장돼요' : '‘등록’을 누르면 저장돼요');
+            }
             elem_selected = null;
         }
     }

@@ -37,6 +37,44 @@ body{
 #btn_addHotSpot:hover{
     background-color: greenyellow;
 }
+/* 저장 안내 (이 브라우저에만 저장) ********************************************/
+#storeNote{
+    position: absolute;
+    top: 1vh;
+    right: 1vw;
+    z-index: 2;
+    box-sizing: border-box;
+    max-width: calc(100% - 180px); /* 왼쪽 위 '장소 등록' 버튼과 겹치지 않게 */
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 6px 5px 10px;
+    border: 2px solid black;
+    background-color: rgba(255, 255, 255, 0.92);
+    color: black;
+    text-align: right;
+    font: 600 13px/1.35 -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+}
+#storeNote.is-flash{
+    background-color: greenyellow;
+}
+#storeNote.is-error{
+    background-color: coral;
+}
+#storeNote button{
+    font: inherit;
+    font-weight: bolder;
+    padding: 3px 8px;
+    border: 2px solid black;
+    background-color: white;
+    color: black;
+    cursor: pointer;
+}
+#storeNote button:hover{
+    background-color: gold;
+}
 /* 이미지 내 버튼 ********************************************/
 .imageHotSpot{
     display: flex;

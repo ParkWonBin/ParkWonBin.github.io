@@ -16,6 +16,7 @@ async function loadData() {
 }
 
 function renderAll() {
+  renderSimSummary(); // 차트 라이브러리를 못 불러와도 숫자는 맞게 — 차트보다 먼저
   renderSourceLinks();
   renderCompareTable();
   renderM2Chart();
@@ -183,6 +184,9 @@ function renderM2FxCorrelation() {
 }
 
 // ===== DEPRECIATION =====
+// 연간 실질 화폐가치 하락률(%) = CPI + M2증가율 × 0.732
+function depRate(d) { return d.cpi + d.m2_growth * 0.732; }
+
 let depRows = [];
 function renderDepreciation() {
   const thead = document.querySelector('#depreciation-table thead');
@@ -193,7 +197,7 @@ function renderDepreciation() {
   let cumValue = 100;
   depRows = [];
   KR.data.forEach(d => {
-    const dep = d.cpi + d.m2_growth * 0.732;
+    const dep = depRate(d);
     cumValue *= (1 - dep / 100);
     depRows.push({ ...d, dep, cumValue });
   });
@@ -371,7 +375,7 @@ function renderETFResults(results) {
     </div>`;
   }).join('');
   document.getElementById('etf-krw-note').innerHTML =
-    `💱 환율 기준: <b>₩${fx}/$</b> (2024년 연평균) · 시뮬레이션은 각 ETF의 <b>실제 과거 CAGR(총수익률 기준)</b>을 사용합니다.`;
+    `💱 환율 기준: <b>₩${fx}/$</b> (2024년 연평균) · 시뮬레이션은 각 ETF의 <b>실제 과거 CAGR(총수익률 기준)</b>을 사용합니다. 달러 수익률을 원화에 그대로 적용하므로 환율 변동은 반영하지 않습니다.`;
 }
 
 let etfChart = null;
@@ -406,6 +410,37 @@ function renderETFChart(results) {
           grid: { color: 'rgba(0,0,0,0.06)' } }
       }
     }
+  });
+}
+
+// ===== '월 10만원 × 30년' 숫자 (상단 요약 카드 · 목차 · 본문 문장) =====
+// 아래 시뮬레이터와 같은 함수(simulateETF)·같은 데이터로 계산해 [data-sim] 요소에 채운다.
+// HTML 에 적힌 값은 데이터를 못 불러왔을 때 보이는 대체값이므로, 데이터를 바꾸면 그 값도 같이 맞춘다.
+function renderSimSummary() {
+  const MONTHLY = 10; // 만원
+  const results = simulateETF(MONTHLY);
+  const vals = {};
+  results.forEach(r => {
+    const eok = (r.total / 10000).toFixed(1);
+    vals[r.key + '.total'] = `약 ${eok}억원`;
+    vals[r.key + '.eok'] = `${eok}억`;
+    vals[r.key + '.multiple'] = `약 ${Math.round(r.total / r.invested)}배`;
+    vals[r.key + '.cagr'] = `CAGR ${(r.cagr * 100).toFixed(1)}% (${r.startYear}~${r.endYear})`;
+    vals[r.key + '.rate'] = `연 ${(r.cagr * 100).toFixed(1)}%`;
+    // 30년 뒤 평가액 × 연 배당률 ÷ 12 (세전)
+    vals[r.key + '.monthlyDiv'] = `약 ${Math.round(r.total * r.divYield / 100 / 12).toLocaleString()}만원`;
+    vals[r.key + '.divYield'] = `연 배당률 ${r.divYield}% 기준`;
+  });
+  const mult = results.map(r => Math.round(r.total / r.invested));
+  vals['range.multiple'] = `${Math.min(...mult)}~${Math.max(...mult)}배`;
+  // 현금: 납입 총액 전체에 화폐가치 하락 표(KR 데이터 전 기간)의 누적 하락을 적용
+  const remain = KR.data.reduce((v, d) => v * (1 - depRate(d) / 100), 1);
+  const invested = MONTHLY * 360;
+  vals['cash.real'] = `${(Math.round(invested * remain / 100) * 100).toLocaleString()}만원`; // 100만원 단위
+  vals['cash.loss'] = `${Math.round((1 - remain) * 100)}%`;
+  document.querySelectorAll('[data-sim]').forEach(el => {
+    const v = vals[el.dataset.sim];
+    if (v != null) el.textContent = v;
   });
 }
 

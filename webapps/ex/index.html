@@ -5,6 +5,27 @@
     <link rel="icon" href="/assets/images/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>3d gallery</title>
+    <script>
+      // 개발용 화면(‘개발’ 전시 버튼 · 카메라 좌표 표시)은 ?dev=1 로 열었을 때만.
+      // 번들은 html.ex-dev 를 보고 main.json 의 "dev": true 항목을 목록에 넣는다.
+      if (/[?&]dev=1(&|$)/.test(location.search)) document.documentElement.classList.add('ex-dev');
+    </script>
+    <style>
+      /* 화면 맞춤: 번들이 #gallery3d-app 높이를 '가로 폭(px)' 으로 정해 장면이 아래로 밀리고
+         넘친 아래쪽이 잘렸다 → 화면 높이(100dvh)로 고정하고, 캔버스가 버튼 줄 아래 남은 칸을 채운다. */
+      html, body { margin: 0; height: 100%; }
+      #gallery3d-app {
+        height: 100vh !important;
+        height: 100dvh !important;
+        display: flex;
+        flex-direction: column;
+      }
+      #gallery3d-app > div { flex: none; }
+      #gallery3d-app > div:first-child { padding: 8px 8px 0; }           /* 전시 버튼 줄 */
+      #gallery3d-app > div:last-child { flex: 1 1 0; min-height: 0; height: auto !important; } /* R3F 캔버스 */
+      html:not(.ex-dev) #camera-info { display: none; }                   /* 카메라 좌표(개발용) */
+      /* (번들 수정) 세로 화면은 시야각을 90° 로 넓혀 건물 좌우가 잘리지 않게: Canvas camera.fov */
+    </style>
     <script type="module" crossorigin src="/webapps/ex/assets/index-CGi1P09P.js"></script>
     <script src="/assets/js/analytics.js" defer></script>
     <script src="/assets/js/app-bar.js" defer data-pos="bl"></script>

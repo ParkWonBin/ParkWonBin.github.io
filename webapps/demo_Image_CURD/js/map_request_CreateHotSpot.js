@@ -1,36 +1,29 @@
-const request_CreateHotSpot = (data) => {
+// Create : 새 장소(사진 + 위치)를 저장하고 새 id 를 돌려준다.
+// 원래는 /map 백엔드로 PUT 요청을 보내는 연습용이었지만, GitHub Pages 에는 서버가 없어
+// 이 브라우저의 IndexedDB(map_store_IndexedDB.js)에 저장한다.
+//   Create : add · Read : list · Update : update · Delete : remove
+const request_CreateHotSpot = async (data) => {
     const {file, left, top} = data
-    // file: file객체,
-    // left: vw 단위의 숫자,
-    // top: vh 단위의 숫자,
-    // payload 만들기
-    const formData = new FormData();
-    formData.append('image', file);
-    formData.append('left', left);
-    formData.append('top', top);
-    // 세션 통해 id 넘기고 본인이 만든것만 수정하도록
+    // file: Blob(줄인 사진),
+    // left: vw 단위 (숫자 또는 '12.3vw'),
+    // top: vh 단위 (숫자 또는 '45.6vh'),
+    const buffer = await readBlobAsArrayBuffer(file);
+    return spotStore.add({
+        data: buffer,
+        type: file.type || 'image/jpeg',
+        left: parseFloat(left) || 0,
+        top: parseFloat(top) || 0,
+        created: Date.now()
+    });
+}
 
-    // /map 백엔드로 요청 보내기
-    // Create : put
-    // Read : get
-    // Update : patch
-    // Delete : delete
-    fetch('/map', {
-        method: 'PUT',
-        body: formData
-    })
-        .then(response => {
-            if (!response.ok) { throw new Error('이미지 등록에 실패했습니다.') }
-            // 서버로부터 응답을 JSON 형태로 받아 리턴합니다.
-            return response.json();
-        })
-        .then(res => {
-            // 서버로부터 받은 JSON 데이터를 콘솔에 출력합니다.
-            console.log('Response :', JSON.stringify(res));
-        })
-        .catch(error => {
-            console.error('Error:', error); // 에러 처리
-        }).finally(()=>{
-            console.log('CreateHotSpot 함수 종료')
+// Blob → ArrayBuffer (blob.arrayBuffer() 가 없는 오래된 브라우저도)
+const readBlobAsArrayBuffer = (blob) => {
+    if (blob.arrayBuffer) { return blob.arrayBuffer(); }
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsArrayBuffer(blob);
     });
 }

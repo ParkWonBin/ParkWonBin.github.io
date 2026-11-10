@@ -18,12 +18,12 @@ module.exports = {
 
   // flood_map
   "flood_map": async (page) => {
-    // GeoJSON 11개(2022년은 20MB)를 다 읽을 때까지 로딩 화면이 덮고 있다
-    await page.waitForSelector('#loading.hidden', { state: 'attached', timeout: 30000 }).catch(() => {});
+    // 연도 파일은 켤 때 받는다 → '전체 켜기' 후 11개(2022년은 20MB)를 다 받을 때까지(.loading 이 없어질 때까지) 기다린다
     await page.waitForSelector('#layer-list .layer-item', { timeout: 5000 }).catch(() => {});
     const btn = page.locator('.controls-bar .ctrl-btn', { hasText: '전체 켜기' });
     if (await btn.count()) { await btn.first().click(); await page.mouse.move(1270, 790); }
     else await page.evaluate(() => { if (typeof toggleAll === 'function') toggleAll(true); });
+    await page.waitForFunction(() => !document.querySelector('#layer-list .layer-item.loading'), null, { timeout: 60000 }).catch(() => {});
     // 침수가 몰린 서울 남부(관악·동작·강남)를 한 단계 확대, 왼쪽 패널(340px)을 피해 오른쪽 지도 영역 가운데에 둔다
     await page.evaluate(() => {
       if (document.activeElement) document.activeElement.blur();

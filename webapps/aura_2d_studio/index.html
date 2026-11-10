@@ -1088,9 +1088,10 @@ void main(){
   float iconA=smoothstep(aaw,-aaw,d0)*ION;
   if(iconA>0.0){
     vec3 base=vec3(ICR,ICG,ICB);
-    if(HASIMG>0.5){ vec2 q=clamp(ip/r,-1.0,1.0); base=mix(texture2D(uImg,vec2(q.x*0.5+0.5,0.5-q.y*0.5)).rgb, base, ITINT); }
+    float fa=0.0; vec3 fillc=base; // 그라데이션 채우기의 색과 그 자리의 불투명도 (이미지가 비쳐 보일 정도)
     // 도형 내부: 노이즈로 일렁이는 좌표 → 그라데이션 → 빛줄기 · 광택 띠
-    if(FMODE>0.5){
+    // (업로드 이미지는 '이미지에 색 입히기'가 0이면 채우기가 안 보이므로 계산을 건너뛴다)
+    if(FMODE>0.5 && (HASIMG<0.5 || ITINT>0.0)){
       vec2 fp=ip/r;
       vec2 wq=fp*FWSCALE+vec2(0.0,-t*FFLOW);
       float wt=t*FWSPD;
@@ -1117,7 +1118,15 @@ void main(){
         fcol+=smoothstep(FSW,0.0,abs(sb-sc))*FSHEEN;
       }
       fcol*=FBRIGHT*(1.0+FPULSE*(pulse-0.5)*2.0);
-      base=mix(base,fcol,clamp(FOPA*fc.a,0.0,1.0));
+      fa=clamp(FOPA*fc.a,0.0,1.0); fillc=fcol;
+      base=mix(base,fcol,fa);
+    }
+    // 업로드 이미지: 이미지 원래 색 위에 채우기 색을 '이미지에 색 입히기'만큼 덮는다
+    // 0 = 이미지 그대로 (기본), 1 = 채우기로 칠한 실루엣. 그라데이션의 투명한 부분 · '채우기 세기'만큼은 이미지가 비친다.
+    // 내장 도형은 그대로 채우기만 쓴다.
+    if(HASIMG>0.5){
+      vec2 q=clamp(ip/r,-1.0,1.0); vec3 img=texture2D(uImg,vec2(q.x*0.5+0.5,0.5-q.y*0.5)).rgb;
+      base = FMODE>0.5 ? mix(img, fillc, ITINT*fa) : mix(img, vec3(ICR,ICG,ICB), ITINT);
     }
     float bevel=clamp(-d0/(r*0.3),0.0,1.0);
     float lit=dot(normalize(ip+1e-5),vec2(-0.55,0.75));
@@ -1434,7 +1443,7 @@ $('#gDpr').addEventListener('change', (e) => { VIEW.dpr = e.target.value; save()
 const FILL_MAPS = [['depth', '깊이 (중심→가장자리)'], ['linear', '선형'], ['radial', '원형'], ['conic', '회전 (각도)'], ['noise', '노이즈 (대리석)']];
 const SHAPES = [['circle', '원'], ['roundbox', '둥근 사각형'], ['hexagon', '육각형'], ['star', '별'], ['diamond', '마름모'],
   ['heart', '하트'], ['shield', '방패'], ['image', '이미지 (업로드)']];
-const R_ = (k, label, min, max, step) => ({ k, t: 'range', label, min, max, step });
+const R_ = (k, label, min, max, step, hint) => ({ k, t: 'range', label, min, max, step, hint });
 const T_ = (k, label) => ({ k, t: 'toggle', label });
 const C_ = (k, label) => ({ k, t: 'color', label });
 const S_ = (k, label, opts) => ({ k, t: 'select', label, opts });
@@ -1449,7 +1458,7 @@ const SCHEMA = [
     R_('icon.size', '크기', 0.05, 0.9, 0.005),
     T_('icon.visible', '아이콘 표시'),
     C_('icon.color', '색'),
-    R_('icon.tint', '이미지에 색 입히기', 0, 1, 0.01),
+    R_('icon.tint', '이미지에 색 입히기', 0, 1, 0.01, '업로드 이미지 위에 도형 내부 채우기 색을 덮는 정도 (0 = 이미지 원래 색, 1 = 채우기 색 실루엣)'),
     R_('icon.shade', '입체감', 0, 1, 0.01),
     R_('icon.rotate', '회전 (°)', -180, 180, 1),
     R_('icon.spin', '자전 속도', -3, 3, 0.01),
@@ -1580,7 +1589,7 @@ function makeControl(it) {
       if (Number.isNaN(v)) return sync();
       setP(it.k, it.step >= 1 ? Math.round(v) : v); rng.value = v; done();
     });
-    lab.title = '더블클릭: 기본값';
+    lab.title = (it.hint ? it.hint + '\n' : '') + '더블클릭: 기본값';
     lab.addEventListener('dblclick', () => { setP(it.k, defaultOf(it.k)); sync(); done(); });
     row.append(rng, num);
     updaters.push(sync);
@@ -1694,7 +1703,7 @@ const SLOT_HINT = {
   aura: '막대 왼쪽(t=0) = 아이콘 쪽, 오른쪽(t=1) = 아우라 바깥 (매핑은 아우라 설정 › 그라데이션 매핑)',
   particles: '불꽃 입자마다 막대 위 임의 위치의 색을 뽑아 써요 (광선은 아우라 그라데이션 25% 지점 색)',
   ring: '궤도 링: “둘레 따라 그라데이션”을 켜면 한 바퀴에 막대 전체, 끄면 60% 지점 색',
-  fill: '도형 내부: 막대 왼쪽(t=0) → 오른쪽(t=1)이 아우라 설정 › 도형 내부 · 채우기의 “그라데이션 모양”을 따라 칠해지고, 일렁임이 그 위에서 흔들어요',
+  fill: '도형 내부: 막대 왼쪽(t=0) → 오른쪽(t=1)이 아우라 설정 › 도형 내부 · 채우기의 “그라데이션 모양”을 따라 칠해지고, 일렁임이 그 위에서 흔들어요 (업로드 이미지에는 “이미지에 색 입히기”만큼 덮여요)',
 };
 const SLOT_P = { aura: 'aura', particles: 'sparks', ring: 'ring', fill: 'fill' };   // 그라데이션 슬롯 → 설정 키
 let slotKey = 'aura';
