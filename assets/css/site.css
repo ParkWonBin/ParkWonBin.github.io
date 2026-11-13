@@ -926,3 +926,9 @@ button.tag:hover { color: var(--text); background: var(--line); }
   .app-card, .art-card, .feature-tile { transition: none; }
   .app-card:hover, .art-card:hover, .feature-tile:hover { transform: none; }
 }
+
+/* ── 출처 목록 (/sources/) ─────────────────────────────────────────────── */
+.source-list { padding-left: 24px; line-height: 1.65; }
+.source-list li { margin: 6px 0; scroll-margin-top: calc(var(--header-h) + 16px); }
+.source-list li:target { background: var(--accent-soft); border-radius: 6px; outline: 4px solid var(--accent-soft); }
+.source-list .muted { color: var(--muted); font-size: 0.92em; }

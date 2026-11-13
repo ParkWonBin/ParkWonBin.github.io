@@ -302,6 +302,7 @@ function getETFStats() {
       name: data.name, desc: data.description,
       divType: data.dividend_type,
       divYield: data.annual_dividend_yield,
+      divSrc: data.dividend_yield_source, // _data/sources/finance.yml 의 id (본문 각주)
       dataYears: data.returns.length,
       startYear: data.returns[0].year,
       endYear: data.returns[data.returns.length - 1].year
@@ -336,7 +337,7 @@ function renderETFSim() {
     infoTable.innerHTML = stats.map(s =>
       `<tr><td style="color:${s.color};font-weight:600">${s.key}</td>
        <td>${s.divType}</td>
-       <td>${s.divYield}%</td>
+       <td>${s.divYield}%${s.divSrc ? `<sup class="fn"><a href="/sources/#${s.divSrc}">[출처]</a></sup>` : ''}</td>
        <td style="color:var(--gold);font-weight:600">${(s.cagr * 100).toFixed(1)}%</td>
        <td>${s.desc} <span style="font-size:.7rem;color:var(--text2)">(${s.startYear}~${s.endYear}, ${s.dataYears}년 실적)</span></td></tr>`
     ).join('');

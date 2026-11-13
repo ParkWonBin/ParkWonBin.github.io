@@ -15,6 +15,7 @@ _data/
   apps.yml             ★ 웹앱 목록 (홈 카드 · 대표작 · 단축 주소가 전부 여기서 나옴)
   drawing.yml          그림 페이지 문구
   redirects.yml        앱이 아닌 옛 주소 → 새 주소
+  sources/*.yml        출처 각주의 원본 자료 (→ /sources.json · /sources/ 페이지)
 _layouts/              default · page · post · artwork · redirect
 _includes/             head · header · footer · app-card · app-resolve · feature-tile · art-card · post-item · share-dialog · resolver
 _posts/                글 (YYYY-MM-DD-제목.md) — 첫 글을 쓸 때 폴더를 만들면 됩니다
@@ -27,6 +28,7 @@ assets/
   js/site.js           라이트/다크 토글, 목록 검색 · 필터 · 태그, 공유 창
   js/analytics.js      Google Analytics (블로그 + 모든 웹앱 공용)
   js/app-bar.js        웹앱 화면의 '← wbpark' 블로그로 돌아가기 표시
+  js/footnotes.js      출처 각주 ([1] 위첨자 · 출처 창 · 페이지 끝 목록)
   js/lib/qrcode.min.js  공유 창의 QR 코드 (필요할 때만 불러옴)
   thumbs/<slug>.webp   웹앱 카드 썸네일 (tools/thumbs.js 로 생성)
 webapps/<slug>/        웹앱 하나 = 폴더 하나 (index.html 이 곧 앱)
@@ -155,6 +157,21 @@ apps: [warhammer_map]      # (선택) 이 글에서 다룬 앱 → 글 끝에 �
 - 주소는 `/posts/제목/` 이 됩니다.
 - 파일 정리용으로 `_posts/network/…` 처럼 하위 폴더를 만들어도 됩니다 (분류는 `category` 로).
 - 글이 하나라도 생기면 상단 메뉴에 **글** 이 나타나고, 홈에 최근 글이 표시됩니다.
+
+---
+
+## 출처 각주
+
+근거가 필요한 문장 끝에 각주를 답니다 (나무위키 · 위키백과처럼 [1] 위첨자 + 페이지 끝 출처 목록).
+
+```html
+깊은 잠 잘 때 뇌세포 사이 틈이 60%쯤 넓어져요.<sup class="fn"><a href="/sources/#xie2013">[출처]</a></sup>
+```
+
+- 출처 내용은 `_data/sources/<묶음>.yml` 에만 적습니다 (id · author · year · title · publisher · url · accessed · note). 본문에는 id 만.
+- `assets/js/footnotes.js` 가 번호를 매기고, 누르면 출처 창을 띄우고, 페이지 끝에 목록을 만듭니다. 자바스크립트가 없으면 `/sources/` 페이지의 그 항목으로 갑니다.
+- 블로그 페이지에는 자동으로 들어가고, 웹앱은 각주를 쓰는 페이지 `<head>` 에 `<script src="/assets/js/footnotes.js" defer></script>` 를 넣습니다.
+- 사이트 점검이 없는 출처 id · 중복 id 를 실패로 잡습니다.
 
 ---
 

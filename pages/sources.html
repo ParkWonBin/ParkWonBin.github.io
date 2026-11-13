@@ -1,0 +1,30 @@
+---
+layout: page
+title: 출처
+permalink: /sources/
+description: 블로그와 웹앱 본문의 각주가 가리키는 원본 자료 목록
+sitemap: false
+---
+{%- comment -%}
+  본문 각주 <sup class="fn"><a href="/sources/#id">[출처]</a></sup> 가 자바스크립트 없이 열리면 여기로 온다.
+  목록은 _data/sources/<묶음>.yml 에서 만든다 (assets/js/footnotes.js 는 같은 내용을 /sources.json 으로 읽는다).
+{%- endcomment -%}
+{%- assign labels = "health:건강관리,finance:경제 지식,science:과학 시뮬레이션,warhammer:워해머,tools:이미지 · 색 도구,web:웹 기술 · 데이터,site:블로그" | split: "," -%}
+<p class="lead">본문의 <sup>[1]</sup> 같은 각주가 가리키는 원본 자료입니다. 시점이 있는 자료는 확인한 날짜를 함께 적었습니다.</p>
+{%- for group in site.data.sources %}
+{%- assign label = group[0] -%}
+{%- for l in labels -%}{%- assign kv = l | split: ":" -%}{%- if kv[0] == group[0] -%}{%- assign label = kv[1] -%}{%- endif -%}{%- endfor %}
+<h2 id="group-{{ group[0] }}">{{ label }}</h2>
+<ol class="source-list">
+  {%- for s in group[1] %}
+  <li id="{{ s.id }}">
+    {%- if s.author %}{{ s.author | escape }}{% if s.year %} ({{ s.year }}){% endif %}. {% elsif s.year %}({{ s.year }}). {% endif -%}
+    {%- if s.title %}<cite>{{ s.title | escape }}</cite>. {% endif -%}
+    {%- if s.publisher %}{{ s.publisher | escape }}. {% endif -%}
+    {%- if s.url %}<a href="{{ s.url }}" target="_blank" rel="noopener">원문 ↗</a>{% endif -%}
+    {%- if s.accessed %} <span class="muted">({{ s.accessed }} 기준)</span>{% endif -%}
+    {%- if s.note %}<br><span class="muted">{{ s.note | escape }}</span>{% endif %}
+  </li>
+  {%- endfor %}
+</ol>
+{%- endfor %}

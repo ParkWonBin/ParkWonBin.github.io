@@ -1,0 +1,15 @@
+---
+# 출처 목록을 JSON 으로 내보낸다 — assets/js/footnotes.js 가 읽는다. 원본은 _data/sources/*.yml (여기는 고칠 필요 없음)
+permalink: /sources.json
+sitemap: false
+---
+{%- assign first = true -%}
+{
+{%- for group in site.data.sources -%}
+  {%- for s in group[1] -%}
+    {%- unless first %},{% endunless %}
+  {{ s.id | jsonify }}: { "group": {{ group[0] | jsonify }}, "author": {{ s.author | jsonify }}, "year": {{ s.year | jsonify }}, "title": {{ s.title | jsonify }}, "publisher": {{ s.publisher | jsonify }}, "url": {{ s.url | jsonify }}, "accessed": {{ s.accessed | jsonify }}, "note": {{ s.note | jsonify }} }
+    {%- assign first = false -%}
+  {%- endfor -%}
+{%- endfor %}
+}

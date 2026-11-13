@@ -9,6 +9,7 @@
 //   · 페이지 JS 오류 (allow.js 의 예외 제외), 페이지가 응답하지 않음 (무한 루프 등)
 //   · 화면보다 긴 본문이 끝까지 스크롤해도 투명한 채로 남음 (나타나기 효과가 안 풀리는 버그)
 //   · 단축 주소 · 옛 주소 (apps.json) 가 제 위치로 가지 않거나, 간 곳이 200 이 아님
+//   · 본문 각주(sup.fn)가 sources.json 에 없는 출처 id 를 가리킴, 출처 id 중복 · 제목과 주소가 다 빈 출처
 // 경고만 하는 것: 외부(CDN 등) 요청 실패 · 외부 요청이 멈춰 45초 안에 다 못 불러옴 — 남의 서버 사정일 수 있어서
 //                 한 페이지가 90초 안에 끝나지 않음 — 점검이 멈추지 않게 다음 페이지로 넘어간다
 const fs = require('fs');
@@ -25,6 +26,8 @@ const ROOT = path.resolve(positional[0] || '_site');
 const PORT = +opt('port', 4321);
 const BASE = `http://127.0.0.1:${PORT}`;
 const SETUP = opt('setup', '') ? require(path.resolve(opt('setup'))) : null;
+// 출처 목록 (_data/sources/*.yml → sources.json). 본문 각주가 없는 id 를 가리키면 실패
+let SOURCES = null;
 const ONLY = opt('only', '');
 const PAGE_BUDGET = 90000; // 한 페이지에 쓰는 최대 시간 (ms)
 
@@ -82,7 +85,12 @@ async function checkPage(ctx, url, isNotFound) {
     });
     await page.waitForTimeout(1200);
     const found = await page.evaluate(async (hiddenOk) => {
-      const out = { broken: [], hidden: [] };
+      const out = { broken: [], hidden: [], fn: [] };
+      // 출처 각주 id (footnotes.js 가 바꾼 뒤면 data-src, 아니면 href 의 /sources/#id)
+      for (const a of document.querySelectorAll('sup.fn > a')) {
+        const id = a.getAttribute('data-src') || ((a.getAttribute('href') || '').split('/sources/#')[1] || '');
+        out.fn.push(decodeURIComponent(id));
+      }
       // 깨진 이미지: 같은 사이트의 <img> 가 디코딩되지 않으면
       //   decode() 는 아직 안 불러온 이미지(숨긴 목록 안의 loading="lazy" 등)면 끝없이 기다리므로 3초만 기다리고,
       //   그래도 안 되면 같은 주소를 새로 불러 본다 (화면을 다시 그리느라 요소가 바뀐 순간일 수도 있어서)
@@ -113,6 +121,7 @@ async function checkPage(ctx, url, isNotFound) {
     }, ALLOW.hiddenOk);
     found.broken.forEach(b => r.fail.push('깨진 이미지: ' + b));
     found.hidden.forEach(h => r.fail.push('본문이 보이지 않음: ' + h));
+    if (SOURCES) [...new Set(found.fn)].filter(id => !id || !(id in SOURCES)).forEach(id => r.fail.push('출처 id 없음: ' + (id || '(빈 id)')));
   })();
   try {
     if (await Promise.race([run, budget]) === 'timeout') {
@@ -158,6 +167,17 @@ async function checkRedirects(ctx, data) {
 
 (async () => {
   if (!fs.existsSync(path.join(ROOT, 'index.html'))) { console.error(`빌드된 사이트가 없어요: ${ROOT}`); process.exit(2); }
+  const srcFile = path.join(ROOT, 'sources.json');
+  const sourceFails = [];
+  if (fs.existsSync(srcFile)) {
+    const raw = fs.readFileSync(srcFile, 'utf8');
+    try { SOURCES = JSON.parse(raw); } catch (e) { sourceFails.push('sources.json 이 올바른 JSON 이 아님: ' + e.message); }
+    // 같은 id 가 두 번 나오면 JSON 에서는 뒤의 것만 남는다 → 원문에서 직접 센다
+    const ids = [...raw.matchAll(/^\s*,?\s*"([^"]+)": \{ "group"/gm)].map(m => m[1]);
+    [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))].forEach(id => sourceFails.push('출처 id 가 두 번 이상: ' + id));
+    if (SOURCES) Object.entries(SOURCES).filter(([, v]) => !v.url && !v.title).forEach(([id]) => sourceFails.push('출처에 제목 · 주소가 없음: ' + id));
+    if (sourceFails.length) console.log('✗ 출처 목록\n    ' + sourceFails.join('\n    '));
+  }
   const server = await serve(ROOT, PORT);
   const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
@@ -193,6 +213,7 @@ async function checkRedirects(ctx, data) {
     ``,
     `- 페이지 ${results.length}개: 문제 ${bad.length}개, 외부 요청 경고 ${warned.length}개${slow.length ? `, 시간 초과 ${slow.length}개` : ''}`,
     `- 단축 · 옛 주소 ${redirects.count}개: 실패 ${redirects.fails.length}개`,
+    ...(SOURCES || sourceFails.length ? [`- 출처 ${SOURCES ? Object.keys(SOURCES).length : 0}개: 문제 ${sourceFails.length}개${sourceFails.length ? ' — ' + sourceFails.join(', ').replace(/\|/g, '\\|') : ''}`] : []),
     ``,
     ...(bad.length ? ['| 페이지 | 문제 |', '|---|---|', ...bad.map(r => `| \`${r.url}\` | ${r.fail.join('<br>').replace(/\|/g, '\\|')} |`), ''] : []),
     ...(redirects.fails.length ? ['**주소 이동 실패**', '', ...redirects.fails.map(f => `- \`${f}\``), ''] : []),
@@ -201,5 +222,5 @@ async function checkRedirects(ctx, data) {
   ].join('\n');
   if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary + '\n');
   console.log('\n' + summary);
-  process.exit(bad.length || redirects.fails.length ? 1 : 0);
+  process.exit(bad.length || redirects.fails.length || sourceFails.length ? 1 : 0);
 })();

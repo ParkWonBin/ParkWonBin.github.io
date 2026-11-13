@@ -1,0 +1,79 @@
+# 건강관리(webapps/health) 본문 각주의 출처. 본문: <sup class="fn"><a href="/sources/#id">[출처]</a></sup>
+# 항목: id(사이트 전체에서 하나) · author · year · title · publisher(학술지 권호 · 기관) · url(가능하면 DOI) · accessed(시점이 있는 자료) · note
+- id: xie2013
+  author: Xie L, Kang H, Xu Q, et al.
+  year: 2013
+  title: Sleep drives metabolite clearance from the adult brain
+  publisher: Science 342(6156):373–377
+  url: https://doi.org/10.1126/science.1241224
+  note: 쥐 실험. 수면 중 뇌 세포 사이 공간이 약 60% 넓어져 노폐물 제거가 빨라짐
+- id: breit2018
+  author: Breit S, Kupferberg A, Rogler G, Hasler G
+  year: 2018
+  title: "Vagus Nerve as Modulator of the Brain–Gut Axis in Psychiatric and Inflammatory Disorders"
+  publisher: Frontiers in Psychiatry 9:44
+  url: https://doi.org/10.3389/fpsyt.2018.00044
+  note: 미주신경 섬유의 약 80%가 감각(구심성) 섬유
+- id: drake2013
+  author: Drake C, Roehrs T, Shambroom J, Roth T
+  year: 2013
+  title: Caffeine effects on sleep taken 0, 3, or 6 hours before going to bed
+  publisher: Journal of Clinical Sleep Medicine 9(11):1195–1200
+  url: https://doi.org/10.5664/jcsm.3170
+  note: 취침 6시간 전 카페인도 총수면을 1시간 넘게 줄임
+- id: ebrahim2013
+  author: Ebrahim IO, Shapiro CM, Williams AJ, Fenwick PB
+  year: 2013
+  title: "Alcohol and sleep I: effects on normal sleep"
+  publisher: Alcoholism, Clinical and Experimental Research 37(4):539–549
+  url: https://doi.org/10.1111/acer.12006
+  note: 잠들기는 빨라지고 밤 전반 깊은 수면은 늘지만, REM 이 줄고 후반 수면이 깨짐
+- id: vancauter1996
+  author: Van Cauter E, Plat L
+  year: 1996
+  title: Physiology of growth hormone secretion during sleep
+  publisher: The Journal of Pediatrics 128(5 Pt 2):S32–S37
+  url: https://doi.org/10.1016/S0022-3476(96)70008-2
+  note: 성장호르몬 분비는 깊은 수면(서파 수면)과 함께 일어남
+- id: zawieja2009
+  author: Zawieja DC
+  year: 2009
+  title: Contractile physiology of lymphatics
+  publisher: Lymphatic Research and Biology 7(2):87–96
+  url: https://doi.org/10.1089/lrb.2009.0007
+  note: 림프관은 스스로 수축해 림프를 밀어 냄 (근육 수축 · 호흡은 보조)
+- id: schneider2005
+  author: Schneider M, Conway EM, Carmeliet P
+  year: 2005
+  title: Lymph makes you fat
+  publisher: Nature Genetics 37(10):1023–1024
+  url: https://doi.org/10.1038/ng1005-1023
+  note: 쥐 연구(Harvey et al. 2005)에 대한 해설
+- id: janssen2000
+  author: Janssen I, Heymsfield SB, Wang ZM, Ross R
+  year: 2000
+  title: Skeletal muscle mass and distribution in 468 men and women aged 18–88 yr
+  publisher: Journal of Applied Physiology 89(1):81–88
+  url: https://doi.org/10.1152/jappl.2000.89.1.81
+  note: 골격근의 절반을 조금 넘는 양(약 55%)이 하체에 있음
+- id: westerterp2004
+  author: Westerterp KR
+  year: 2004
+  title: Diet induced thermogenesis
+  publisher: Nutrition & Metabolism 1:5
+  url: https://doi.org/10.1186/1743-7075-1-5
+  note: 식사성 발열 효과 — 단백질 20~30%, 탄수화물 5~10%, 지방 0~3%
+- id: jang2018
+  author: Jang C, Hui S, Lu W, et al.
+  year: 2018
+  title: The Small Intestine Converts Dietary Fructose into Glucose and Organic Acids
+  publisher: Cell Metabolism 27(2):351–361
+  url: https://doi.org/10.1016/j.cmet.2017.12.016
+  note: 적은 양의 과당은 소장이 먼저 대부분 처리하고, 많을 때 간으로 넘어감 (쥐 실험)
+- id: sodhi2023
+  author: Sodhi M, Rezaeianzadeh R, Kezouh A, Etminan M
+  year: 2023
+  title: Risk of Gastrointestinal Adverse Events Associated With Glucagon-Like Peptide-1 Receptor Agonists for Weight Loss
+  publisher: JAMA 330(18):1795–1797
+  url: https://doi.org/10.1001/jama.2023.19574
+  note: 췌장염 위험비 9.09 (95% 신뢰구간 1.25–66.00), 부프로피온-날트렉손 사용자와 비교

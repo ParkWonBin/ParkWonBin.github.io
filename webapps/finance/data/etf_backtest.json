@@ -13,6 +13,7 @@
       "description": "나스닥100 지수추종",
       "dividend_type": "연 배당",
       "annual_dividend_yield": 0.5,
+      "dividend_yield_source": "qqq-dividend",
       "annual_growth": 15.0,
       "inception": 1999,
       "returns": [

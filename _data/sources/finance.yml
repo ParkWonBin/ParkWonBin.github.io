@@ -1,0 +1,8 @@
+# 경제 지식(webapps/finance) 본문 · 데이터의 출처. 시점이 있는 자료는 accessed(기준일)를 꼭 적는다.
+- id: qqq-dividend
+  author: StockAnalysis
+  title: Invesco QQQ Trust (QQQ) Dividend History
+  publisher: stockanalysis.com
+  url: https://stockanalysis.com/etf/qqq/dividend/
+  accessed: "2026-11-12"
+  note: 최근 1년 배당 수익률 약 0.5% (2025년 9월 0.48%)
