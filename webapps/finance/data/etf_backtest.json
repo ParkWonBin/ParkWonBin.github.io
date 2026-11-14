@@ -11,11 +11,12 @@
     "QQQ": {
       "name": "Invesco QQQ Trust",
       "description": "나스닥100 지수추종",
-      "dividend_type": "연 배당",
+      "dividend_type": "분기 배당",
       "annual_dividend_yield": 0.5,
       "dividend_yield_source": "qqq-dividend",
       "annual_growth": 15.0,
       "inception": 1999,
+      "returns_source": "qqq-returns",
       "returns": [
         {"year":2005,"return":2.23},
         {"year":2006,"return":6.95},
@@ -36,7 +37,7 @@
         {"year":2021,"return":27.42},
         {"year":2022,"return":-32.58},
         {"year":2023,"return":54.85},
-        {"year":2024,"return":33.31}
+        {"year":2024,"return":25.58}
       ]
     },
     "SCHD": {
@@ -46,20 +47,21 @@
       "annual_dividend_yield": 3.2,
       "annual_growth": 12.0,
       "inception": 2011,
+      "returns_source": "schd-returns",
       "returns": [
-        {"year":2012,"return":14.81},
-        {"year":2013,"return":30.40},
-        {"year":2014,"return":15.94},
-        {"year":2015,"return":-8.53},
-        {"year":2016,"return":25.04},
-        {"year":2017,"return":2.91},
-        {"year":2018,"return":-5.90},
-        {"year":2019,"return":26.22},
-        {"year":2020,"return":11.63},
-        {"year":2021,"return":27.28},
-        {"year":2022,"return":-5.56},
-        {"year":2023,"return":15.08},
-        {"year":2024,"return":29.87}
+        {"year":2012,"return":11.39},
+        {"year":2013,"return":32.88},
+        {"year":2014,"return":11.69},
+        {"year":2015,"return":-0.30},
+        {"year":2016,"return":16.45},
+        {"year":2017,"return":20.85},
+        {"year":2018,"return":-5.56},
+        {"year":2019,"return":27.29},
+        {"year":2020,"return":15.03},
+        {"year":2021,"return":29.87},
+        {"year":2022,"return":-3.26},
+        {"year":2023,"return":4.54},
+        {"year":2024,"return":11.66}
       ]
     },
     "SPHD": {
@@ -69,6 +71,7 @@
       "annual_dividend_yield": 4.4,
       "annual_growth": 9.5,
       "inception": 2012,
+      "returns_source": "sphd-returns",
       "returns": [
         {"year":2013,"return":20.81},
         {"year":2014,"return":19.99},

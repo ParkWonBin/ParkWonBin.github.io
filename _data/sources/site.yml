@@ -1,0 +1,38 @@
+# 블로그 공통 글 · 앱 목록(_data/apps.yml) 설명 · 그림 작품(webapps/drawing/img) 본문 각주의 출처. 본문: <sup class="fn"><a href="/sources/#id">[출처]</a></sup>
+# 항목: id(사이트 전체에서 하나) · author · year · title · publisher(학술지 권호 · 기관) · url(가능하면 DOI) · accessed(시점이 있는 자료) · note
+- id: openai-assistants-sunset
+  author: OpenAI
+  year: 2025
+  title: "Deprecations — Assistants API (2025-08-26 지원 중단 발표, 2026-08-26 종료)"
+  publisher: OpenAI API 문서
+  url: https://developers.openai.com/api/docs/deprecations
+  accessed: "2026-11-13"
+  note: "Assistants API(Threads · Messages · Runs 포함)는 2025년 8월 26일 지원 중단 발표, 2026년 8월 26일 종료. 대체는 Responses API — 앱 목록 'OpenAI API · Assistant'(demo_GPT001) 설명의 근거"
+- id: mdn-speechrecognition
+  author: MDN contributors
+  title: SpeechRecognition — Web APIs
+  publisher: MDN Web Docs (Mozilla)
+  url: https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition
+  accessed: "2026-11-13"
+  note: "Web Speech API 의 SpeechRecognition 은 말소리를 인식해 글자(결과)로 돌려주는 인터페이스. Chrome 등은 음성을 서버로 보내 인식 — 앱 목록 '브라우저 음성 인식(STT)'(test_speach2text) 설명의 근거"
+- id: shubin2006
+  author: Shubin NH, Daeschler EB, Jenkins FA Jr
+  year: 2006
+  title: The pectoral fin of Tiktaalik roseae and the origin of the tetrapod limb
+  publisher: Nature 440(7085):764–771
+  url: https://doi.org/10.1038/nature04637
+  note: "틱타알릭의 가슴지느러미에 위팔 · 아래팔 · 손목뼈의 원형이 있음 — 네발동물의 팔다리가 물고기 지느러미에서 나왔다는 근거 (그림 '펭귄의 날개')"
+- id: xu2014
+  author: Xu X, Zhou Z, Dudley R, Mackem S, Chuong CM, Erickson GM, Varricchio DJ
+  year: 2014
+  title: An integrative approach to understanding bird origins
+  publisher: Science 346(6215):1253293
+  url: https://doi.org/10.1126/science.1253293
+  note: "새는 마니랍토라 수각류 공룡의 후손이며, 깃털 · 날개(앞다리) · 비행 같은 새의 특징은 공룡 조상에서 먼저 생겨남 (그림 '펭귄의 날개')"
+- id: elliott2013
+  author: Elliott KH, Ricklefs RE, Gaston AJ, Hatch SA, Speakman JR, Davoren GK
+  year: 2013
+  title: High flight costs, but low dive costs, in auks support the biomechanical hypothesis for flightlessness in penguins
+  publisher: PNAS 110(23):9380–9384
+  url: https://doi.org/10.1073/pnas.1304838110
+  note: "날개로 잠수도 하는 큰부리바다오리는 비행 비용이 척추동물 최고 수준 — 잠수에 맞춘 날개는 비행을 포기하게 만든다는 가설(펭귄이 날지 못하게 된 이유)을 뒷받침 (그림 '펭귄의 날개')"

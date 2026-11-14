@@ -991,7 +991,7 @@
         },
         {
           id: 'hidden', ko: '은폐', en: 'Hidden', ref: '13.09',
-          when: '{{COVERKW}} 이 <b>밀집(Dense) 조각을 품은 지형 구역 안</b>에 있고, 그 유닛이 '
+          when: '{{COVERKW}} 이 <b>경량(Light)이나 밀집(Dense) 조각을 품은 지형 구역 안</b>에 있고(에라타 기준 — 코어 룰 PDF 1.0 은 밀집만), 그 유닛이 '
             + '이번 턴과 지난 턴에 사격하지 않았다.',
           what: '<b>탐지 거리(기본 15인치) 안</b>의 적 모델에게만 보인다. '
             + '⚠ 이 판은 굴리지 않아 「사격했는가」를 못 센다 — 사람이 켜는 스위치다.'
@@ -1020,13 +1020,14 @@
         light: {
           ko: '경량', blocks: false, color: THEME.catLight,
           what: '시선을 <b>막지는 않지만</b> 그 구역이 <b>차폐 구역</b>이 된다(13.10) — '
-            + '모든 선이 그런 구역을 가로지르면 서로 안 보인다. 모든 모델이 지나갈 수 있다(13.06).'
+            + '모든 선이 그런 구역을 가로지르면 서로 안 보인다. 모든 모델이 지나갈 수 있다(13.06). '
+            + '<b>은폐</b>(13.09)도 성립한다(에라타 기준).'
         },
         dense: {
           ko: '밀집', blocks: true, color: THEME.catDense,
           what: '<b>막힘</b>(13.11)을 갖는다 — 지면에서 정해진 높이 이하의 막힌 틈으로는 시선을 '
             + '못 긋는다. 그 구역은 <b>차폐 구역</b>이기도 하고(13.10), '
-            + '<b>은폐</b>(13.09)가 성립하는 <b>유일한</b> 유형이다.'
+            + '<b>은폐</b>(13.09)도 성립한다 — 에라타 기준으로는 경량 구역도 마찬가지다(코어 룰 PDF 1.0 은 밀집만).'
         },
       },
     };
@@ -1298,7 +1299,7 @@
     function isHidden(m, u) {
       if (!hasCoverKeyword(u)) return false;
       if (u.shotRecently) return false;
-      return areasAt(m.x, m.z).some((t) => RULES.terrainCats[t.cat].blocks);
+      return areasAt(m.x, m.z).some(isObscuring);
     }
 
     const isObscuring = (t) => t.cat === 'light' || t.cat === 'dense';

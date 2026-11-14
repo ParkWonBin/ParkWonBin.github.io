@@ -33,7 +33,7 @@
   category: learn
   featured: true
   icon: 🏋️
-  desc: 예땀(@yeddam_soul)님의 「인체사용설명서」 시리즈를 식단·운동·수면·마인드·바이오해킹으로 나눠 정리했습니다. 영양소·호르몬 사전, 에피소드별 상세, 논문 기반 레퍼런스 42건.
+  desc: 예땀(@yeddam_soul)님의 「인체사용설명서」 시리즈를 식단·운동·수면·마인드·바이오해킹으로 나눠 정리했습니다. 영양소·호르몬 사전, 에피소드별 상세, 영상에서 언급된 논문·저서 레퍼런스 50여 건.
   tags: [건강, 요약 정리]
   usage:
     - "위쪽 메뉴(폰은 ‘☰’)에서 ‘🍽️ 식단’ 같은 주제를 골라요"
@@ -339,7 +339,7 @@
   category: lab
   icon: 🤖
   thumb_pos: left top
-  desc: GPT Assistant API 테스트 페이지입니다. Thread(채팅방) 생성, Assistant(챗봇) 생성 · 수정, Run(AI 응답 생성)을 실행해 봅니다.
+  desc: GPT Assistant API 테스트 페이지입니다. Thread(채팅방) 생성, Assistant(챗봇) 생성 · 수정, Run(AI 응답 생성)을 실행해 봅니다. Assistants API가 2026년 8월 26일 종료되어 지금은 동작하지 않습니다(2026년 11월 기준).
   tags: [OpenAI API]
   usage:
     - "OpenAI API 키를 넣고 ‘(유사 로그인) KEY 설정’을 눌러요"
@@ -378,7 +378,7 @@
   category: lab
   icon: 🎙️
   thumbnail: false   # 첫 화면이 버튼 두 개뿐이라 아이콘으로
-  desc: 브라우저 Speech API로 음성을 인식해 녹음 · 출력해 봅니다.
+  desc: 브라우저 Speech API로 음성을 인식해 글자로 출력해 봅니다.
   tags: [Web Speech API]
   usage:
     - "Chrome · Edge · Safari에서 ‘녹음 시작’을 눌러요"

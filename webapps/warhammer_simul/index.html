@@ -1852,7 +1852,7 @@
         ],
         skipMode: '<b>사격과 근접은 쓰는 칸이 다릅니다</b> — ⓪에서 고른 종류에 따라 아래에서 쓰이지 않는 칸이 생깁니다. 쓰이지 않는 칸은 값이 남아 있어도 계산에 넣지 않고, 요약에서 흐리게 보여 줍니다.',
         skipLethal: '<b>[살상타] Lethal Hits</b> — ②에서 보정을 더하기 전 숫자가 6이면(결정적 명중) <b>③ 타격 굴림을 건너뛰고</b> 바로 ④ 방호로 갑니다.',
-        skipDevast: '<b>[궤멸적 피해] Devastating Wounds</b> — ③에서 결정적 타격이 나오면 공격이 <b>거기서 끝나고</b>, ④ 방호도 ⑤ 피해도 굴리지 않습니다. 대신 무기 피해만큼 <b>치명상</b>을 줍니다(24.10). 그래서 아래 「따로 세는 것」에 섭니다.',
+        skipDevast: '<b>[궤멸적 피해] Devastating Wounds</b> — ③에서 결정적 타격이 나오면 공격이 <b>거기서 끝나고</b>, ④ 방호도 ⑤ 피해 단계도 거치지 않습니다. 대신 무기 피해만큼 <b>치명상</b>을 줍니다(24.10). 그래서 아래 「따로 세는 것」에 섭니다.',
         group: (n) => '그룹 ' + n, addGrp: '＋ 할당 그룹 추가',
         mortalTitle: '치명상 Mortal Wounds — 원천 목록', addMortal: '＋ 치명상 원천 추가',
         mortal: (n) => '치명상 ' + n, mortalCharge: '돌격 시',
@@ -1906,7 +1906,7 @@
           wounds: ['타격', '타격 성공 + 살상타로 자동 성공한 수'],
           failed: ['방호 실패', '방호를 굴려 실패한 수 — 궤멸적 피해는 여기 없습니다'],
           dmg: ['피해', '불굴을 거친 뒤 · 체력 상한을 적용하기 전 · 궤멸적 피해를 포함합니다'],
-          devastM: ['궤멸적 피해', '결정적 타격이 준 치명상 · 방호도 피해도 굴리지 않고, 불굴만 막습니다'],
+          devastM: ['궤멸적 피해', '결정적 타격이 준 치명상 · 방호를 굴리지 않고, 불굴만 막습니다'],
           mortal: ['치명상 합계', '아래 원천들을 더한 것 · 불굴을 거친 뒤의 점수입니다'],
           hazard: ['위험 굴림 — 내가 입는 치명상', '상대가 아니라 내 쪽이 다칩니다'],
         },
@@ -2003,7 +2003,7 @@
         ],
         skipMode: '<b>Shooting and fighting use different fields</b> — the attack type picked at ⓪ decides which of the fields below take part. A field that takes no part keeps its value but stays out of the calculation, and is struck through in the summary.',
         skipLethal: '<b>Lethal Hits</b> — an unmodified 6 at ② <b>skips the wound roll at ③</b> and goes straight to ④.',
-        skipDevast: '<b>Devastating Wounds</b> — a critical wound at ③ <b>ends the attack there</b>: no save at ④, no damage roll at ⑤. It inflicts mortal wounds equal to the weapon Damage instead (24.10), so it appears under "counted separately" below.',
+        skipDevast: '<b>Devastating Wounds</b> — a critical wound at ③ <b>ends the attack there</b>: no save at ④ and no ⑤ damage step. It inflicts mortal wounds equal to the weapon Damage instead (24.10), so it appears under "counted separately" below.',
         group: (n) => 'Group ' + n, addGrp: '＋ Add allocation group',
         mortalTitle: 'Mortal wound sources', addMortal: '＋ Add a source',
         mortal: (n) => 'Source ' + n, mortalCharge: 'On the charge',
@@ -2056,7 +2056,7 @@
           wounds: ['Wounds', 'wound successes + auto-wounds from lethal hits'],
           failed: ['Failed saves', 'saves actually rolled and failed — devastating wounds are not here'],
           dmg: ['Damage', 'after Feel No Pain · before the wound cap · Devastating Wounds included'],
-          devastM: ['Devastating Wounds', 'mortal wounds from critical wounds · no save, no damage roll, only Feel No Pain stops them'],
+          devastM: ['Devastating Wounds', 'mortal wounds from critical wounds · no save, only Feel No Pain stops them'],
           mortal: ['Mortal wounds total', 'the sources below, added up · counted after Feel No Pain'],
           hazard: ['Hazard — mortal wounds on you', 'they land on your own unit, not the target'],
         },
@@ -2150,9 +2150,9 @@
           how: '나온 숫자 + 보정 값이 목표 이상이면 명중입니다. 보정과 상관없이, 보정을 더하기 전 1은 빗나가고 6은 결정적 명중입니다.',
           tableHead: ['이런 상황은', '이렇게 넣으세요', '왜냐하면'],
           table: [
-            ['엄폐 효과 (13.08)', '명중 보정 −1', '맞히기 어려워지는 것이지, 방호가 좋아지는 것이 아닙니다.'],
-            ['스텔스 (24.33)', '명중 보정 −1', '유닛 전원이 가지고 있으면 원거리 공격에 대해 엄폐 효과를 받습니다.'],
-            ['엄폐 무시 (24.18)', '명중 보정 0', '상대가 엄폐 중이어도 그 효과를 받지 않습니다.'],
+            ['엄폐 효과 (13.08)', '명중 한 칸 올림 (3+ → 4+)', '방호가 좋아지는 것이 아니라 그 공격의 BS 가 1 나빠집니다. 명중 보정이 아니어서 ±1 상한과 따로 겹친다는 해석이 있습니다.'],
+            ['스텔스 (24.33)', '명중 한 칸 올림 (3+ → 4+)', '유닛 전원이 가지고 있으면 원거리 공격에 대해 엄폐 효과를 받습니다.'],
+            ['엄폐 무시 (24.18)', '명중 그대로', '상대가 엄폐 중이어도 그 효과를 받지 않습니다.'],
             ['은폐 (13.09)', '넣을 수 없음', '일정 거리(기본 15인치) 밖에서는 아예 목표로 삼을 수 없다는 규칙이라, 거리와 시야를 다루어야 계산할 수 있습니다.'],
             ['중화기 · 제자리 사격 (24.16)', '명중 보정 +1', '그 턴에 움직이지 않았을 때 받는 보너스입니다.'],
           ],
@@ -2161,7 +2161,7 @@
         hitReroll: {
           t: '명중 다시 굴림',
           what: '조건에 맞는 주사위를 모두 다시 굴립니다.',
-          how: '「실패한 주사위」는 Twin-linked(24.38)와 같은 효과입니다. 「전부」는 조건 없이 다시 굴리는 것이라 확률은 「없음」과 같습니다. 다시 굴려 나온 숫자는 더 나쁘더라도 그대로 씁니다.',
+          how: '「실패한 주사위」는 빗나간 명중만 다시 굴립니다. Twin-linked(24.38)는 명중이 아니라 <b>타격</b> 굴림을 다시 굴리므로 「타격 다시 굴림」에 넣으세요. 「전부」는 조건 없이 다시 굴리는 것이라 확률은 「없음」과 같습니다. 다시 굴려 나온 숫자는 더 나쁘더라도 그대로 씁니다.',
           see: ['woundReroll', 'saveReroll']
         },
         strength: {
@@ -2206,7 +2206,7 @@
         devastating: {
           t: '[궤멸적 피해] Devastating Wounds', ref: '코어룰 24.10',
           what: '타격 굴림이 결정적 타격이 되면 공격이 거기서 끝나고, 무기의 피해 수치만큼 치명상을 입힙니다.',
-          how: '★ 치명상이므로 **방호도 피해도 굴리지 않습니다.** 한 점씩 빠져나가서 체력을 넘겨 버려지는 몫이 없고, 불굴만 막습니다. 그래서 방호 실패에 세지 않고 아래 「따로 세는 것」에 제 줄로 섭니다. 숫자를 따로 넣지 않습니다 — 점수는 피해 칸을 따릅니다.',
+          how: '★ 치명상이므로 <b>방호를 굴리지 않습니다</b>(피해가 D3 처럼 주사위면 그 수는 굴립니다). 막는 것은 불굴뿐입니다. 그래서 방호 실패에 세지 않고 아래 「따로 세는 것」에 제 줄로 섭니다. 숫자를 따로 넣지 않습니다 — 점수는 피해 칸을 따릅니다.',
           see: ['anti', 'fnp', 'damage']
         },
         anti: {
@@ -2284,7 +2284,7 @@
         character: {
           t: '캐릭터 CHARACTER 그룹인가', ref: '코어룰 05.03 · 24.28',
           what: '이 그룹이 CHARACTER 모델로 이루어졌는지입니다. 규칙은 CHARACTER 모델마다 그룹을 하나씩 만들고, 나머지는 체력 · 방호 · 무적 방호가 같은 것끼리 묶습니다.',
-          how: '켜면 이 그룹은 자동으로 뒤로 갑니다 — 캐릭터 그룹은 어떤 비캐릭터 그룹보다 앞에 올 수 없습니다. 즉 **호위가 다 죽어야 캐릭터가 맞기 시작합니다.** [정밀] 무기만 그 순서를 건너뜁니다.',
+          how: '켜면 이 그룹은 자동으로 뒤로 갑니다 — 캐릭터 그룹은 어떤 비캐릭터 그룹보다 앞에 올 수 없습니다. 즉 <b>호위가 다 죽어야 캐릭터가 맞기 시작합니다.</b> [정밀] 무기만 그 순서를 건너뜁니다.',
           see: ['precision', 'models']
         },
         precision: {
@@ -2437,7 +2437,7 @@
         s_devastM: {
           t: '궤멸적 피해 Devastating Wounds — 결정적 타격이 준 치명상', ref: '코어룰 24.10 · 06.02',
           what: '타격 굴림이 결정적 타격이 되면 공격이 거기서 끝나고, 무기 피해만큼 치명상을 줍니다. 이 줄은 그렇게 들어간 점수입니다.',
-          how: '방호도 피해 굴림도 없습니다. 한 점씩 빠져나가므로 체력을 넘겨 버려지는 몫이 없고, <b>불굴만 그것을 막습니다</b> — 줄 아래에 「불굴 전 → 뒤」로 얼마가 지워졌는지 적어 두었습니다. 무적 방호는 막지 못합니다.',
+          how: '방호 굴림이 없고, <b>불굴만 그것을 막습니다</b> — 줄 아래에 「불굴 전 → 뒤」로 얼마가 지워졌는지 적어 두었습니다. 무적 방호는 막지 못합니다.',
           see: ['devastating', 'anti', 'fnp']
         },
         s_mortal: {
@@ -2494,7 +2494,7 @@
         c_cover: {
           t: '엄폐 효과 Benefit of Cover 를 받는지 봤다', ref: '코어룰 13.08',
           what: '사격 대상 유닛의 모든 모델이 지형 구역 안에 있거나 지형에 가려 완전히 보이지 않으면, 그 유닛은 그 공격에 대해 엄폐 효과를 받습니다.',
-          how: '엄폐 효과를 받으면 그 공격의 명중(BS) 능력치가 1 나빠집니다. 이 페이지에서는 「명중」을 한 단계 올리거나(3+ → 4+) 「명중 보정」을 −1로 두면 같은 결과가 됩니다. 방호가 좋아지는 것이 아닙니다.',
+          how: '엄폐 효과를 받으면 그 공격의 명중(BS) 능력치가 1 나빠집니다. 이 페이지에서는 「명중」을 한 단계 올리면(3+ → 4+) 됩니다. 다른 명중 보정이 없을 때는 「명중 보정」을 −1로 두어도 같은 결과입니다. 방호가 좋아지는 것이 아닙니다.',
           see: ['hitMod', 'hitTarget']
         },
         c_canFight: {
@@ -2574,10 +2574,10 @@
           how: 'roll + modifier ≥ target means a hit. Regardless of modifiers, an unmodified 1 fails and an unmodified 6 is a critical hit.',
           tableHead: ['Situation', 'Set', 'Why'],
           table: [
-            ['Benefit of Cover (13.08)', 'hit modifier −1', 'It worsens the hit roll by 1. It does not improve the save.'],
-            ['Stealth (24.33)', 'hit modifier −1', 'If every model has it, the unit gets cover against ranged attacks.'],
-            ['Ignores Cover (24.18)', 'hit modifier 0', 'The target gets no cover modifier even while in cover.'],
-            ['Concealed (13.09)', 'cannot be expressed', 'Outside the detection range (15" by default) the unit cannot be targeted at all — that needs range and line of sight.'],
+            ['Benefit of Cover (13.08)', 'BS one step worse (3+ → 4+)', 'It worsens the Ballistic Skill of the attack by 1, not the save. As it is not a hit modifier, it is read as stacking outside the ±1 cap.'],
+            ['Stealth (24.33)', 'BS one step worse (3+ → 4+)', 'If every model has it, the unit gets cover against ranged attacks.'],
+            ['Ignores Cover (24.18)', 'BS unchanged', 'The target gets no Benefit of Cover even while in cover.'],
+            ['Hidden (13.09)', 'cannot be expressed', 'Outside the detection range (15" by default) the unit cannot be targeted at all — that needs range and line of sight.'],
             ['Heavy · stationary (24.16)', 'hit modifier +1', 'The bonus for not having moved this turn.'],
           ],
           see: ['hitTarget']
@@ -2585,7 +2585,7 @@
         hitReroll: {
           t: 'Hit reroll',
           what: 'Rerolls every die that matches the condition.',
-          how: '"Failed rolls" is the same as Twin-linked (24.38). "All" rerolls unconditionally, so its probability equals "None". The second result stands, better or worse.',
+          how: '"Failed rolls" rerolls only misses. Twin-linked (24.38) rerolls the <b>wound</b> roll, not the hit roll, so set it under Wound reroll. "All" rerolls unconditionally, so its probability equals "None". The second result stands, better or worse.',
           see: ['woundReroll', 'saveReroll']
         },
         strength: {
@@ -2629,7 +2629,7 @@
         devastating: {
           t: 'Devastating Wounds', ref: 'core rules 24.10',
           what: 'A critical wound ends the attack sequence there and inflicts mortal wounds equal to the weapon Damage.',
-          how: '★ Being mortal wounds, they roll <b>neither a save nor damage</b>. They come off one wound at a time, so nothing is lost to overkill, and only Feel No Pain stops them. That is why they are not counted as failed saves but get their own line under "counted separately". There is no X parameter — the amount comes from the D field.',
+          how: '★ Being mortal wounds, they get <b>no save</b> (a random D such as D3 is still rolled), and only Feel No Pain stops them. That is why they are not counted as failed saves but get their own line under "counted separately". There is no X parameter — the amount comes from the D field.',
           see: ['anti', 'fnp', 'damage']
         },
         anti: {
@@ -2860,7 +2860,7 @@
         s_devastM: {
           t: 'Devastating Wounds — mortal wounds from critical wounds', ref: 'core rules 24.10 · 06.02',
           what: 'A critical wound ends the attack there and inflicts mortal wounds equal to the weapon Damage. This row counts the points that landed that way.',
-          how: 'No save, no damage roll. They come off one wound at a time, so nothing is lost to overkill, and <b>only Feel No Pain stops them</b> — the line under the figure shows how many it erased. An invulnerable save cannot.',
+          how: 'No save roll, and <b>only Feel No Pain stops them</b> — the line under the figure shows how many it erased. An invulnerable save cannot.',
           see: ['devastating', 'anti', 'fnp']
         },
         s_mortal: {
@@ -2917,7 +2917,7 @@
         c_cover: {
           t: 'Checked the benefit of cover', ref: 'core rules 13.08',
           what: 'If every model in the target unit is within a terrain area, or not fully visible because of intervening terrain, the unit has the benefit of cover against that attack.',
-          how: 'The benefit of cover worsens the BS characteristic of that attack by 1. Here you can either worsen the hit target by one step (3+ → 4+) or set the hit modifier to −1 — the result is the same. It does not improve the save.',
+          how: 'The benefit of cover worsens the BS characteristic of that attack by 1. Here, worsen the hit target by one step (3+ → 4+). With no other hit modifier, setting the hit modifier to −1 gives the same result. It does not improve the save.',
           see: ['hitMod', 'hitTarget']
         },
         c_canFight: {

@@ -138,16 +138,18 @@
     },
     {
       "year": 2023,
-      "top10": ["AAPL","MSFT","GOOG","AMZN","BRK.B","UNH","XOM","V","JNJ","NVDA"],
-      "returns": [49.0,58.2,58.8,80.9,15.8,-1.0,-6.4,25.0,-10.2,239.0],
-      "portfolio_return": 50.9,
+      "top10": ["AAPL","MSFT","GOOG","AMZN","BRK.B","UNH","XOM","V","JNJ","JPM"],
+      "returns": [49.0,58.2,58.8,80.9,15.8,-1.0,-6.4,25.0,-10.2,29.9],
+      "portfolio_return": 30.0,
+      "source_ids": ["finhacker-top20"],
       "spy_return": 26.3
     },
     {
       "year": 2024,
       "top10": ["MSFT","AAPL","NVDA","GOOG","AMZN","META","BRK.B","LLY","AVGO","TSLA"],
-      "returns": [12.6,33.0,171.2,36.8,47.2,65.4,27.8,10.1,29.1,62.5],
-      "portfolio_return": 49.6,
+      "returns": [12.6,33.0,171.2,36.8,47.2,65.4,27.8,32.4,107.7,62.5],
+      "portfolio_return": 59.7,
+      "source_ids": ["bi-2024-best"],
       "spy_return": 25.0
     }
   ]

@@ -1,0 +1,28 @@
+# 웹 API 실험 · 데이터 웹앱(WebGPU · 센서 · 침수흔적도 등) 본문 각주의 출처. 본문: <sup class="fn"><a href="/sources/#id">[출처]</a></sup>
+# 항목: id(사이트 전체에서 하나) · author · year · title · publisher · url(가능하면 DOI) · accessed(시점이 있는 자료) · note
+- id: mdn-webgpu-compat
+  author: MDN Web Docs (browser-compat-data 8.1.9)
+  year: 2026
+  title: GPU — Browser compatibility
+  publisher: Mozilla · MDN Web Docs
+  url: https://developer.mozilla.org/en-US/docs/Web/API/GPU#browser_compatibility
+  accessed: "2026-11-13"
+  note: "WebGPU 기본 지원: Chrome · Edge 113(Windows · macOS · ChromeOS), Android Chrome 121, Linux 는 Chrome · Edge 144부터(Intel Gen12+ GPU 만), Safari · iOS Safari 26, Firefox 141(Windows) · 145(Apple 실리콘 macOS Tahoe) · 147(Apple 실리콘 이전 macOS). Firefox 는 Linux · Intel Mac · Android 미지원"
+- id: w3c-deviceorientation
+  author: W3C Devices and Sensors Working Group
+  title: Device Orientation and Motion
+  publisher: W3C (Editor's Draft)
+  url: https://w3c.github.io/deviceorientation/
+  note: "alpha 는 z축(0~360°), beta 는 x축(앞뒤 기울기, -180~180°), gamma 는 y축(좌우 기울기, -90~90°) 기준 회전 각도. devicemotion 의 interval 은 밀리초(ms), rotationRate 는 초당 도(deg/s)"
+- id: w3c-geolocation
+  author: W3C Devices and Sensors Working Group · Web Applications Working Group
+  title: Geolocation
+  publisher: W3C (Editor's Draft)
+  url: https://w3c.github.io/geolocation/
+  note: "altitude 는 WGS84 타원체 기준 높이(m), heading 은 진북에서 시계 방향 각도(0~360°, 정지 중이면 null), speed 는 m/s, accuracy 는 m(68% 신뢰 수준)"
+- id: seoul-flood-trace
+  author: 서울특별시
+  title: 서울시 침수흔적도
+  publisher: 서울 열린데이터광장
+  url: https://data.seoul.go.kr/dataList/OA-15636/F/1/datasetView.do
+  note: "연도별 침수흔적 폴리곤 — 침수심(m) · 침수면적(㎡) · 재해명 · 침수 시작/종료일 · 원인. 이 앱은 2013~2025년 중 11개 연도(2015 · 2021년 없음)를 GeoJSON 으로 바꿔 씀"

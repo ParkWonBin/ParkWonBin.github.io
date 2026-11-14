@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebGPU Example</title>
   <script src="/assets/js/analytics.js" defer></script>
+  <script src="/assets/js/footnotes.js" defer></script>
   <script src="/assets/js/app-bar.js" defer data-pos="bl"></script>
 </head>
 <body>
     <h1>WebGPU Activation Guide</h1>
     <h2>WebGPU 활성화</h2>
     <p>Chrome · Edge 는 113 버전부터(Android 는 121 버전부터) WebGPU 가 기본으로 켜져 있습니다.
-    그 밖의 브라우저나 일부 기기(예: Linux)에서는 아직 실험적 기능이라 직접 활성화해야 할 수 있습니다.
+    Safari 는 26 버전부터, Firefox 는 Windows 에서 141 버전부터 · Apple 실리콘 Mac 에서 145~147 버전부터 기본으로 켜져 있습니다 (2026년 11월 기준).<sup class="fn"><a href="/sources/#mdn-webgpu-compat">[출처]</a></sup>
+    다만 Linux(Chrome 은 144 버전부터 Intel 일부 GPU 에서만 지원)나 Android 용 Firefox 처럼 아직 쓸 수 없거나 직접 활성화해야 하는 환경도 있습니다.
     </p><p>예를 들어, Chrome에서는 다음과 같이 설정할 수 있습니다:</p>
     <ul>
         <li>주소창에 <code>chrome://flags</code> 입력 후 이동.</li>

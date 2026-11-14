@@ -1,0 +1,85 @@
+# 도구 · 그림 웹앱(색 · 이미지 변환 · QR · 오라 스튜디오) 본문 각주의 출처. 본문: <sup class="fn"><a href="/sources/#id">[출처]</a></sup>
+# 항목: id(사이트 전체에서 하나) · author · year · title · publisher · url(가능하면 DOI) · accessed(시점이 있는 자료) · note
+- id: machado2009
+  author: Machado GM, Oliveira MM, Fernandes LAF
+  year: 2009
+  title: A Physiologically-based Model for Simulation of Color Vision Deficiency
+  publisher: "IEEE Transactions on Visualization and Computer Graphics 15(6):1291–1298"
+  url: https://doi.org/10.1109/TVCG.2009.113
+  note: 선형 RGB 색각이상 시뮬레이션 행렬. 심각도 1.0 = 이색각(적색맹 · 녹색맹 · 청색맹)
+- id: wcag22-luminance
+  author: W3C
+  year: 2023
+  title: Web Content Accessibility Guidelines (WCAG) 2.2 — relative luminance
+  publisher: W3C Recommendation
+  url: "https://www.w3.org/TR/WCAG22/#dfn-relative-luminance"
+  accessed: "2026-11-13"
+  note: 상대 휘도 = 0.2126 R + 0.7152 G + 0.0722 B (선형화한 sRGB, 경계값 0.04045)
+- id: ottosson2020
+  author: Ottosson B
+  year: 2020
+  title: A perceptual color space for image processing
+  publisher: bottosson.github.io (2020-12-23)
+  url: https://bottosson.github.io/posts/oklab/
+  accessed: "2026-11-13"
+  note: Oklab은 지각되는 밝기 · 채도 · 색상을 잘 예측하도록 설계해 색 사이 전환이 고르게 보임. 극좌표(L · C · h)형이 OKLCH
+- id: avidan2007
+  author: Avidan S, Shamir A
+  year: 2007
+  title: Seam carving for content-aware image resizing
+  publisher: ACM Transactions on Graphics 26(3), Article 10 (SIGGRAPH 2007)
+  url: https://doi.org/10.1145/1276377.1276390
+  note: 에너지가 가장 낮은 연결 경로(seam)를 지우면 이미지가 줄고, 이웃과 평균한 seam을 복제하면 늘어남
+- id: caire-flags
+  author: Simo E (esimov)
+  year: 2018
+  title: caire — cmd/caire/main.go (명령줄 옵션 기본값)
+  publisher: GitHub esimov/caire (MIT License)
+  url: https://github.com/esimov/caire/blob/master/cmd/caire/main.go
+  accessed: "2026-11-13"
+  note: -sobel 기본 2 (Sobel 임계값, 이하인 에지는 0), -blur 기본 4 (블러 반경)
+- id: caire-carver
+  author: Simo E (esimov)
+  year: 2018
+  title: caire — carver.go (ComputeSeams · AddSeam)
+  publisher: GitHub esimov/caire (MIT License)
+  url: https://github.com/esimov/caire/blob/master/carver.go
+  accessed: "2026-11-13"
+  note: "에너지 맵 순서: Sobel → 보호 · 제거 마스크 → Stackblur → 누적 최소 에너지. 추가하는 이음선은 좌우 이웃 픽셀의 평균색"
+- id: piellardj-threading
+  author: Piellard J
+  title: image-stylization-threading
+  publisher: "GitHub piellardj/image-stylization-threading (LICENSE.md: GNU GPL v3.0)"
+  url: https://github.com/piellardj/image-stylization-threading
+  accessed: "2026-11-13"
+  note: 라이선스 GPL-3.0. 틀에 못을 놓고 단색 실 한 가닥을 못에서 못으로 직선으로 계속 이어 원본을 재현, 컬러 모드는 실 3가닥
+- id: fogleman-primitive
+  author: Fogleman M
+  year: 2016
+  title: primitive — Reproducing images with geometric primitives
+  publisher: GitHub fogleman/primitive (MIT License)
+  url: https://github.com/fogleman/primitive
+  accessed: "2026-11-13"
+  note: "옵션: -m 0=combo … 8=polygon, -a 0 = 도형마다 알파 자동, -rep 축소 탐색으로 N개 추가, -r 256 · -s 1024 · -bg 평균색. 무작위 도형 → 언덕 오르기, RMSE로 평가해 하나씩 더함"
+- id: fogleman-primitive-model
+  author: Fogleman M
+  year: 2016
+  title: primitive — primitive/model.go (Step)
+  publisher: GitHub fogleman/primitive (MIT License)
+  url: https://github.com/fogleman/primitive/blob/master/primitive/model.go
+  accessed: "2026-11-13"
+  note: "runWorkers(…, 1000, 100, 16): 무작위 후보 1000 · 언덕 오르기 한도 100 · 재시작 16. -rep 반복은 HillClimb(…, 100)"
+- id: denso-qr-ec
+  author: DENSO WAVE
+  title: Error correction feature
+  publisher: QRcode.com (DENSO WAVE INCORPORATED)
+  url: https://www.qrcode.com/en/about/error_correction.html
+  accessed: "2026-11-13"
+  note: "오류 정정 수준별 복원 가능한 코드워드 비율: L 약 7% · M 약 15% · Q 약 25% · H 약 30%"
+- id: gif89a
+  author: CompuServe Incorporated
+  year: 1990
+  title: Graphics Interchange Format, Version 89a
+  publisher: CompuServe (W3C 보관본)
+  url: https://www.w3.org/Graphics/GIF/spec-gif89a.txt
+  note: 색상표는 최대 256색. 투명은 Graphic Control Extension의 투명 색 인덱스 하나뿐이라 반투명(부분 알파)을 담을 수 없음

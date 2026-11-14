@@ -8,11 +8,15 @@
     <link rel="stylesheet" crossorigin href="./assets/index-ZP4sN1nD.css">
     <!-- 맨 아래 '설명보기' 버튼이 왼쪽 아래 '← wbpark' 표시에 가리지 않게 여유를 둔다 -->
     <style>#root{padding-bottom:calc(48px + env(safe-area-inset-bottom, 0px))}</style>
+    <!-- 설명 속 각주의 '출처' 목록(footnotes.js)은 앱 아래 한 줄 전체로 둔다 (body 가 가로 flex 라 옆에 붙지 않게) -->
+    <style>body{flex-wrap:wrap}[data-footnotes]{flex:0 0 100%;box-sizing:border-box;padding:0 16px calc(48px + env(safe-area-inset-bottom, 0px))}[data-footnotes]:empty{display:none}</style>
     <script src="/assets/js/analytics.js" defer></script>
+    <script src="/assets/js/footnotes.js" defer></script>
     <script src="/assets/js/app-bar.js" defer data-pos="bl"></script>
   </head>
   <body>
     <div id="root"></div>
+    <div data-footnotes></div>
 
   </body>
 </html>

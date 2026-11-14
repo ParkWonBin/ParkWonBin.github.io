@@ -261,6 +261,7 @@
   }
 </style>
   <script src="/assets/js/analytics.js" defer></script>
+  <script src="/assets/js/footnotes.js" defer></script>
   <script src="/assets/js/app-bar.js" defer data-pos="tl"></script>
 </head>
 <body>
@@ -405,7 +406,7 @@
       </div>
 
       <h3>보간 설정</h3>
-      <div class="row wide"><label>보간 색공간</label><select id="gSpace"><option value="oklab">OKLab (지각 균일)</option><option value="srgb">sRGB</option></select></div>
+      <div class="row wide"><label>보간 색공간<sup class="fn"><a href="/sources/#ottosson2020">[출처]</a></sup></label><select id="gSpace"><option value="oklab">OKLab (지각 균일)</option><option value="srgb">sRGB</option></select></div>
       <div class="row"><label>원판 경계 선명도</label><input type="range" id="gSpread" min="0.5" max="4" step="0.1"><code id="gSpreadVal"></code></div>
       <div class="row wide"><label>구간 길이</label><select id="gEqual"><option value="0">원판 위 길이에 비례</option><option value="1">균등 분할</option></select></div>
       <div class="row wide"><label>점·선 가이드</label><input type="checkbox" id="gGuides"></div>
@@ -2543,8 +2544,8 @@ function openExport(kind) {
   $('#eBg').value = kind === 'gif' ? 'color' : 'transparent';
   $('#eSize').value = kind === 'gif' ? 256 : 128;
   $('#eFps').value = kind === 'gif' ? '20' : '24';
-  $('#eInfo').textContent = kind === 'gif'
-    ? 'GIF는 반투명을 못 담아서 배경색을 채워요.'
+  $('#eInfo').innerHTML = kind === 'gif'
+    ? 'GIF는 반투명을 못 담아서 배경색을 채워요.<sup class="fn"><a href="/sources/#gif89a">[출처]</a></sup>'
     : '프레임을 가로로 이어 붙인 PNG 한 장 + CSS steps() 애니메이션. 런타임 비용이 거의 없어 목록에 수천 개도 가능해요.';
   $('#eProg').hidden = true; $('#eCssWrap').hidden = true;
   expDlg.showModal();

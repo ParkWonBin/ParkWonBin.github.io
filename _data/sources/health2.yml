@@ -1,0 +1,324 @@
+# 건강관리(webapps/health) 마인드 · 바이오해킹 · 사전 · 레퍼런스 페이지 각주의 출처 (health.yml 에 이어서). 본문: <sup class="fn"><a href="/sources/#id">[출처]</a></sup>
+# 항목: id(사이트 전체에서 하나) · author · year · title · publisher(학술지 권호 · 기관) · url(가능하면 DOI) · accessed(시점이 있는 자료) · note
+- id: lally2010
+  author: Lally P, van Jaarsveld CHM, Potts HWW, Wardle J
+  year: 2010
+  title: "How are habits formed: Modelling habit formation in the real world"
+  publisher: European Journal of Social Psychology 40(6):998–1009 (온라인 2009)
+  url: https://doi.org/10.1002/ejsp.674
+  note: "96명이 새 행동을 매일 반복: 자동화에 이르기까지 걸린 기간은 중간값 66일, 사람에 따라 18~254일(긴 쪽은 모델 추정)"
+- id: baumeister1998
+  author: Baumeister RF, Bratslavsky E, Muraven M, Tice DM
+  year: 1998
+  title: "Ego depletion: Is the active self a limited resource?"
+  publisher: Journal of Personality and Social Psychology 74(5):1252–1265
+  url: https://doi.org/10.1037/0022-3514.74.5.1252
+  note: "자기 통제가 한정된 자원을 쓴다는 '자아 고갈' 제안. 의식적 자기 조절이 행동을 이끄는 건 일부(5% 정도)일 수 있다는 이 논문의 추론이 '무의식 95%'의 출처로 인용되지만, 실제로 잰 비율은 아님"
+- id: hagger2016
+  author: Hagger MS, Chatzisarantis NLD, Alberts H, et al.
+  year: 2016
+  title: A Multilab Preregistered Replication of the Ego-Depletion Effect
+  publisher: Perspectives on Psychological Science 11(4):546–573
+  url: https://doi.org/10.1177/1745691616652873
+  note: "23개 연구실 2,141명 사전등록 재현 실험: 자아 고갈 효과 d = 0.04 (95% 신뢰구간 −0.07~0.15), 0과 구분되지 않음"
+- id: leibel1995
+  author: Leibel RL, Rosenbaum M, Hirsch J
+  year: 1995
+  title: Changes in energy expenditure resulting from altered body weight
+  publisher: The New England Journal of Medicine 332(10):621–628
+  url: https://doi.org/10.1056/NEJM199503093321001
+  note: "비만 18명 · 비비만 23명: 체중 10% 이상 감량을 유지하면 총 에너지 소비가 제지방 1kg당 하루 약 6~8kcal 줄어, 몸 크기 변화로 예상되는 것보다 더 감소"
+- id: rosenbaum2010
+  author: Rosenbaum M, Leibel RL
+  year: 2010
+  title: Adaptive thermogenesis in humans
+  publisher: International Journal of Obesity 34(Suppl 1):S47–S55
+  url: https://doi.org/10.1038/ijo.2010.184
+  note: "체중을 10% 이상 줄인 상태를 유지하면 하루 총 에너지 소비가 약 20~25% 줄고, 이는 지방 · 제지방 변화만으로 예상되는 것보다 10~15% 더 낮음"
+- id: dallman2003
+  author: Dallman MF, Pecoraro N, Akana SF, et al.
+  year: 2003
+  title: "Chronic stress and obesity: A new view of “comfort food”"
+  publisher: PNAS 100(20):11696–11701
+  url: https://doi.org/10.1073/pnas.1934666100
+  note: "주로 쥐 실험: 만성 스트레스 때 글루코코르티코이드가 달고 기름진 음식 섭취를 늘리고, 그 음식이 스트레스 반응을 누그러뜨리는 대신 복부 지방이 늘어남"
+- id: schultz2015
+  author: Schultz W
+  year: 2015
+  title: "Neuronal Reward and Decision Signals: From Theories to Data"
+  publisher: Physiological Reviews 95(3):853–951
+  url: https://doi.org/10.1152/physrev.00023.2014
+  note: "도파민 뉴런은 보상이 예측보다 좋으면 활성↑, 예측대로면 변화 없음, 예측보다 나쁘면 활성↓ (보상 예측 오류 신호)"
+- id: siebers2021
+  author: Siebers M, Biedermann SV, Bindila L, Lutz B, Fuss J
+  year: 2021
+  title: Exercise-induced euphoria and anxiolysis do not depend on endogenous opioids in humans
+  publisher: Psychoneuroendocrinology 126:105173
+  url: https://doi.org/10.1016/j.psyneuen.2021.105173
+  note: "63명 무작위 이중맹검: 오피오이드 차단제(날트렉손)를 먹어도 달리기 뒤 행복감 증가 · 불안 감소가 그대로 나타났고, 엔도카나비노이드(AEA · 2-AG)는 증가"
+- id: hardwick2018
+  author: Hardwick RM, Caspers S, Eickhoff SB, Swinnen SP
+  year: 2018
+  title: "Neural correlates of action: Comparing meta-analyses of imagery, observation, and execution"
+  publisher: Neuroscience & Biobehavioral Reviews 94:31–44
+  url: https://doi.org/10.1016/j.neubiorev.2018.08.003
+  note: "뇌영상 연구 메타분석: 동작 상상은 실제 동작과 겹치는 전운동 · 두정 · 피질하 영역을 쓰지만, 1차 운동 피질 등에서는 차이가 있음"
+- id: polivy1985
+  author: Polivy J, Herman CP
+  year: 1985
+  title: "Dieting and binging: A causal analysis"
+  publisher: American Psychologist 40(2):193–201
+  url: https://doi.org/10.1037/0003-066X.40.2.193
+  note: "식이 제한(다이어트)이 폭식을 부른다는 분석: 규칙이 깨지면 '어차피 망쳤다'며 더 먹는 탈억제 현상"
+- id: adams2007
+  author: Adams CE, Leary MR
+  year: 2007
+  title: Promoting self-compassionate attitudes toward eating among restrictive and guilty eaters
+  publisher: Journal of Social and Clinical Psychology 26(10):1120–1144
+  url: https://doi.org/10.1521/jscp.2007.26.10.1120
+  note: "여대생 실험: 금지 음식을 먹은 뒤 '누구나 그럴 수 있다'는 자기 연민 메시지를 들은 그룹은, 다이어트 중이거나 죄책감이 큰 사람일수록 그 뒤에 덜 먹었음"
+- id: arnsten2009
+  author: Arnsten AFT
+  year: 2009
+  title: Stress signalling pathways that impair prefrontal cortex structure and function
+  publisher: Nature Reviews Neuroscience 10(6):410–422
+  url: https://doi.org/10.1038/nrn2648
+  note: "스트레스 때 늘어나는 카테콜아민 · 글루코코르티코이드가 판단 · 자기 조절을 맡는 전전두엽 기능을 빠르게 떨어뜨리고, 만성이면 구조도 바꾼다는 리뷰 (주로 동물 연구)"
+- id: bryan2011
+  author: Bryan CJ, Walton GM, Rogers T, Dweck CS
+  year: 2011
+  title: Motivating voter turnout by invoking the self
+  publisher: PNAS 108(31):12653–12656
+  url: https://doi.org/10.1073/pnas.1103343108
+  note: "미국 유권자 대상 소규모 실험: 설문에서 '투표하기'(동사) 대신 '투표자 되기'(명사) 문구를 본 사람의 실제 투표율이 더 높았음"
+- id: gerber2016
+  author: Gerber AS, Huber GA, Biggers DR, Hendry DJ
+  year: 2016
+  title: A field experiment shows that subtle linguistic cues might not affect voter behavior
+  publisher: PNAS 113(26):7112–7117
+  url: https://doi.org/10.1073/pnas.1513727113
+  note: "더 큰 현장 실험: '투표자'(명사) 문구와 '투표하기'(동사) 문구 사이에 실제 투표율 차이가 없었음"
+- id: christakis2007
+  author: Christakis NA, Fowler JH
+  year: 2007
+  title: The spread of obesity in a large social network over 32 years
+  publisher: The New England Journal of Medicine 357(4):370–379
+  url: https://doi.org/10.1056/NEJMsa066082
+  note: "프레이밍햄 연구 12,067명(1971~2003): 친구가 비만이 되면 본인이 비만이 될 가능성이 57% 높아짐 (95% 신뢰구간 6~123%, 관찰 연구)"
+- id: bargh1999
+  author: Bargh JA, Chartrand TL
+  year: 1999
+  title: The unbearable automaticity of being
+  publisher: American Psychologist 54(7):462–479
+  url: https://doi.org/10.1037/0003-066X.54.7.462
+  note: "일상의 대부분이 의식적 의도보다 환경이 자동으로 일으키는 정신 과정에 좌우된다는 리뷰 (비율을 잰 연구는 아님)"
+- id: albrecht2015
+  author: Albrecht E, Norheim F, Thiede B, et al.
+  year: 2015
+  title: Irisin – a myth rather than an exercise-inducible myokine
+  publisher: Scientific Reports 5:8889
+  url: https://doi.org/10.1038/srep08889
+  note: "시판 항체로 잰 이리신 수치는 믿기 어렵다는 분석 — 사람에서 이리신의 역할은 아직 논란"
+- id: roberts2015
+  author: Roberts LA, Raastad T, Markworth JF, et al.
+  year: 2015
+  title: Post-exercise cold water immersion attenuates acute anabolic signalling and long-term adaptations in muscle to strength training
+  publisher: The Journal of Physiology 593(18):4285–4301
+  url: https://doi.org/10.1113/JP270570
+  note: "12주간 근력 운동 뒤마다 10분 냉수욕을 한 그룹은 가볍게 자전거를 탄 그룹보다 근육량 · 근력 증가가 적었고, 근육 합성 신호 · 위성세포 활성도 약했음"
+- id: yousefzadeh2018
+  author: Yousefzadeh MJ, Zhu Y, McGowan SJ, et al.
+  year: 2018
+  title: Fisetin is a senotherapeutic that extends health and lifespan
+  publisher: EBioMedicine 36:18–28
+  url: https://doi.org/10.1016/j.ebiom.2018.09.015
+  note: "세포 · 쥐 실험: 플라보노이드 10종 중 피세틴의 노화세포 제거 효과가 가장 컸고(케르세틴보다 강함), 늙은 쥐의 수명이 늘어남. 사람 효과는 확인 전"
+- id: fitzgerald2021
+  author: Fitzgerald KN, Hodges R, Hanes D, et al.
+  year: 2021
+  title: "Potential reversal of epigenetic age using a diet and lifestyle intervention: a pilot randomized clinical trial"
+  publisher: Aging 13(7):9419–9432
+  url: https://doi.org/10.18632/aging.202913
+  note: "50~72세 건강한 남성 43명, 8주 식단 · 운동 · 수면 · 이완 프로그램(프로바이오틱스 · 식물 영양소 보충 포함): 후성유전 나이(DNAmAge)가 대조군보다 3.23년 적게 나옴 (프로그램 그룹 안 변화는 −1.96년, 통계적 경계)"
+- id: elmerahbi2015
+  author: El-Merahbi R, Löffler M, Mayer A, Sumara G
+  year: 2015
+  title: The roles of peripheral serotonin in metabolic homeostasis
+  publisher: FEBS Letters 589(15):1728–1734
+  url: https://doi.org/10.1016/j.febslet.2015.05.054
+  note: "몸의 세로토닌 대부분(약 95%)은 말초(주로 장)에서 만들어지며, 세로토닌은 혈뇌장벽을 넘지 못해 뇌와 말초의 세로토닌은 따로 있음"
+- id: chevalier2013
+  author: Chevalier G, Sinatra ST, Oschman JL, Delany RM
+  year: 2013
+  title: Earthing (grounding) the human body reduces blood viscosity—a major factor in cardiovascular disease
+  publisher: Journal of Alternative and Complementary Medicine 19(2):102–110
+  url: https://doi.org/10.1089/acm.2011.0820
+  note: "10명, 2시간 접지 전후 적혈구 제타 전위 상승 · 응집 감소 (대조군 없는 소규모 연구, 점도는 직접 재지 않음)"
+- id: ghaly2004
+  author: Ghaly M, Teplitz D
+  year: 2004
+  title: The biologic effects of grounding the human body during sleep as measured by cortisol levels and subjective reporting of sleep, pain, and stress
+  publisher: Journal of Alternative and Complementary Medicine 10(5):767–776
+  url: https://doi.org/10.1089/acm.2004.10.767
+  note: "12명이 접지 매트를 깔고 몇 주간 잠: 밤 코르티솔 리듬이 고르게 바뀌고 수면 · 통증 · 스트레스가 나아졌다고 스스로 답함 (대조군 없는 예비 연구)"
+- id: laukkanen2015
+  author: Laukkanen T, Khan H, Zaccardi F, Laukkanen JA
+  year: 2015
+  title: Association Between Sauna Bathing and Fatal Cardiovascular and All-Cause Mortality Events
+  publisher: JAMA Internal Medicine 175(4):542–548
+  url: https://doi.org/10.1001/jamainternmed.2014.8187
+  note: "핀란드 중년 남성 2,315명 약 20년 추적: 주 4~7회 사우나는 주 1회보다 심혈관 사망 위험비 0.50 (관찰 연구)"
+- id: covarrubias2021
+  author: Covarrubias AJ, Perrone R, Grozio A, Verdin E
+  year: 2021
+  title: NAD+ metabolism and its roles in cellular processes during ageing
+  publisher: Nature Reviews Molecular Cell Biology 22(2):119–141
+  url: https://doi.org/10.1038/s41580-020-00313-x
+  note: "사람을 포함한 여러 생물에서 나이가 들수록 조직 · 세포의 NAD+ 수준이 서서히 떨어짐"
+- id: ristow2009
+  author: Ristow M, Zarse K, Oberbach A, et al.
+  year: 2009
+  title: Antioxidants prevent health-promoting effects of physical exercise in humans
+  publisher: PNAS 106(21):8665–8670
+  url: https://doi.org/10.1073/pnas.0903485106
+  note: "젊은 남성 39명, 4주 운동 중 비타민 C · E 고용량 보충 시 인슐린 감수성 개선 등 운동 효과가 나타나지 않음 (소규모 연구)"
+- id: defreitas2016
+  author: de Freitas LF, Hamblin MR
+  year: 2016
+  title: Proposed Mechanisms of Photobiomodulation or Low-Level Light Therapy
+  publisher: IEEE Journal of Selected Topics in Quantum Electronics 22(3):7000417
+  url: https://doi.org/10.1109/JSTQE.2016.2561201
+  note: "적색 · 근적외선이 미토콘드리아의 사이토크롬 c 산화효소에 흡수돼 전자 전달과 ATP 생산을 늘린다는 것이 주된 가설"
+- id: borges2014
+  author: Borges LS, Cerqueira MS, dos Santos Rocha JA, et al.
+  year: 2014
+  title: Light-emitting diode phototherapy improves muscle recovery after a damaging exercise
+  publisher: Lasers in Medical Science 29(3):1139–1144
+  url: https://doi.org/10.1007/s10103-013-1486-z
+  note: "팔 굽힘근 편심 운동 직후 적색 LED를 쬔 그룹이 위약 그룹보다 근육통 · 근력 저하 · 가동 범위 감소가 적었음 (소규모 무작위 연구)"
+- id: uribarri2010
+  author: Uribarri J, Woodruff S, Goodman S, et al.
+  year: 2010
+  title: Advanced glycation end products in foods and a practical guide to their reduction in the diet
+  publisher: Journal of the American Dietetic Association 110(6):911–916.e12
+  url: https://doi.org/10.1016/j.jada.2010.03.018
+  note: "굽기 · 튀기기 같은 건열 조리는 AGEs를 날것보다 10~100배 늘리고, 물로 익히기 · 짧고 낮은 온도 · 산성 재료가 줄여 줌"
+- id: oury2011
+  author: Oury F, Sumara G, Sumara O, et al.
+  year: 2011
+  title: Endocrine regulation of male fertility by the skeleton
+  publisher: Cell 144(5):796–809
+  url: https://doi.org/10.1016/j.cell.2011.02.004
+  note: "쥐 실험: 뼈의 오스테오칼신이 고환 라이디히 세포의 테스토스테론 생성을 촉진"
+- id: oury2013
+  author: Oury F, Khrimian L, Denny CA, et al.
+  year: 2013
+  title: Maternal and offspring pools of osteocalcin influence brain development and functions
+  publisher: Cell 155(1):228–241
+  url: https://doi.org/10.1016/j.cell.2013.08.042
+  note: "쥐 실험: 오스테오칼신이 뇌로 들어가 신경전달물질 합성에 관여하고, 없는 쥐는 기억력이 떨어지고 불안이 늘었음 (어미의 오스테오칼신은 태아 뇌 발달에 관여)"
+- id: diegel2020
+  author: Diegel CR, Hann S, Ayturk UM, et al.
+  year: 2020
+  title: An osteocalcin-deficient mouse strain without endocrine abnormalities
+  publisher: PLOS Genetics 16(5):e1008361
+  url: https://doi.org/10.1371/journal.pgen.1008361
+  note: "다른 연구팀이 새로 만든 오스테오칼신 결손 쥐에서는 혈당 조절 · 수컷 생식력 이상이 나타나지 않아 기존 결과와 엇갈림"
+- id: jacobs2011
+  author: Jacobs TL, Epel ES, Lin J, et al.
+  year: 2011
+  title: Intensive meditation training, immune cell telomerase activity, and psychological mediators
+  publisher: Psychoneuroendocrinology 36(5):664–681
+  url: https://doi.org/10.1016/j.psyneuen.2010.09.010
+  note: "3개월 명상 수련을 마친 30명의 면역세포 텔로머레이스 활성이 대조군보다 약 30% 높았음 (수련 전 측정은 없음, 소규모)"
+- id: epel2004
+  author: Epel ES, Blackburn EH, Lin J, et al.
+  year: 2004
+  title: Accelerated telomere shortening in response to life stress
+  publisher: PNAS 101(49):17312–17315
+  url: https://doi.org/10.1073/pnas.0407162101
+  note: "건강한 여성 58명(아픈 아이를 돌보는 어머니 포함): 스트레스를 가장 크게 느낀 그룹은 산화 스트레스가 높고 텔로미어가 적어도 10년 더 늙은 만큼 짧았음 (단면 연구)"
+- id: blackburn2006
+  author: Blackburn EH, Greider CW, Szostak JW
+  year: 2006
+  title: "Telomeres and telomerase: the path from maize, Tetrahymena and yeast to human cancer and aging"
+  publisher: Nature Medicine 12(10):1133–1138
+  url: https://doi.org/10.1038/nm1006-1133
+  note: "2009년 노벨 생리의학상 수상자 세 사람이 정리한 텔로미어 · 텔로머레이스 발견 과정과 기전"
+- id: damico2021
+  author: D'Amico D, Andreux PA, Valdés P, Singh A, Rinsch C, Auwerx J
+  year: 2021
+  title: Impact of the Natural Compound Urolithin A on Health, Disease, and Aging
+  publisher: Trends in Molecular Medicine 27(7):687–699
+  url: https://doi.org/10.1016/j.molmed.2021.04.009
+  note: "석류 · 베리 · 견과의 엘라지타닌을 장내 미생물이 바꾼 유로리틴 A가 미토파지를 촉진한다는 연구 리뷰 (만드는 능력은 사람마다 다름)"
+- id: volek2016
+  author: Volek JS, Freidenreich DJ, Saenz C, et al.
+  year: 2016
+  title: Metabolic characteristics of keto-adapted ultra-endurance runners
+  publisher: Metabolism 65(3):100–110
+  url: https://doi.org/10.1016/j.metabol.2015.10.028
+  note: "저탄수 식단에 평균 20개월 적응한 울트라 러너 10명의 최대 지방 산화량이 고탄수 그룹 10명의 약 2.3배 (1.54 vs 0.67 g/분, 단면 비교)"
+- id: goldstein2003
+  author: Goldstein DS, Eisenhofer G, Kopin IJ
+  year: 2003
+  title: Sources and significance of plasma levels of catechols and their metabolites in humans
+  publisher: Journal of Pharmacology and Experimental Therapeutics 305(3):800–811
+  url: https://doi.org/10.1124/jpet.103.049270
+  note: "혈중 노르에피네프린은 주로 교감신경 말단에서 흘러나온 것이고, 부신수질은 주로 에피네프린을 분비함"
+- id: pedersen2008
+  author: Pedersen BK, Febbraio MA
+  year: 2008
+  title: "Muscle as an endocrine organ: focus on muscle-derived interleukin-6"
+  publisher: Physiological Reviews 88(4):1379–1406
+  url: https://doi.org/10.1152/physrev.90100.2007
+  note: "근육이 만들어 내보내는 사이토카인 · 펩타이드를 마이오카인이라 부름. 대표격인 IL-6는 운동 시간 · 강도 · 쓰는 근육량에 따라 늘며 혈중에서 최대 100배까지 증가"
+- id: gooley2011
+  author: Gooley JJ, Chamberlain K, Smith KA, et al.
+  year: 2011
+  title: Exposure to room light before bedtime suppresses melatonin onset and shortens melatonin duration in humans
+  publisher: The Journal of Clinical Endocrinology & Metabolism 96(3):E463–E472
+  url: https://doi.org/10.1210/jc.2010-2098
+  note: "116명: 잠들기 전 8시간 실내 조명(200lux 미만)에 있으면 어두운 조명보다 멜라토닌 분비 시작이 늦어지고(99%) 분비 시간이 약 90분 짧아짐"
+- id: chang2015
+  author: Chang AM, Aeschbach D, Duffy JF, Czeisler CA
+  year: 2015
+  title: Evening use of light-emitting eReaders negatively affects sleep, circadian timing, and next-morning alertness
+  publisher: PNAS 112(4):1232–1237
+  url: https://doi.org/10.1073/pnas.1418490112
+  note: "12명: 잠들기 전 4시간 동안 빛을 내는 전자책(태블릿)을 읽은 밤에는 종이책을 읽은 밤보다 저녁 멜라토닌이 덜 나오고 분비 시각이 늦어졌으며, 잠드는 데 더 오래 걸림 (소규모 연구)"
+- id: brooks2018
+  author: Brooks GA
+  year: 2018
+  title: The Science and Translation of Lactate Shuttle Theory
+  publisher: Cell Metabolism 27(4):757–785
+  url: https://doi.org/10.1016/j.cmet.2018.03.008
+  note: "젖산은 산소가 충분할 때도 계속 만들어지며, 심장 · 뇌 등 여러 기관의 주요 연료이자 포도당 신생의 재료 · 신호 물질"
+- id: ference2017
+  author: Ference BA, Ginsberg HN, Graham I, et al.
+  year: 2017
+  title: Low-density lipoproteins cause atherosclerotic cardiovascular disease. 1. Evidence from genetic, epidemiologic, and clinical studies. A consensus statement from the European Atherosclerosis Society Consensus Panel
+  publisher: European Heart Journal 38(32):2459–2472
+  url: https://doi.org/10.1093/eurheartj/ehx144
+  note: "유전 · 역학 · 임상 연구를 종합하면 LDL이 동맥경화성 심혈관 질환의 원인이며, LDL 콜레스테롤에 노출된 양과 기간에 비례해 위험이 커짐"
+- id: zhu2016
+  author: Zhu X, Bührer C, Wellmann S
+  year: 2016
+  title: Cold-inducible proteins CIRP and RBM3, a unique couple with activities far beyond the cold
+  publisher: Cellular and Molecular Life Sciences 73(20):3839–3859
+  url: https://doi.org/10.1007/s00018-016-2253-7
+  note: "추위 · 저체온에서는 CIRP · RBM3 같은 냉유도 단백질이 늘어남 (열충격단백질과는 다른 계열)"
+- id: galsgaard2019
+  author: Galsgaard KD, Pedersen J, Knop FK, Holst JJ, Wewer Albrechtsen NJ
+  year: 2019
+  title: Glucagon Receptor Signaling and Lipid Metabolism
+  publisher: Frontiers in Physiology 10:413
+  url: https://doi.org/10.3389/fphys.2019.00413
+  note: "글루카곤이 지방조직의 지방 분해를 일으키는지는 특히 사람에서 논란 (설치류에선 보이지만 사람에선 뚜렷하지 않음)"
+- id: gravholt2001
+  author: Gravholt CH, Møller N, Jensen MD, Christiansen JS, Schmitz O
+  year: 2001
+  title: Physiological levels of glucagon do not influence lipolysis in abdominal adipose tissue as assessed by microdialysis
+  publisher: The Journal of Clinical Endocrinology & Metabolism 86(5):2085–2089
+  url: https://doi.org/10.1210/jcem.86.5.7460
+  note: "건강한 남성: 생리적 농도의 글루카곤은 복부 피하지방의 지방 분해를 바꾸지 않았음"

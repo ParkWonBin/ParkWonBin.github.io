@@ -207,7 +207,7 @@ function renderDepreciation() {
   const avgDep = depRows.reduce((s, r) => s + r.dep, 0) / depRows.length;
   document.getElementById('depreciation-summary').innerHTML = `
     <div class="result-card">
-      <div class="label">20년간 누적 화폐가치 하락</div>
+      <div class="label">20년간 누적 화폐가치 하락 (이 페이지 추정식 · 소비자물가 기준으로는 약 37%<sup class="fn"><a href="/sources/#kostat-cpi">[출처]</a></sup>)</div>
       <div class="value" style="color:var(--red)">${totalDep.toFixed(1)}%</div>
       <div class="label">2005년 100만원 → 현재 ${depRows[depRows.length-1].cumValue.toFixed(0)}만원 가치</div>
     </div>
@@ -336,9 +336,9 @@ function renderETFSim() {
   if (infoTable) {
     infoTable.innerHTML = stats.map(s =>
       `<tr><td style="color:${s.color};font-weight:600">${s.key}</td>
-       <td>${s.divType}</td>
+       <td>${s.divType}${s.divSrc ? `<sup class="fn"><a href="/sources/#${s.divSrc}">[출처]</a></sup>` : ''}</td>
        <td>${s.divYield}%${s.divSrc ? `<sup class="fn"><a href="/sources/#${s.divSrc}">[출처]</a></sup>` : ''}</td>
-       <td style="color:var(--gold);font-weight:600">${(s.cagr * 100).toFixed(1)}%</td>
+       <td style="color:var(--gold);font-weight:600">${(s.cagr * 100).toFixed(1)}%${ETF.etfs[s.key].returns_source ? `<sup class="fn"><a href="/sources/#${ETF.etfs[s.key].returns_source}">[출처]</a></sup>` : ''}</td>
        <td>${s.desc} <span style="font-size:.7rem;color:var(--text2)">(${s.startYear}~${s.endYear}, ${s.dataYears}년 실적)</span></td></tr>`
     ).join('');
   }
@@ -571,7 +571,7 @@ function renderTop10() {
     }
     const miniTable = `<table style="width:100%;border-collapse:collapse;font-size:.78rem">${miniRows}</table>`;
     return `<tr>
-      <td style="font-weight:600">${d.year}</td>
+      <td style="font-weight:600">${d.year}${(d.source_ids || []).map(id => `<sup class="fn"><a href="/sources/#${id}">[출처]</a></sup>`).join('')}</td>
       <td style="padding:4px 6px">${miniTable}</td>
       <td class="${d.portfolio_return >= 0 ? 'pos' : 'neg'}" style="font-weight:600">${d.portfolio_return >= 0 ? '+' : ''}${d.portfolio_return.toFixed(1)}%</td>
       <td class="${d.spy_return >= 0 ? 'pos' : 'neg'}">${d.spy_return >= 0 ? '+' : ''}${d.spy_return.toFixed(1)}%</td>

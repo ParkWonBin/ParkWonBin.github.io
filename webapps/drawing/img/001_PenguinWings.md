@@ -13,11 +13,11 @@ original: /webapps/drawing/img/001_PenguinWings.png
 가진 능력의 일부를 잃는 과정입니다.  
 
 땅을 걷고자 했던 물고기는  
-지느러미를 대가로 팔다리를 얻었고.  
+지느러미를 대가로 팔다리를 얻었고.<sup class="fn"><a href="/sources/#shubin2006">[출처]</a></sup>  
 하늘을 날고자 했던 공룡은  
-두 팔을 대가로 날개를 얻었습니다.  
+두 팔을 대가로 날개를 얻었습니다.<sup class="fn"><a href="/sources/#xu2014">[출처]</a></sup>  
 그리고 바다로 다시 돌아간 새는  
-두 날개를 지느러미로 바꾸었습니다. 
+두 날개를 지느러미로 바꾸었습니다.<sup class="fn"><a href="/sources/#elliott2013">[출처]</a></sup> 
 
 펭귄의 날개는  
 바다에서 시작되어 바다로 돌아간 역사.  

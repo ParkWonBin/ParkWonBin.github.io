@@ -140,6 +140,7 @@
   }
 </style>
   <script src="/assets/js/analytics.js" defer></script>
+  <script src="/assets/js/footnotes.js" defer></script>
   <script src="/assets/js/app-bar.js" defer data-pos="bl" data-pos-m="tr"></script>
 </head>
 <body>
@@ -248,7 +249,7 @@
       </div>
 
       <h3>보간 설정</h3>
-      <div class="row wide"><label>보간 색공간</label><select id="gSpace"><option value="oklab">OKLab (지각 균일)</option><option value="srgb">sRGB</option></select></div>
+      <div class="row wide"><label>보간 색공간<sup class="fn"><a href="/sources/#ottosson2020">[출처]</a></sup></label><select id="gSpace"><option value="oklab">OKLab (지각 균일)</option><option value="srgb">sRGB</option></select></div>
       <div class="row"><label>원판 경계 선명도</label><input type="range" id="gSpread" min="0.5" max="4" step="0.1"><code id="gSpreadVal"></code></div>
       <div class="row wide"><label>구간 길이</label><select id="gEqual"><option value="0">원판 위 길이에 비례</option><option value="1">균등 분할</option></select></div>
       <div class="row wide"><label>점·선 가이드</label><input type="checkbox" id="gGuides"></div>
@@ -261,6 +262,7 @@
         <li>아래 막대 = 효과에 실제로 들어가는 그라데이션 (구간을 만든 순서대로 펼침). 체크무늬는 알파</li>
         <li>아우라: 막대 왼쪽(t=0)이 오브젝트 쪽, 오른쪽(t=1)이 바깥 — <b>아우라 설정 › 그라데이션 매핑</b>에서 높이·노이즈·각도로 바꿀 수 있어요</li>
       </ul>
+      <div data-footnotes></div>
     </div>
   </div>
 
@@ -303,7 +305,7 @@
     <label>비율</label><select id="gifAspect"><option value="1">1:1</option><option value="1.3333">4:3</option><option value="1.7778">16:9</option><option value="0.75">3:4</option><option value="screen">현재 화면</option></select>
     <label>길이(초)</label><input type="number" id="gifDur" value="2.5" min="0.2" max="20" step="0.1">
     <label>FPS</label><select id="gifFps"><option>10</option><option>15</option><option selected>20</option><option>25</option><option>30</option><option>50</option></select>
-    <label>색상 수</label><select id="gifColors"><option>256</option><option>128</option><option>64</option><option>32</option></select>
+    <label>색상 수<sup class="fn"><a href="/sources/#gif89a">[출처]</a></sup></label><select id="gifColors"><option>256</option><option>128</option><option>64</option><option>32</option></select>
     <label>공용 팔레트</label><label class="chk"><input type="checkbox" id="gifGlobal" checked> 프레임 간 색 깜빡임 줄이기</label>
   </div>
   <div class="btns" style="justify-content:space-between">

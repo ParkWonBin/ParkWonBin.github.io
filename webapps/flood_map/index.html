@@ -174,6 +174,7 @@ body{font-family:'Inter',sans-serif;background:#0f1117;color:#e1e4ea;overflow:hi
 }
 </style>
   <script src="/assets/js/analytics.js" defer></script>
+  <script src="/assets/js/footnotes.js" defer></script>
   <script src="/assets/js/app-bar.js" defer data-pos="bl"></script>
 </head>
 <body>
@@ -183,7 +184,7 @@ body{font-family:'Inter',sans-serif;background:#0f1117;color:#e1e4ea;overflow:hi
 <div id="panel">
   <div class="panel-header">
     <h1><a href="https://data.seoul.go.kr/dataList/OA-15636/F/1/datasetView.do#" target="_blank" style="color:inherit;-webkit-text-fill-color:inherit;text-decoration:none">🌊 서울시 침수흔적도</a></h1>
-    <p>2013~2025년 침수흔적 데이터 시각화</p>
+    <p>2013~2025년 침수흔적 데이터 시각화<sup class="fn"><a href="/sources/#seoul-flood-trace">[출처]</a></sup></p>
   </div>
   <div class="search-box">
     <div class="search-wrap">
@@ -218,6 +219,7 @@ body{font-family:'Inter',sans-serif;background:#0f1117;color:#e1e4ea;overflow:hi
       <div class="legend-chip"><div class="legend-dot" style="background:#991b1b"></div>2.0m+</div>
     </div>
   </div>
+  <div data-footnotes style="padding:0 20px"></div>
   <div class="panel-foot" aria-hidden="true"></div>
 </div>
 
@@ -583,7 +585,7 @@ function buildLayerItem(year) {
 // data/ 의 파일을 바꾸면 이 표도 고친다 (개수는 받은 뒤 실제 값으로 바뀌고, 크기는 진행률에만 쓴다)
 const YEAR_FILES = {
   2013: [8, 5339], 2014: [31, 20703], 2016: [29, 19926], 2017: [13, 8552],
-  2018: [842, 593207], 2019: [6, 5824], 2020: [166, 118352], 2022: [19881, 20654027],
+  2018: [842, 593208], 2019: [6, 5824], 2020: [166, 118352], 2022: [19881, 20651675],
   2023: [278, 213889], 2024: [121, 101217], 2025: [1132, 842049]
 };
 const YEARS = Object.keys(YEAR_FILES).map(Number);

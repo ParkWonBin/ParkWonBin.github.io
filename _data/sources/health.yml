@@ -55,7 +55,7 @@
   title: Skeletal muscle mass and distribution in 468 men and women aged 18–88 yr
   publisher: Journal of Applied Physiology 89(1):81–88
   url: https://doi.org/10.1152/jappl.2000.89.1.81
-  note: 골격근의 절반을 조금 넘는 양(약 55%)이 하체에 있음
+  note: 골격근의 절반을 조금 넘는 양(약 55%)이 하체에 있음 · 체중 대비 근육량은 20대부터 줄지만 근육량 자체는 40대 후반부터 뚜렷이 줄고, 주로 하체에서 줄어듦
 - id: westerterp2004
   author: Westerterp KR
   year: 2004
@@ -77,3 +77,247 @@
   publisher: JAMA 330(18):1795–1797
   url: https://doi.org/10.1001/jama.2023.19574
   note: 췌장염 위험비 9.09 (95% 신뢰구간 1.25–66.00), 부프로피온-날트렉손 사용자와 비교
+- id: lasschuijt2020
+  author: Lasschuijt MP, Mars M, de Graaf C, Smeets PAM
+  year: 2020
+  title: "Endocrine Cephalic Phase Responses to Food Cues: A Systematic Review"
+  publisher: Advances in Nutrition 11(5):1364–1383
+  url: https://doi.org/10.1093/advances/nmaa059
+  note: "사람 대상 연구 체계적 고찰: 맛·음식 신호만으로 나오는 인슐린 반응은 작고 연구마다 들쭉날쭉하며, 포만감·혈당 조절에 영향을 준다는 근거는 적음"
+- id: nichol2018
+  author: Nichol AD, Holle MJ, An R
+  year: 2018
+  title: "Glycemic impact of non-nutritive sweeteners: a systematic review and meta-analysis of randomized controlled trials"
+  publisher: European Journal of Clinical Nutrition 72(6):796–804
+  url: https://doi.org/10.1038/s41430-018-0170-6
+  note: "무작위 연구 29개(741명): 아스파탐·사카린·스테비오사이드·수크랄로스만 먹었을 때 혈당이 오르지 않았음"
+- id: johnson2012
+  author: Johnson GH, Fritsche K
+  year: 2012
+  title: "Effect of dietary linoleic acid on markers of inflammation in healthy persons: a systematic review of randomized controlled trials"
+  publisher: Journal of the Academy of Nutrition and Dietetics 112(7):1029–1041
+  url: https://doi.org/10.1016/j.jand.2012.03.029
+  note: "건강한 성인 무작위 연구: 리놀레산을 더 먹어도 CRP·피브리노겐·TNF-α 등 염증 지표가 오른다는 근거가 거의 없음"
+- id: who2012
+  author: World Health Organization
+  year: 2012
+  title: "Guideline: Sodium intake for adults and children"
+  publisher: World Health Organization, Geneva (ISBN 978-92-4-150483-6)
+  url: https://www.who.int/publications/i/item/9789241504836
+  note: 성인 나트륨 하루 2g(소금 5g) 미만 섭취를 강하게 권고
+- id: betterhealth-oedema
+  author: Better Health Channel (Victoria State Government, Department of Health)
+  title: Fluid retention (oedema)
+  publisher: Better Health Channel, Victoria State Government
+  url: https://www.betterhealth.vic.gov.au/health/conditionsandtreatments/fluid-retention-oedema
+  note: 부종은 심장·신장·간 질환 등의 신호일 수 있고, 치료(이뇨제 등)는 원인에 따라 달라짐
+- id: shukla2017
+  author: Shukla AP, Andono J, Touhamy SH, et al.
+  year: 2017
+  title: Carbohydrate-last meal pattern lowers postprandial glucose and insulin excursions in type 2 diabetes
+  publisher: BMJ Open Diabetes Research & Care 5(1):e000440
+  url: https://doi.org/10.1136/bmjdrc-2017-000440
+  note: "제2형 당뇨 16명: 탄수화물을 마지막에 먹으면 식후 3시간 인슐린(iAUC)이 약 25%, 혈당이 약 53% 낮음"
+- id: he2022
+  author: He L, Wang J, Ping F, et al.
+  year: 2022
+  title: "Association of Glucagon-Like Peptide-1 Receptor Agonist Use With Risk of Gallbladder and Biliary Diseases: A Systematic Review and Meta-analysis of Randomized Clinical Trials"
+  publisher: JAMA Internal Medicine 182(5):513–519
+  url: https://doi.org/10.1001/jamainternmed.2022.0338
+  note: "무작위 임상 76개 메타분석: GLP-1 계열 약 사용 시 담낭·담도 질환 위험비 1.37 (체중 감량 목적 시험에선 2.29)"
+- id: laforgia2006
+  author: LaForgia J, Withers RT, Gore CJ
+  year: 2006
+  title: Effects of exercise intensity and duration on the excess post-exercise oxygen consumption
+  publisher: Journal of Sports Sciences 24(12):1247–1264
+  url: https://pubmed.ncbi.nlm.nih.gov/17101527/
+  note: 운동 후 초과 산소 소모(EPOC)는 강도가 높을수록 커지지만, 오래 지속되는 경우에도 운동 순 소모량의 6~15% 정도
+- id: schuenke2002
+  author: Schuenke MD, Mikat RP, McBride JM
+  year: 2002
+  title: "Effect of an acute period of resistance exercise on excess post-exercise oxygen consumption: implications for body mass management"
+  publisher: European Journal of Applied Physiology 86(5):411–417
+  url: https://doi.org/10.1007/s00421-001-0568-y
+  note: 남성 7명, 약 31분 고강도 근력 운동 뒤 산소 소모가 38시간째까지 기준보다 높았음
+- id: behm2016
+  author: Behm DG, Blazevich AJ, Kay AD, McHugh M
+  year: 2016
+  title: "Acute effects of muscle stretching on physical performance, range of motion, and injury incidence in healthy active individuals: a systematic review"
+  publisher: Applied Physiology, Nutrition, and Metabolism 41(1):1–11
+  url: https://doi.org/10.1139/apnm-2015-0235
+  note: "운동 직전 정적 스트레칭: 한 부위 60초 미만이면 수행 −1.1%, 60초 이상이면 −4.6%. 부상을 늘린다는 근거는 없음"
+- id: afonso2021
+  author: Afonso J, Clemente FM, Nakamura FY, et al.
+  year: 2021
+  title: "The Effectiveness of Post-exercise Stretching in Short-Term and Delayed Recovery of Strength, Range of Motion and Delayed Onset Muscle Soreness: A Systematic Review and Meta-Analysis of Randomized Controlled Trials"
+  publisher: Frontiers in Physiology 12:677581
+  url: https://doi.org/10.3389/fphys.2021.677581
+  note: "무작위 연구 메타분석: 운동 후 스트레칭은 가만히 쉬는 것과 비교해 근력·가동범위 회복과 근육통(24~72시간)에 차이가 없었음"
+- id: zampell2012
+  author: Zampell JC, Aschen S, Weitman ES, et al.
+  year: 2012
+  title: "Regulation of adipogenesis by lymphatic fluid stasis: part I. Adipogenesis, fibrosis, and inflammation"
+  publisher: Plastic and Reconstructive Surgery 129(4):825–834
+  url: https://doi.org/10.1097/PRS.0b013e3182450b2d
+  note: 쥐 꼬리 림프관을 막아 림프가 오래 고이게 하자(임상 림프부종과 비슷한 모델) 피하지방이 늘어남
+- id: srikanthan2014
+  author: Srikanthan P, Karlamangla AS
+  year: 2014
+  title: Muscle mass index as a predictor of longevity in older adults
+  publisher: The American Journal of Medicine 127(6):547–553
+  url: https://doi.org/10.1016/j.amjmed.2014.02.007
+  note: "NHANES III 노인 3,659명: 근육량 지수 상위 25%는 하위 25%보다 사망 위험이 약 20% 낮음 (보정 HR 0.80)"
+- id: heitmann2009
+  author: Heitmann BL, Frederiksen P
+  year: 2009
+  title: "Thigh circumference and risk of heart disease and premature death: prospective cohort study"
+  publisher: BMJ 339:b3292
+  url: https://doi.org/10.1136/bmj.b3292
+  note: "덴마크 성인 2,816명: 허벅지가 가늘수록 심혈관·관상동맥 질환과 전체 사망 위험이 높았고, 약 60cm 미만에서 조기 사망 위험이 크게 높아짐"
+- id: ranganathan2004
+  author: Ranganathan VK, Siemionow V, Liu JZ, Sahgal V, Yue GH
+  year: 2004
+  title: From mental power to muscle power—gaining strength by using the mind
+  publisher: Neuropsychologia 42(7):944–956
+  url: https://doi.org/10.1016/j.neuropsychologia.2003.11.018
+  note: "12주간 머릿속으로만 수축 연습: 팔꿈치 굽힘 근력 13.5%, 새끼손가락 벌림 근력 35% 증가"
+- id: mandsager2018
+  author: Mandsager K, Harb S, Cremer P, Phelan D, Nissen SE, Jaber W
+  year: 2018
+  title: Association of Cardiorespiratory Fitness With Long-term Mortality Among Adults Undergoing Exercise Treadmill Testing
+  publisher: JAMA Network Open 1(6):e183605
+  url: https://doi.org/10.1001/jamanetworkopen.2018.3605
+  note: "트레드밀 검사 12만 2,007명: 심폐체력 최하위 그룹의 사망 위험이 최상위 그룹의 약 5배 (최상위 대비 보정 HR 약 0.20)"
+- id: brito2012
+  author: Brito LB, Ricardo DR, Araújo DS, Ramos PS, Myers J, Araújo CG
+  year: 2012
+  title: Ability to sit and rise from the floor as a predictor of all-cause mortality
+  publisher: European Journal of Preventive Cardiology 21(7):892–898 (2014; 온라인 2012)
+  url: https://doi.org/10.1177/2047487312471759
+  note: "51~80세 2,002명: 바닥 앉았다 일어서기 점수 최하위(0~3점)의 사망 위험이 최상위 그룹의 약 5~6배 (HR 5.44)"
+- id: menzies2010
+  author: Menzies P, Menzies C, McIntyre L, et al.
+  year: 2010
+  title: Blood lactate clearance during active recovery after an intense running bout depends on the intensity of the active recovery
+  publisher: Journal of Sports Sciences 28(9):975–982
+  url: https://doi.org/10.1080/02640414.2010.481721
+  note: 격한 달리기 뒤 젖산 역치 80~100% 강도로 가볍게 움직이면 가만히 쉴 때보다 젖산이 빨리 제거됨
+- id: ruiz2008
+  author: Ruiz JR, Sui X, Lobelo F, et al.
+  year: 2008
+  title: "Association between muscular strength and mortality in men: prospective cohort study"
+  publisher: BMJ 337:a439
+  url: https://doi.org/10.1136/bmj.a439
+  note: "남성 8,762명: 근력이 강할수록 전체 · 암 사망 위험이 낮음 (심폐체력 보정 후에도)"
+- id: schoenfeld2013
+  author: Schoenfeld BJ, Aragon AA, Krieger JW
+  year: 2013
+  title: "The effect of protein timing on muscle strength and hypertrophy: a meta-analysis"
+  publisher: Journal of the International Society of Sports Nutrition 10:53
+  url: https://doi.org/10.1186/1550-2783-10-53
+  note: 다른 요인을 보정하면 단백질 섭취 시점의 효과는 사라지고, 근육 성장을 가장 잘 설명한 것은 하루 총 단백질 섭취량
+- id: sawka2007
+  author: Sawka MN, Burke LM, Eichner ER, Maughan RJ, Montain SJ, Stachenfeld NS
+  year: 2007
+  title: American College of Sports Medicine position stand. Exercise and fluid replacement
+  publisher: Medicine & Science in Sports & Exercise 39(2):377–390
+  url: https://doi.org/10.1249/mss.0b013e31802ca597
+  note: 운동 후 빠른 회복에는 줄어든 체중 1kg당 약 1.5L 수분 섭취 권고
+- id: richter2013
+  author: Richter EA, Hargreaves M
+  year: 2013
+  title: Exercise, GLUT4, and skeletal muscle glucose uptake
+  publisher: Physiological Reviews 93(3):993–1017
+  url: https://doi.org/10.1152/physrev.00038.2012
+  note: 근육 수축은 인슐린과 다른 신호(AMPK · 칼슘 등)로 GLUT4 를 세포막으로 옮겨 포도당을 흡수시킴
+- id: cheung2003
+  author: Cheung K, Hume P, Maxwell L
+  year: 2003
+  title: "Delayed onset muscle soreness: treatment strategies and performance factors"
+  publisher: Sports Medicine 33(2):145–164
+  url: https://doi.org/10.2165/00007256-200333020-00005
+  note: 지연성 근육통(DOMS)은 운동 뒤 24~72시간에 가장 심하고 5~7일이면 사라짐
+- id: pedersen2011
+  author: Pedersen BK
+  year: 2011
+  title: Muscles and their myokines
+  publisher: Journal of Experimental Biology 214(2):337–346
+  url: https://doi.org/10.1242/jeb.048074
+  note: 근육이 내보내는 사이토카인 · 펩타이드를 마이오카인으로 정의, 운동의 만성질환 예방 효과에 기여할 수 있음
+- id: bostrom2012
+  author: Boström P, Wu J, Jedrychowski MP, et al.
+  year: 2012
+  title: A PGC1-α-dependent myokine that drives brown-fat-like development of white fat and thermogenesis
+  publisher: Nature 481(7382):463–468
+  url: https://doi.org/10.1038/nature10777
+  note: "쥐 실험: 운동 때 근육에서 나오는 이리신이 백색지방을 갈색지방처럼 바꾸고 에너지 소비를 늘림"
+- id: lundberg1995
+  author: Lundberg JO, Farkas-Szallasi T, Weitzberg E, et al.
+  year: 1995
+  title: High nitric oxide production in human paranasal sinuses
+  publisher: Nature Medicine 1(4):370–373
+  url: https://doi.org/10.1038/nm0495-370
+  note: 사람의 부비강 점막이 산화질소(NO)를 만들어 부비강 공기에 고농도로 존재
+- id: lundberg1996
+  author: Lundberg JO, Settergren G, Gelinder S, et al.
+  year: 1996
+  title: Inhalation of nasally derived nitric oxide modulates pulmonary function in humans
+  publisher: Acta Physiologica Scandinavica 158(4):343–347
+  url: https://pubmed.ncbi.nlm.nih.gov/8971255/
+  note: 건강한 사람이 코로 숨 쉴 때 입으로 쉴 때보다 피부 산소분압이 약 10% 높았음 (코에서 만든 NO 효과로 해석)
+- id: vancauter2000
+  author: Van Cauter E, Leproult R, Plat L
+  year: 2000
+  title: Age-related changes in slow wave sleep and REM sleep and relationship with growth hormone and cortisol levels in healthy men
+  publisher: JAMA 284(7):861–868
+  url: https://doi.org/10.1001/jama.284.7.861
+  note: 남성은 하루 성장호르몬 분비의 약 60~70%가 잠든 초반 깊은 수면(서파 수면) 때 나오며, 나이가 들어 서파 수면이 줄면 성장호르몬 분비도 함께 줄어듦
+- id: blomstrand2006
+  author: Blomstrand E
+  year: 2006
+  title: A role for branched-chain amino acids in reducing central fatigue
+  publisher: The Journal of Nutrition 136(2):544S–547S
+  url: https://doi.org/10.1093/jn/136.2.544S
+  note: BCAA 가 트립토판의 뇌 유입을 줄여 중추 피로를 늦출 수 있다는 가설 · 운동 수행이 좋아진 것은 일부 상황에서만
+- id: haghayegh2019
+  author: Haghayegh S, Khoshnevis S, Smolensky MH, et al.
+  year: 2019
+  title: "Before-bedtime passive body heating by warm shower or bath to improve sleep: A systematic review and meta-analysis"
+  publisher: Sleep Medicine Reviews 46:124–135
+  url: https://doi.org/10.1016/j.smrv.2019.04.008
+  note: 잠자기 1~2시간 전 40~42.5°C 물로 샤워 · 목욕(10분 정도도)하면 잠드는 시간이 짧아지고 수면 질이 좋아짐
+- id: spiegel2004
+  author: Spiegel K, Tasali E, Penev P, Van Cauter E
+  year: 2004
+  title: "Brief communication: Sleep curtailment in healthy young men is associated with decreased leptin levels, elevated ghrelin levels, and increased hunger and appetite"
+  publisher: Annals of Internal Medicine 141(11):846–850
+  url: https://doi.org/10.7326/0003-4819-141-11-200412070-00008
+  note: "건강한 남성 12명: 이틀간 4시간만 자자 10시간 잔 때보다 렙틴 18%↓, 그렐린 28%↑, 배고픔 24%↑"
+- id: nedeltcheva2010
+  author: Nedeltcheva AV, Kilkus JM, Imperial J, Schoeller DA, Penev PD
+  year: 2010
+  title: Insufficient sleep undermines dietary efforts to reduce adiposity
+  publisher: Annals of Internal Medicine 153(7):435–441
+  url: https://doi.org/10.7326/0003-4819-153-7-201010050-00006
+  note: "과체중 성인 10명, 14일 다이어트: 5.5시간 잔 때는 8.5시간 잔 때보다 빠진 지방이 1.4→0.6kg 으로 줄고, 빠진 제지방(근육 등)은 1.5→2.4kg 으로 늘어남"
+- id: lamon2021
+  author: Lamon S, Morabito A, Arentson-Lantz E, et al.
+  year: 2021
+  title: The effect of acute sleep deprivation on skeletal muscle protein synthesis and the hormonal environment
+  publisher: Physiological Reports 9(1):e14660
+  url: https://doi.org/10.14814/phy2.14660
+  note: 성인 13명, 하룻밤을 꼬박 새우자 근단백 합성 18%↓, 코르티솔 21%↑, 테스토스테론 24%↓ (성장호르몬은 측정 안 함)
+- id: nobel2017
+  author: The Nobel Assembly at Karolinska Institutet
+  year: 2017
+  title: The Nobel Prize in Physiology or Medicine 2017 – Press release
+  publisher: NobelPrize.org
+  url: https://www.nobelprize.org/prizes/medicine/2017/press-release/
+  note: 제프리 홀 · 마이클 로스배시 · 마이클 영, 서카디안 리듬을 조절하는 분자 기전 발견으로 수상
+- id: murphy1997
+  author: Murphy PJ, Campbell SS
+  year: 1997
+  title: "Nighttime drop in body temperature: a physiological trigger for sleep onset?"
+  publisher: Sleep 20(7):505–511
+  url: https://doi.org/10.1093/sleep/20.7.505
+  note: 심부 체온이 빠르게 떨어질 때 잠들 가능성이 높아짐 (논문 제목처럼 가설로 제시)

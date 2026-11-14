@@ -1,0 +1,77 @@
+# 과학 시뮬레이션(webapps/demo_physicsSimulation · demo_Earth) 설명문 각주의 출처. 본문: <sup class="fn"><a href="/sources/#id">[출처]</a></sup>
+# 항목: id(사이트 전체에서 하나) · author · year · title · publisher(학술지 권호 · 기관) · url(가능하면 DOI) · accessed(시점이 있는 자료) · note
+- id: openstax-up1-shm
+  author: Ling SJ, Sanny J, Moebs W
+  year: 2016
+  title: "University Physics Volume 1, 15.1 Simple Harmonic Motion"
+  publisher: OpenStax (Rice University)
+  url: https://openstax.org/books/university-physics-volume-1/pages/15-1-simple-harmonic-motion
+  note: "후크 법칙 F = −kx, 단순 조화 운동 x(t) = A cos(ωt + φ), v(t) = −Aω sin(ωt + φ), ω = √(k/m)"
+- id: openstax-up1-shm-energy
+  author: Ling SJ, Sanny J, Moebs W
+  year: 2016
+  title: "University Physics Volume 1, 15.2 Energy in Simple Harmonic Motion"
+  publisher: OpenStax (Rice University)
+  url: https://openstax.org/books/university-physics-volume-1/pages/15-2-energy-in-simple-harmonic-motion
+  note: "감쇠 없는 용수철 진동의 총 에너지 ½mv² + ½kx² = ½kA² 는 일정 (|v| = √(k/m)·√(A² − x²))"
+- id: openstax-up1-pendulum
+  author: Ling SJ, Sanny J, Moebs W
+  year: 2016
+  title: "University Physics Volume 1, 15.4 Pendulums"
+  publisher: OpenStax (Rice University)
+  url: https://openstax.org/books/university-physics-volume-1/pages/15-4-pendulums
+  note: "단진자 복원력은 −mg sinθ (θ̈ = −(g/L)sinθ). 작은 각(약 15° 이하)에서는 sinθ ≈ θ 로 근사해 단순 조화 운동이 되고 ω = √(g/L), T = 2π√(L/g)"
+- id: openstax-up1-rotke
+  author: Ling SJ, Sanny J, Moebs W
+  year: 2016
+  title: "University Physics Volume 1, 10.4 Moment of Inertia and Rotational Kinetic Energy"
+  publisher: OpenStax (Rice University)
+  url: https://openstax.org/books/university-physics-volume-1/pages/10-4-moment-of-inertia-and-rotational-kinetic-energy
+  note: "회전 운동 에너지 K = ½Iω², 점질량의 관성 모멘트 I = mr² → 진자 추의 운동 에너지는 ½mL²ω²"
+- id: nist-gn
+  author: NIST
+  title: "CODATA Value: standard acceleration of gravity"
+  publisher: NIST Reference on Constants, Units, and Uncertainty
+  url: https://physics.nist.gov/cgi-bin/cuu/Value?gn
+  note: "표준 중력 가속도 g_n = 9.80665 m/s² (정의된 정확값) — 9.81 은 이를 반올림한 값"
+- id: strogatz2015
+  author: Strogatz SH
+  year: 2015
+  title: "Nonlinear Dynamics and Chaos: With Applications to Physics, Biology, Chemistry, and Engineering (2nd ed.), 6.7 Pendulum"
+  publisher: Westview Press (ISBN 978-0-8133-4910-7)
+  url: https://www.stevenstrogatz.com/books/nonlinear-dynamics-and-chaos-with-applications-to-physics-biology-chemistry-and-engineering
+  note: "감쇠 없는 진자는 에너지 E = ½θ̇² − cosθ(무차원)가 보존되어 위상도에 닫힌 궤도가 생기고, 약한 감쇠가 있으면 평형점으로 나선을 그리며 수렴한다"
+- id: hairer2003
+  author: Hairer E, Lubich C, Wanner G
+  year: 2003
+  title: "Geometric numerical integration illustrated by the Störmer–Verlet method"
+  publisher: "Acta Numerica 12:399–450"
+  url: https://doi.org/10.1017/S0962492902000144
+  note: "심플렉틱 오일러 · 스퇴르머–베를레 같은 방법은 에너지가 한쪽으로 새지 않고, 시간 간격(dt)에 비례하는 작은 폭으로 출렁이며 오래 보존된다"
+- id: stachowiak2006
+  author: Stachowiak T, Okada T
+  year: 2006
+  title: "A numerical analysis of chaos in the double pendulum"
+  publisher: "Chaos, Solitons & Fractals 29(2):417–422"
+  url: https://doi.org/10.1016/j.chaos.2005.08.032
+  note: "푸앵카레 단면 · 분기도 · 리아푸노프 지수 모두, 에너지가 낮을 땐 규칙적이다가 에너지가 커지면 카오스로 넘어감을 보임"
+- id: feynman-ii-19
+  author: Feynman RP, Leighton RB, Sands M
+  year: 1964
+  title: "The Feynman Lectures on Physics Vol. II, Ch. 19: The Principle of Least Action"
+  publisher: Addison-Wesley · Caltech 온라인판
+  url: https://www.feynmanlectures.caltech.edu/II_19.html
+  note: "작용(action) S = ∫(운동 에너지 − 위치 에너지)dt 이고 실제 운동은 이 작용을 극값으로 만드는 경로다 — 적분되는 T − U 가 라그랑지안(총에너지 T + U 와 다름)"
+- id: shinbrot1992
+  author: Shinbrot T, Grebogi C, Wisdom J, Yorke JA
+  year: 1992
+  title: "Chaos in a double pendulum"
+  publisher: "American Journal of Physics 60(6):491–499"
+  url: https://doi.org/10.1119/1.16860
+  note: "실제 이중진자 실험에서, 초기 조건이 아주 조금만 달라도 운동이 빠르게 크게 달라지는 것(초기 조건 민감성)을 보임"
+- id: weisstein-double-pendulum
+  author: Weisstein EW
+  title: "Double Pendulum"
+  publisher: Eric Weisstein's World of Physics (ScienceWorld), Wolfram Research
+  url: https://scienceworld.wolfram.com/physics/DoublePendulum.html
+  note: "이중진자의 운동 에너지 T(cos(θ₁ − θ₂) 항 포함)와 위치 에너지 V(매단 점 기준 — 이 페이지의 가장 낮은 점 기준과 상수만 다름), 라그랑지안과 운동방정식"

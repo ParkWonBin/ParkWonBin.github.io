@@ -1,8 +1,162 @@
 # 경제 지식(webapps/finance) 본문 · 데이터의 출처. 시점이 있는 자료는 accessed(기준일)를 꼭 적는다.
+# 항목: id(사이트 전체에서 하나) · author · year · title · publisher · url(가능하면 DOI) · accessed(시점이 있는 자료) · note
+- id: kostat-cpi
+  author: 국가데이터처(옛 통계청)
+  year: 2025
+  title: 소비자물가조사 — 소비자물가지수(2020=100) 연도별 등락률
+  publisher: 국가데이터처
+  url: https://kostat.go.kr/cpidtval.es?mid=b70201010000
+  accessed: "2026-11-13"
+  note: "연간 소비자물가 상승률 2005~2024년(2022년 5.1%, 2023년 3.6%, 2024년 2.3% · 2024년 지수 114.18): 20년 누적 약 1.58배(연평균 약 2.3%) → 같은 돈의 구매력 약 37% 감소. 페이지 데이터 cpi 값과 같음"
+- id: qqq-returns
+  author: Total Real Returns
+  year: 2026
+  title: QQQ Total Return Stock Chart (Dividends Reinvested)
+  publisher: totalrealreturns.com
+  url: https://totalrealreturns.com/n/QQQ
+  accessed: "2026-11-13"
+  note: "QQQ 연도별 총수익률(배당 재투자): 2008년 −41.7%, 2022년 −32.6%, 2023년 +54.9%, 2024년 +25.6% · 2005~2024년 일시금 약 15배(연평균 약 14.5%)"
+- id: schd-returns
+  author: Total Real Returns
+  year: 2026
+  title: SCHD Total Return Stock Chart (Dividends Reinvested)
+  publisher: totalrealreturns.com
+  url: https://totalrealreturns.com/n/SCHD
+  accessed: "2026-11-13"
+  note: "SCHD 연도별 총수익률(배당 재투자) 2012~2024: 11.39 · 32.88 · 11.69 · −0.30 · 16.45 · 20.85 · −5.56 · 27.29 · 15.03 · 29.87 · −3.26 · 4.54 · 11.66% (연평균 약 12.6%)"
+- id: sphd-returns
+  author: Total Real Returns
+  year: 2026
+  title: SPHD Total Return Stock Chart (Dividends Reinvested)
+  publisher: totalrealreturns.com
+  url: https://totalrealreturns.com/n/SPHD
+  accessed: "2026-11-13"
+  note: "SPHD 연도별 총수익률(배당 재투자) 2013~2024 (2022년 +0.6%, 2024년 +18.1%), 연평균 약 10.1%"
 - id: qqq-dividend
   author: StockAnalysis
+  year: 2026
   title: Invesco QQQ Trust (QQQ) Dividend History
   publisher: stockanalysis.com
   url: https://stockanalysis.com/etf/qqq/dividend/
   accessed: "2026-11-12"
-  note: 최근 1년 배당 수익률 약 0.5% (2025년 9월 0.48%)
+  note: "분기 배당(3 · 6 · 9 · 12월). 최근 1년 배당 수익률 약 0.5% (2025년 9월 0.48%)"
+- id: boe2014
+  author: McLeay M, Radia A, Thomas R
+  year: 2014
+  title: Money creation in the modern economy
+  publisher: Bank of England Quarterly Bulletin 2014 Q1, pp. 14–27
+  url: https://www.bankofengland.co.uk/quarterly-bulletin/2014/q1/money-creation-in-the-modern-economy
+  note: 오늘날 시중 통화(광의통화)의 대부분은 중앙은행이 아니라 시중은행이 대출할 때 예금 형태로 만들어짐
+- id: bok-m2-2024
+  author: 한국은행
+  year: 2026
+  title: "경제통계시스템(ECOS) — 통화 및 유동성: M2(광의통화, 평잔, 원계열)"
+  publisher: 한국은행 ECOS
+  url: https://ecos.bok.or.kr/
+  accessed: "2026-11-13"
+  note: M2(평잔, 2025년 개편 전 기준)는 2005년 1,000조원대에서 2024년 처음 4,000조원을 넘어섬(약 4배)
+- id: bok-m2-revision
+  author: 뉴시스 (한국은행 발표 인용)
+  year: 2025
+  title: 한은, 유동성 통계 개편…M2서 ETF 등 수익증권 제외
+  publisher: 뉴시스
+  url: https://www.newsis.com/view/NISX20251230_0003459050
+  accessed: "2026-11-13"
+  note: "한국은행 통화지표 개편(2025년 12월 발표): 새 기준 M2에서 ETF 등 수익증권 제외 — 개편 전 기준 M2와 수치가 다름"
+- id: fred-m2
+  author: Board of Governors of the Federal Reserve System
+  year: 2026
+  title: M2 [M2SL], Seasonally Adjusted
+  publisher: FRED, Federal Reserve Bank of St. Louis
+  url: https://fred.stlouisfed.org/series/M2SL
+  accessed: "2026-11-13"
+  note: 미국 M2 2005년 약 6.5조 달러 → 2024년 약 21조 달러(약 3.2~3.3배)
+- id: krw-usd-ecos
+  author: 한국은행
+  year: 2026
+  title: 경제통계시스템(ECOS) — 원/미국달러 환율(연평균 · 연말)
+  publisher: 한국은행 ECOS
+  url: https://ecos.bok.or.kr/
+  accessed: "2026-11-13"
+  note: 원/달러 연평균 2019년 약 1,166원, 2020년 약 1,180원, 2021년 약 1,144원, 2024년 1,363.98원 · 2020년 말 종가 1,086.3원
+- id: meese1983
+  author: Meese RA, Rogoff K
+  year: 1983
+  title: "Empirical exchange rate models of the seventies: Do they fit out of sample?"
+  publisher: Journal of International Economics 14(1–2):3–24
+  url: https://doi.org/10.1016/0022-1996(83)90017-X
+  note: 통화량 등을 쓰는 구조적 환율 모형이 1~12개월 예측에서 단순 랜덤워크보다 낫지 않음
+- id: bi-2024-best
+  author: Business Insider (AOL 재게재)
+  year: 2024
+  title: These were the 10 best-performing S&P 500 stocks in 2024
+  publisher: AOL / Business Insider
+  url: https://www.aol.com/were-10-best-performing-p-142939212.html
+  accessed: "2026-11-13"
+  note: "2024년 주가 상승률: Nvidia +171.2%, Broadcom +107.7%"
+- id: finhacker-top20
+  author: FinHacker
+  year: 2026
+  title: Largest 20 S&P 500 Companies by Market Cap (1989–2026)
+  publisher: finhacker.cz
+  url: https://www.finhacker.cz/en/top-20-sp-500-companies-by-market-cap/
+  accessed: "2026-11-13"
+  note: "2022년 말 시가총액 상위 10: AAPL · MSFT · GOOGL · AMZN · BRK · UNH · JNJ · XOM · V · JPM — NVDA 는 10위 밖"
+- id: buffett2013
+  author: Buffett WE
+  year: 2014
+  title: Berkshire Hathaway Inc. 2013 Shareholder Letter
+  publisher: Berkshire Hathaway
+  url: https://www.berkshirehathaway.com/letters/2013ltr.pdf
+  note: "아내를 위한 유산 지침: 현금의 10%는 단기 국채, 90%는 아주 낮은 비용의 S&P 500 인덱스 펀드 (2014년 2월 발표된 2013년 서한)"
+- id: vanguard-1976
+  author: Vanguard
+  year: 2026
+  title: 50 years. 50 facts. Indexing since 1976
+  publisher: Vanguard
+  url: https://corporate.vanguard.com/content/corporatesite/us/en/corp/articles/50-years-50-facts-indexing-since-1976.html
+  note: 1976년 8월 31일 First Index Investment Trust(현 Vanguard 500 Index Fund) 출시 — 개인 투자자가 살 수 있는 첫 인덱스 펀드
+- id: nobel2013
+  author: The Royal Swedish Academy of Sciences
+  year: 2013
+  title: The Prize in Economic Sciences 2013 — Press release
+  publisher: NobelPrize.org
+  url: https://www.nobelprize.org/prizes/economic-sciences/2013/press-release/
+  note: Fama · Hansen · Shiller 공동 수상(자산 가격의 실증 분석) — 주가는 단기적으로 예측하기 매우 어렵다는 Fama 등의 연구
+- id: fama1970
+  author: Fama EF
+  year: 1970
+  title: "Efficient Capital Markets: A Review of Theory and Empirical Work"
+  publisher: The Journal of Finance 25(2):383–417
+  url: https://doi.org/10.2307/2325486
+  note: 효율적 시장 가설을 정리한 대표 논문
+- id: spiva-us-2025
+  author: S&P Dow Jones Indices
+  year: 2026
+  title: SPIVA U.S. Scorecard Year-End 2025
+  publisher: S&P Dow Jones Indices
+  url: https://www.spglobal.com/spdji/en/documents/spiva/spiva-us-year-end-2025.pdf
+  accessed: "2026-11-13"
+  note: 미국 대형주 액티브 펀드의 약 90%가 최근 15년간 S&P 500보다 성과가 낮음 (2025년 말 기준)
+- id: malkiel2023
+  author: Malkiel BG
+  year: 2023
+  title: "A Random Walk Down Wall Street: The Best Investment Guide That Money Can Buy (50th anniversary ed., 13th ed.)"
+  publisher: W. W. Norton & Company
+  url: https://wwnorton.com/books/9781324035435
+  note: 1973년 초판, 2023년 1월 나온 50주년 기념판이 13판(12판은 2019년)
+- id: munger-waiting
+  author: Morningstar Australia
+  year: 2023
+  title: The wisdom of Charlie Munger
+  publisher: Morningstar
+  url: https://www.morningstar.com.au/insights/personal-finance/243253/the-wisdom-of-charlie-munger
+  accessed: "2026-11-13"
+  note: "“The big money is not in the buying and the selling, but in the waiting.” — 멍거의 말로 널리 인용됨 (‘Rule No.1: Never lose money’ 는 버핏의 말)"
+- id: graham-ii
+  author: Graham B; Zweig J (commentary)
+  year: 2006
+  title: The Intelligent Investor, Revised Edition — Ch. 5 “The Defensive Investor and Common Stocks” · Ch. 8
+  publisher: HarperBusiness (Collins)
+  url: https://openlibrary.org/isbn/9780060555665
+  note: "1973년 4판 본문: 방어적 투자자는 10~30개의 크고 재무가 탄탄한 기업으로 분산, 주가 예측(타이밍)보다 정해 둔 주식·채권 비중을 지키라고 권고 · 8장 “투자자의 가장 큰 적은 자기 자신”"

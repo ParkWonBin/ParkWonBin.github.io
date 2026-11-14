@@ -96,13 +96,14 @@ body.brush-mode .brush-only { display: block; }
 body.brush-mode .pane.brush-only { display: block; }
 </style>
   <script src="/assets/js/analytics.js" defer></script>
+  <script src="/assets/js/footnotes.js" defer></script>
   <script>/* 블로그에서 고른 라이트/다크를 따른다 (assets/js/site.js 와 같은 저장값) */try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
   <script src="/assets/js/app-bar.js" defer data-pos="br"></script>
 </head>
 <body>
 <header>
   <h1>Primitive × p5.brush</h1>
-  <p>Primitive가 기본 도형을 하나씩 더해 이미지를 근사하고, 그 도형들을 그대로 그리거나 p5.brush의 수채·해칭·연필 붓질로 다시 그립니다.</p>
+  <p>Primitive가 기본 도형을 하나씩 더해 이미지를 근사하고<sup class="fn"><a href="/sources/#fogleman-primitive">[출처]</a></sup>, 그 도형들을 그대로 그리거나 p5.brush의 수채·해칭·연필 붓질로 다시 그립니다.</p>
 </header>
 <main>
   <aside>
@@ -123,7 +124,7 @@ body.brush-mode .pane.brush-only { display: block; }
 
     <h2>Primitive</h2>
     <div class="field">
-      <label for="shapeType">도형 종류 (-m)</label>
+      <label for="shapeType">도형 종류 (-m)<sup class="fn"><a href="/sources/#fogleman-primitive">[출처]</a></sup></label>
       <select id="shapeType">
         <option value="0">0 · 혼합 (combo)</option>
         <option value="1" selected>1 · 삼각형</option>
@@ -143,12 +144,12 @@ body.brush-mode .pane.brush-only { display: block; }
     <div class="field">
       <label for="alpha">알파 (-a)</label>
       <div class="range-row"><input type="range" id="alpha" min="0" max="255" step="1" value="128"><input type="number"></div>
-      <div class="hint">0 = 도형마다 알파를 자동으로 탐색</div>
+      <div class="hint">0 = 도형마다 알파를 자동으로 탐색<sup class="fn"><a href="/sources/#fogleman-primitive">[출처]</a></sup></div>
     </div>
     <div class="field">
       <label for="repeat">반복 (-rep)</label>
       <div class="range-row"><input type="range" id="repeat" min="0" max="10" step="1" value="0"><input type="number"></div>
-      <div class="hint">반복마다 축소 탐색으로 도형을 N개 더 추가</div>
+      <div class="hint">반복마다 축소 탐색으로 도형을 N개 더 추가<sup class="fn"><a href="/sources/#fogleman-primitive">[출처]</a></sup></div>
     </div>
     <div class="field">
       <label for="inputSize">계산 크기 (-r, px)</label>
@@ -175,7 +176,7 @@ body.brush-mode .pane.brush-only { display: block; }
     <div class="field">
       <label for="restarts">재시작 횟수</label>
       <div class="range-row"><input type="range" id="restarts" min="1" max="64" step="1" value="16"><input type="number"></div>
-      <div class="hint">원본 기본값: 후보 1000 · 한도 100 · 재시작 16</div>
+      <div class="hint">원본 기본값: 후보 1000 · 한도 100 · 재시작 16<sup class="fn"><a href="/sources/#fogleman-primitive-model">[출처]</a></sup></div>
     </div>
     <div class="field">
       <label for="workers">워커 수</label>
@@ -279,6 +280,7 @@ body.brush-mode .pane.brush-only { display: block; }
     <li><a href="https://github.com/fogleman/primitive" target="_blank" rel="noopener">fogleman/primitive</a> — Michael Fogleman, MIT License. Go로 작성된 원본의 도형 탐색(무작위 후보 → 언덕 오르기, 최적 색 계산, 부분 RMSE 점수)을 단일 HTML + Web Worker로 다시 구현했습니다.</li>
     <li><a href="https://github.com/acamposuribe/p5.brush" target="_blank" rel="noopener">acamposuribe/p5.brush</a> — Alejandro Campos Uribe, MIT License. 브러시 렌더링에는 standalone 빌드(<code>dist/brush.js</code>, v2.2.4)를 이 파일 안에 그대로 포함해 사용합니다.</li>
   </ul>
+  <div data-footnotes></div>
 </footer>
 
 <script id="engine-src">
