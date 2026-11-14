@@ -3,11 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- 브라우저 강제 다크 모드(삼성 인터넷 · 크롬 자동 어둡게)가 판 색 · 그늘 · 마스크를 뒤집어 시야 영역 대비가 사라지던 것 → 밝은 화면 전용 -->
+<meta name="color-scheme" content="only light">
 <title>전장 플래너</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }</script>
 <style>
 :root {
+  color-scheme: only light; /* 강제 다크 모드 끄기 — 위 meta 와 같은 뜻 */
   --bg: #f7f3ef; --surface: #fdf9f6; --sunk: #ede9e6; --line: #d7d3d0; --muted: #666260; --sub: #524f4d; --ink: #302d2b; --strong: #211f1c;
   --gold: #7b5e22; --gold-fill: #d6ba86; --gold-soft: #f7e9d1; --red: #a34945; --red-soft: #ffe8e6; --matte: #403c3a; --on-matte: #f7f3ef;
   --me: #3f6a8f; --enemy: #a34945; --ok: #3d7a4f; --hl: #f2efb8;
@@ -1975,7 +1978,7 @@ async function make3d() {
     const cs = getComputedStyle(document.documentElement);
     const inner = ($('defs').outerHTML + $('static').outerHTML + $('dyn').outerHTML)
       .replace(/var\((--[\w-]+)\)/g, (_, n) => cs.getPropertyValue(n).trim() || '#000');
-    const svgText = `<svg xmlns="http://www.w3.org/2000/svg" width="${canvas.width}" height="${canvas.height}" viewBox="0 0 ${W} ${H}" font-family="Pretendard, 'Malgun Gothic', sans-serif">${inner}</svg>`;
+    const svgText = `<svg xmlns="http://www.w3.org/2000/svg" style="color-scheme:only light" width="${canvas.width}" height="${canvas.height}" viewBox="0 0 ${W} ${H}" font-family="Pretendard, 'Malgun Gothic', sans-serif">${inner}</svg>`;
     const img = new Image();
     img.onload = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0); tex.needsUpdate = true; done(); };
     img.onerror = done;
