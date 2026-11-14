@@ -91,6 +91,18 @@ body.is3d #board { visibility: hidden; }
 .tabs { display: flex; gap: 4px; padding: 6px 8px 0; position: sticky; top: 0; background: var(--surface); z-index: 1; border-bottom: 1px solid var(--line); }
 .tabs button { border: none; border-bottom: 3px solid transparent; border-radius: 0; padding: 6px 10px; }
 .tabs button[aria-pressed="true"] { background: transparent; border-bottom-color: var(--gold); }
+/* 패널 접기 — 판을 크게 보고 싶을 때. 좁은 화면(아래 패널)은 탭 줄만 남기고, 넓은 화면(오른쪽 패널)은 좁은 띠로 */
+.tabs .pfold { margin-left: auto; flex: none; border-bottom: 3px solid transparent; color: var(--sub); font-weight: 600; white-space: nowrap; }
+.tabs .pfold:hover { color: var(--strong); }
+body.pfolded #panel { overflow: hidden; padding-bottom: env(safe-area-inset-bottom, 0px); }
+body.pfolded #panel .pane { display: none; }
+body.pfolded .tabs { border-bottom: none; padding-left: 52px; } /* 왼쪽 아래 '← wbpark' 표시를 비켜서 */
+@media (min-width: 900px) {
+  body.pfolded main { grid-template-columns: 1fr 44px; }
+  body.pfolded .tabs { flex-direction: column; padding: 6px 4px; }
+  body.pfolded .tabs [data-tab] { display: none; }
+  body.pfolded .tabs .pfold { margin: 0; padding: 8px 0; writing-mode: vertical-rl; }
+}
 .pane { padding: 10px 12px 16px; display: grid; gap: 10px; }
 .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .row label { display: inline-flex; gap: 4px; align-items: center; }
@@ -920,7 +932,12 @@ function renderDyn() {
   if (L.sightFan && su && su.models.length && layout()) {
     const m = su.models[grabbed(su)];
     const pts = sightFan(su.base, m);
-    h += `<path pointer-events="none" fill-rule="evenodd" fill="#2a2622" fill-opacity="0.24" d="M0 0H${W}V${H}H0Z M${pts.map((p) => p[0].toFixed(2) + ' ' + p[1].toFixed(2)).join('L')}Z"/>`
+    // 그늘은 조금 짙게, 끌어 옮기는 동안은 더 짙게 + 보이는 영역 경계선을 또렷하게(밝은 선 위에 어두운 선) — 이동 중에 시야가 한눈에 들어오게
+    const moving = drag && drag.kind === 'unit' && drag.uid === su.id;
+    const poly = pts.map((p) => p[0].toFixed(2) + ' ' + p[1].toFixed(2)).join('L');
+    h += `<path pointer-events="none" fill-rule="evenodd" fill="#1f1b18" fill-opacity="${moving ? 0.46 : 0.34}" d="M0 0H${W}V${H}H0Z M${poly}Z"/>`
+      + `<path pointer-events="none" fill="none" stroke="#fff" stroke-opacity="0.85" stroke-width="${moving ? 0.16 : 0.12}" stroke-linejoin="round" d="M${poly}Z"/>`
+      + `<path pointer-events="none" fill="none" stroke="#1f1b18" stroke-opacity="0.75" stroke-width="0.05" stroke-linejoin="round" d="M${poly}Z"/>`
       + `<circle pointer-events="none" cx="${f1(m.x)}" cy="${f1(m.y)}" r="0.25" fill="var(--strong)"/>`;
     seen.fan = true;
   }
@@ -1066,7 +1083,7 @@ const LG_RING = [['move', '이동', 'Move'], ['adv', '급속 이동 M+6"', 'Adva
 const LG_OFF = { myZone: ['내 배치 구역', () => lgBox('var(--me)', 0.25, 'var(--me)')], enemyZone: ['상대 배치 구역', () => lgBox('var(--enemy)', 0.25, 'var(--enemy)')], edge6: ['예비대 진입 6"', () => lgBox('#9b8cb0', 0.3, '#9b8cb0', '0.6 0.4')],
   dsMine: ['내 심층 타격 8"', () => lgBox('var(--me)', 0.2, 'var(--me)', '0.5 0.3')], dsEnemy: ['적 심층 타격 8"', () => lgBox('var(--enemy)', 0.2, 'var(--enemy)', '0.5 0.3')], grid: ['격자 1"·6"', () => lgSw('<path d="M1 0V1.4M2 0V1.4M3 0V1.4" stroke="#999" stroke-width="0.08"/>')],
   objectives: ['목표물 · 마커 3"', () => lgDot('var(--gold-soft)', 'var(--gold)')], control: ['장악 칩 · 윤곽', () => lgPill('var(--gold)')], rings: ['유닛 반경', () => lgLine('var(--sub)', '')],
-  labels: ['거리 라벨', () => lgBox('#fdf9f6', 1, 'var(--sub)')], sight: ['시야선 · 판정', () => lgLine('var(--ok)', '')], sightFan: ['시야 그늘', () => lgBox('#2a2622', 0.24, 'none')] };
+  labels: ['거리 라벨', () => lgBox('#fdf9f6', 1, 'var(--sub)')], sight: ['시야선 · 판정', () => lgLine('var(--ok)', '')], sightFan: ['시야 그늘', () => lgBox('#1f1b18', 0.34, 'none')] };
 function renderLegend() {
   const lg = $('legend'); if (!lg) return;
   let rows = '';
@@ -1157,9 +1174,23 @@ function objName(o) {
 
 // ---------- 패널 ----------
 function findSel() { return sel && (sel.kind === 'unit' ? S.units.find((u) => u.id === sel.id) : S.targets.find((t) => t.id === sel.id)); }
+// 패널 접기 — 화면 설정이라 공유 링크 · 저장 상태(S)와 따로 이 브라우저에만 기억
+const PFOLD = 'warhammer_map.panelFolded';
+function panelFolded() { return document.body.classList.contains('pfolded'); }
+function setPanelFold(on) {
+  document.body.classList.toggle('pfolded', on);
+  try { if (on) localStorage.setItem(PFOLD, '1'); else localStorage.removeItem(PFOLD); } catch (e) {}
+  renderPanel();
+  if (!on) $('panel').scrollTop = 0;
+}
+try { if (localStorage.getItem(PFOLD) === '1') document.body.classList.add('pfolded'); } catch (e) {}
+matchMedia('(min-width: 900px)').addEventListener('change', () => renderPanel()); // 넓은/좁은 화면이 바뀌면 단추 글자도 바꾼다
 function renderPanel() {
   const tabs = [['units', '유닛'], ['targets', '목표'], ['terrain', '지형'], ['layers', '레이어'], ['map', '미션']]; // 목표 = 장악 현황 + 목표 마커 · 표적, 미션 = 프라이머리 · 트위스트 · 지도
-  let h = `<div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" aria-pressed="${tab === k}">${n}</button>`).join('')}</div><div class="pane">`;
+  const fold = panelFolded(), wide = matchMedia('(min-width: 900px)').matches;
+  const foldTxt = fold ? (wide ? '◂ 패널 펼치기' : '▴ 펼치기') : (wide ? '접기 ▸' : '접기 ▾');
+  let h = `<div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" aria-pressed="${tab === k}">${n}</button>`).join('')}`
+    + `<button class="pfold" data-act="panelFold" aria-expanded="${!fold}" aria-controls="panel" title="${fold ? '패널 펼치기' : '패널 접기 — 판을 크게 보기'}">${foldTxt}</button></div><div class="pane">`;
   if (tab === 'units') h += unitsPane();
   else if (tab === 'targets') h += targetsPane();
   else if (tab === 'terrain') h += terrainPane();
@@ -1479,7 +1510,8 @@ $('panel').addEventListener('click', (e) => {
   if (b.matches('input[type=checkbox]')) return; // change 에서 처리
   const u = sel && sel.kind === 'unit' && S.units.find((x) => x.id === sel.id);
   const ds = b.dataset;
-  if (ds.tab) { tab = ds.tab; renderPanel(); return; }
+  if (ds.act === 'panelFold') { setPanelFold(!panelFolded()); return; }
+  if (ds.tab) { tab = ds.tab; if (panelFolded()) setPanelFold(false); else renderPanel(); return; } // 접힌 채 탭을 누르면 펼친다
   if (ds.kindpick) { kindSel = kindSel === ds.kindpick ? null : ds.kindpick; terrainChanged(); return; }
   if (ds.kindsolo) { S.kindSolo = S.kindSolo === ds.kindsolo ? null : ds.kindsolo; kindSel = S.kindSolo; save(); terrainChanged(); return; }
   if (ds.act === 'kindAll') { S.kindSolo = null; S.kindHidden = {}; kindSel = null; save(); terrainChanged(); return; }
