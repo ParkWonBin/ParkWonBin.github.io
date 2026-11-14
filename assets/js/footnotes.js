@@ -104,7 +104,8 @@
       pop.setAttribute('role', 'note');
       pop.dataset.for = id;
       pop.innerHTML = '<span class="fn-n">[' + n + ']</span>' + cite(data[id], id) + ' · <a href="#fn-' + n + '">출처 목록</a>';
-      document.body.appendChild(pop);
+      // 모달 창(dialog) 안의 각주는 그 창 안에 띄워야 맨 위 층(top layer)에 보인다
+      (a.closest('dialog[open]') || document.body).appendChild(pop);
       popFor = a;
       place();
       pinned = !!pin;
@@ -131,8 +132,9 @@
   // 각주를 (다시) 센다: 번호 · 되돌아가기 자리 · 아래 목록
   function build() {
     var refs = Array.prototype.slice.call(document.querySelectorAll(SEL)).filter(function (a) { return idOf(a); });
-    if (!refs.length) { return; }
+    if (!refs.length) { if (list) { list.hidden = true; close(); } return; } // 각주가 모두 사라지면(설명 접기 등) 목록도 숨김
     if (!list) { setup(); }
+    list.hidden = false;
     order = []; num = {};
     refs.forEach(function (a) {
       var id = idOf(a);
@@ -161,16 +163,20 @@
   }
 
   build();
-  // 앱이 나중에 그린 각주도 센다 (각주 목록 안의 변화는 무시)
+  // 앱이 나중에 그리거나 지운 각주도 다시 센다 (각주 목록 · 출처 창 안의 변화는 무시)
   var t = 0;
+  function hasFn(nodes) {
+    for (var j = 0; j < nodes.length; j++) {
+      var node = nodes[j];
+      if (node.nodeType === 1 && (node.matches('sup.fn') || node.querySelector('sup.fn'))) { return true; }
+    }
+    return false;
+  }
   new MutationObserver(function (muts) {
     for (var i = 0; i < muts.length; i++) {
       var m = muts[i];
-      if (list && list.contains(m.target)) { continue; }
-      for (var j = 0; j < m.addedNodes.length; j++) {
-        var node = m.addedNodes[j];
-        if (node.nodeType === 1 && (node.matches('sup.fn') || node.querySelector('sup.fn'))) { clearTimeout(t); t = setTimeout(build, 50); return; }
-      }
+      if ((list && list.contains(m.target)) || (pop && pop.contains(m.target))) { continue; }
+      if (hasFn(m.addedNodes) || hasFn(m.removedNodes)) { clearTimeout(t); t = setTimeout(build, 50); return; }
     }
   }).observe(document.body, { childList: true, subtree: true });
 })();
